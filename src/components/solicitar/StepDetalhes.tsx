@@ -21,13 +21,13 @@ const finalidades = [
   { value: "outro", label: "Outro" },
 ];
 
-const diasOpcoes = [
-  { label: "1 dia", preco: "R$ 29,90" },
-  { label: "2 dias", preco: "R$ 34,90" },
-  { label: "3 dias", preco: "R$ 39,90" },
-  { label: "5 dias", preco: "R$ 44,90" },
-  { label: "7 dias", preco: "R$ 49,90" },
-  { label: "15 dias", preco: "R$ 59,90" },
+export const diasOpcoes = [
+  { label: "1 dia", preco: "R$ 29,99", valor: 29.99 },
+  { label: "2 dias", preco: "R$ 34,99", valor: 34.99 },
+  { label: "3 dias", preco: "R$ 39,99", valor: 39.99 },
+  { label: "5 dias", preco: "R$ 49,99", valor: 49.99 },
+  { label: "7 dias", preco: "R$ 59,99", valor: 59.99 },
+  { label: "15 dias", preco: "R$ 89,99", valor: 89.99 },
 ];
 
 const StepDetalhes = ({ formData, updateForm, errors }: Props) => {
