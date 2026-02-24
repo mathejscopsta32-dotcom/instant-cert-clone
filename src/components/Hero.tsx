@@ -1,4 +1,5 @@
 import { ArrowRight, CheckCircle2, Clock, ShieldCheck, Star } from "lucide-react";
+import { Link } from "react-router-dom";
 import doctorImg from "@/assets/doctor.jpg";
 
 const Hero = () => {
@@ -42,13 +43,13 @@ const Hero = () => {
             </ul>
 
             <div className="flex flex-wrap gap-3 pt-2">
-              <a
-                href="#solicitar"
+              <Link
+                to="/solicitar"
                 className="inline-flex items-center gap-2 bg-primary text-primary-foreground px-6 py-3 rounded-lg font-semibold hover:opacity-90 transition-opacity"
               >
                 Solicitar Atestado
                 <ArrowRight className="w-4 h-4" />
-              </a>
+              </Link>
               <a
                 href="#"
                 className="inline-flex items-center gap-2 border border-border text-foreground px-6 py-3 rounded-lg font-semibold hover:bg-muted transition-colors"
