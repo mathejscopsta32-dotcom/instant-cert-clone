@@ -12,7 +12,7 @@ import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
-import { format, addDays, subDays } from "date-fns";
+import { format, subDays, addDays } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { CalendarIcon, Info } from "lucide-react";
 import type { FormData } from "@/pages/Solicitar";
@@ -34,7 +34,6 @@ export const diasOpcoes = [
 ];
 
 const inicioOpcoes = [
-  { value: "amanha", label: "Amanhã" },
   { value: "hoje", label: "Hoje" },
   { value: "ontem", label: "Ontem" },
   { value: "personalizado", label: "Personalizado" },
@@ -59,7 +58,6 @@ const getDateFromInicio = (inicio: string, customDate?: Date): Date => {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
   switch (inicio) {
-    case "amanha": return addDays(today, 1);
     case "hoje": return today;
     case "ontem": return subDays(today, 1);
     case "personalizado": return customDate || today;
