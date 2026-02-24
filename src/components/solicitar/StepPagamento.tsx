@@ -1,5 +1,5 @@
-import { useState, useEffect } from "react";
-import { Check, Clock, Copy, ShieldCheck, AlertCircle } from "lucide-react";
+import { useState, useEffect, useRef } from "react";
+import { Check, Clock, Copy, ShieldCheck, AlertCircle, RefreshCw, Upload, Loader2 } from "lucide-react";
 import { QRCodeSVG } from "qrcode.react";
 import type { FormData } from "@/pages/Solicitar";
 import { diasOpcoes } from "./StepDetalhes";
@@ -19,6 +19,8 @@ const PIX_KEY = "c3a20682-cc6f-4a3c-ae81-982b97780dc6";
 const StepPagamento = ({ formData, onPaymentConfirmed }: Props) => {
   const [timeLeft, setTimeLeft] = useState(30 * 60);
   const [copied, setCopied] = useState(false);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const selected = diasOpcoes.find((d) => d.label === formData.diasAfastamento);
   const basePrice = selected?.valor || 39.9;
@@ -51,10 +53,8 @@ const StepPagamento = ({ formData, onPaymentConfirmed }: Props) => {
     return () => clearInterval(timer);
   }, []);
 
-  const formatTime = (seconds: number) => {
-    const m = Math.floor(seconds / 60);
-    const s = seconds % 60;
-    return `${m.toString().padStart(2, "0")}:${s.toString().padStart(2, "0")}`;
+  const handleRegenerate = () => {
+    setTimeLeft(30 * 60);
   };
 
   const handleCopy = async () => {
@@ -74,123 +74,154 @@ const StepPagamento = ({ formData, onPaymentConfirmed }: Props) => {
     }
   };
 
+  const handleFileSelect = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) setSelectedFile(file);
+  };
+
   return (
     <div className="space-y-6">
-      <h2 className="text-lg font-bold text-foreground mb-1">Pagamento via PIX</h2>
-      <p className="text-sm text-muted-foreground mb-4">
-        Escaneie o QR Code ou copie o código PIX para realizar o pagamento.
-      </p>
+      {/* Header */}
+      <div className="text-center">
+        <div className="w-14 h-14 mx-auto mb-4 rounded-full bg-primary/10 flex items-center justify-center">
+          <span className="text-2xl">₱</span>
+        </div>
+        <h2 className="text-xl font-bold text-foreground">Pagamento via PIX</h2>
+        <p className="text-sm text-muted-foreground mt-1">
+          Seu atestado será liberado após a confirmação do pagamento.
+        </p>
+      </div>
 
-      <div className="grid md:grid-cols-2 gap-6">
-        {/* QR Code */}
-        <div className="space-y-4">
-          {/* Timer */}
-          <div
-            className={`flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold ${
-              timeLeft < 300
-                ? "bg-destructive/10 text-destructive"
-                : "bg-secondary text-secondary-foreground"
-            }`}
-          >
-            {timeLeft > 0 ? (
-              <>
-                <Clock className="w-4 h-4" />
-                Expira em {formatTime(timeLeft)}
-              </>
-            ) : (
-              <>
-                <AlertCircle className="w-4 h-4" />
-                PIX expirado — solicite novamente
-              </>
-            )}
-          </div>
+      {/* Valor Total */}
+      <div className="bg-secondary/50 rounded-xl p-4 text-center">
+        <p className="text-xs text-muted-foreground font-medium mb-1">Valor Total</p>
+        <p className="text-3xl font-extrabold text-primary">{precoLabel}</p>
+      </div>
 
-          {/* QR Code real */}
-          <div className="flex justify-center">
-            <div className="bg-white p-4 rounded-2xl">
-              <QRCodeSVG value={pixPayload} size={200} level="M" />
-            </div>
-          </div>
-
-          {/* Copy PIX */}
-          <div className="space-y-3">
-            <p className="text-xs text-muted-foreground text-center font-medium">
-              PIX Copia e Cola
-            </p>
-            <div className="bg-muted rounded-xl p-3 text-xs text-muted-foreground break-all font-mono max-h-20 overflow-y-auto">
-              {pixPayload}
-            </div>
-            <button
-              type="button"
-              onClick={handleCopy}
-              disabled={timeLeft === 0}
-              className={`w-full inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl font-semibold text-sm transition-all ${
-                copied
-                  ? "bg-primary text-primary-foreground"
-                  : "border border-primary text-primary hover:bg-secondary"
-              } disabled:opacity-50`}
-            >
-              {copied ? (
-                <>
-                  <Check className="w-4 h-4" />
-                  Código copiado!
-                </>
-              ) : (
-                <>
-                  <Copy className="w-4 h-4" />
-                  Copiar código PIX
-                </>
-              )}
-            </button>
+      {/* QR Code */}
+      <div className="space-y-3">
+        <p className="text-sm font-semibold text-foreground text-center">
+          Escaneie o QR Code abaixo:
+        </p>
+        <div className="flex justify-center">
+          <div className="bg-white p-5 rounded-2xl shadow-sm border">
+            <QRCodeSVG value={pixPayload} size={220} level="M" />
           </div>
         </div>
 
-        {/* Resumo */}
-        <div className="space-y-4">
-          <div className="bg-muted rounded-xl p-4 space-y-3 text-sm">
-            <h3 className="font-bold text-foreground">Resumo</h3>
-            <Row label="Nome" value={formData.nomeCompleto} />
-            <Row label="CPF" value={formData.cpf} />
-            <Row label="E-mail" value={formData.email} />
-            <Row label="Afastamento" value={formData.diasAfastamento} />
+        {/* Timer */}
+        {timeLeft > 0 ? (
+          <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground">
+            <Clock className="w-3.5 h-3.5" />
+            Expira em {Math.floor(timeLeft / 60).toString().padStart(2, "0")}:{(timeLeft % 60).toString().padStart(2, "0")}
           </div>
-
-          <div className="bg-secondary rounded-xl p-4 flex items-center justify-between">
-            <span className="text-sm font-medium text-muted-foreground">Total</span>
-            <span className="text-2xl font-extrabold text-primary">{precoLabel}</span>
+        ) : (
+          <div className="flex items-center justify-center gap-2 text-xs text-destructive font-medium">
+            <AlertCircle className="w-3.5 h-3.5" />
+            PIX expirado
           </div>
+        )}
 
-          <button
-            type="button"
-            onClick={onPaymentConfirmed}
-            disabled={timeLeft === 0}
-            className="w-full inline-flex items-center justify-center gap-2 bg-primary text-primary-foreground px-6 py-3.5 rounded-xl font-semibold hover:opacity-90 transition-opacity disabled:opacity-50 text-sm"
-          >
-            <Check className="w-4 h-4" />
-            Já realizei o pagamento
-          </button>
+        {/* Regenerate */}
+        <button
+          type="button"
+          onClick={handleRegenerate}
+          className="w-full inline-flex items-center justify-center gap-2 text-sm text-primary font-semibold hover:underline"
+        >
+          <RefreshCw className="w-4 h-4" />
+          Gerar novo código PIX
+        </button>
+      </div>
 
-          <div className="bg-muted rounded-xl p-4 space-y-2">
-            <p className="text-xs text-muted-foreground flex items-start gap-2">
-              <ShieldCheck className="w-4 h-4 text-primary flex-shrink-0 mt-0.5" />
-              Pagamento processado com segurança. Seus dados são protegidos por criptografia.
-            </p>
-            <p className="text-xs text-muted-foreground flex items-start gap-2">
-              <Clock className="w-4 h-4 text-primary flex-shrink-0 mt-0.5" />
-              Após confirmação, o atestado é enviado em até 5 minutos para seu e-mail.
-            </p>
-          </div>
+      {/* Copia e Cola */}
+      <div className="space-y-3">
+        <p className="text-sm font-semibold text-foreground">Ou copie e cole o código:</p>
+        <div className="bg-muted rounded-xl p-3 text-xs text-muted-foreground break-all font-mono max-h-20 overflow-y-auto">
+          {pixPayload}
+        </div>
+        <button
+          type="button"
+          onClick={handleCopy}
+          disabled={timeLeft === 0}
+          className={`w-full inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl font-semibold text-sm transition-all ${
+            copied
+              ? "bg-primary text-primary-foreground"
+              : "border border-primary text-primary hover:bg-secondary"
+          } disabled:opacity-50`}
+        >
+          {copied ? (
+            <>
+              <Check className="w-4 h-4" />
+              Código copiado!
+            </>
+          ) : (
+            <>
+              <Copy className="w-4 h-4" />
+              Copiar
+            </>
+          )}
+        </button>
+      </div>
+
+      {/* Verificando pagamento */}
+      <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
+        <Loader2 className="w-4 h-4 animate-spin text-primary" />
+        Verificando pagamento automaticamente...
+      </div>
+
+      {/* Já fiz o pagamento */}
+      <button
+        type="button"
+        onClick={onPaymentConfirmed}
+        disabled={timeLeft === 0}
+        className="w-full inline-flex items-center justify-center gap-2 bg-primary text-primary-foreground px-6 py-3.5 rounded-xl font-semibold hover:opacity-90 transition-opacity disabled:opacity-50 text-sm"
+      >
+        <Check className="w-4 h-4" />
+        Já fiz o pagamento
+      </button>
+
+      {/* Enviar comprovante */}
+      <div className="bg-muted rounded-xl p-4 space-y-3">
+        <div>
+          <p className="text-sm font-bold text-foreground">Enviar Comprovante de Pagamento</p>
+          <p className="text-xs text-muted-foreground mt-1">
+            Após realizar o PIX, envie o comprovante para agilizar a liberação do seu atestado.
+          </p>
+        </div>
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/*,.pdf"
+          onChange={handleFileChange}
+          className="hidden"
+        />
+        <button
+          type="button"
+          onClick={handleFileSelect}
+          className="w-full inline-flex items-center justify-center gap-2 border border-border text-foreground px-4 py-3 rounded-xl font-semibold text-sm hover:bg-secondary transition-colors"
+        >
+          <Upload className="w-4 h-4" />
+          {selectedFile ? selectedFile.name : "Selecionar Arquivo"}
+        </button>
+      </div>
+
+      {/* Footer badges */}
+      <div className="flex items-center justify-center gap-6 pt-2">
+        <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+          <ShieldCheck className="w-4 h-4 text-primary" />
+          Pagamento 100% Seguro
+        </div>
+        <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+          <Clock className="w-4 h-4 text-primary" />
+          Liberação em Minutos
         </div>
       </div>
     </div>
   );
 };
-
-const Row = ({ label, value }: { label: string; value: string }) => (
-  <div className="flex justify-between">
-    <span className="text-muted-foreground">{label}</span>
-    <span className="text-foreground font-medium text-right max-w-[55%] break-words">{value}</span>
-  </div>
-);
 
 export default StepPagamento;
