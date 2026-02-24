@@ -1,6 +1,4 @@
 import { ShieldCheck } from "lucide-react";
-import { format } from "date-fns";
-import { ptBR } from "date-fns/locale";
 import type { FormData } from "@/pages/Solicitar";
 import { diasOpcoes } from "./StepDetalhes";
 
@@ -8,11 +6,11 @@ interface Props {
   formData: FormData;
 }
 
-const finalidadeLabels: Record<string, string> = {
-  trabalho: "Trabalho (CLT)",
-  escola: "Escola / Faculdade",
-  concurso: "Concurso / Prova",
-  outro: "Outro",
+const inicioLabels: Record<string, string> = {
+  amanha: "Amanhã",
+  hoje: "Hoje",
+  ontem: "Ontem",
+  personalizado: "Data personalizada",
 };
 
 const StepRevisao = ({ formData }: Props) => {
@@ -52,16 +50,10 @@ const StepRevisao = ({ formData }: Props) => {
         {/* Detalhes */}
         <div className="bg-muted rounded-xl p-4 space-y-2">
           <h3 className="text-sm font-bold text-foreground">Detalhes do Atestado</h3>
-          <Row label="Finalidade" value={finalidadeLabels[formData.finalidade] || formData.finalidade} />
-          <Row
-            label="Data de início"
-            value={
-              formData.dataInicio
-                ? format(formData.dataInicio, "dd/MM/yyyy", { locale: ptBR })
-                : "—"
-            }
-          />
+          <Row label="Início dos sintomas" value={inicioLabels[formData.inicioSintomas] || formData.inicioSintomas} />
           <Row label="Afastamento" value={formData.diasAfastamento} />
+          <Row label="Cidade/Estado" value={`${formData.cidade} - ${formData.estado}`} />
+          {formData.hospitalPreferencia && <Row label="Hospital" value={formData.hospitalPreferencia} />}
           {formData.observacoes && <Row label="Observações" value={formData.observacoes} />}
         </div>
 
@@ -72,7 +64,7 @@ const StepRevisao = ({ formData }: Props) => {
             <p className="text-xs text-muted-foreground">Pagamento via PIX</p>
           </div>
           <p className="text-2xl font-extrabold text-primary">
-            {diasOpcoes.find(d => d.label === formData.diasAfastamento)?.preco || "R$ 29,99"}
+            {diasOpcoes.find(d => d.label === formData.diasAfastamento)?.preco || "R$ 39,90"}
           </p>
         </div>
 
