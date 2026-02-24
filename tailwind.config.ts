@@ -47,6 +47,13 @@ export default {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
+        hero: "hsl(var(--hero-bg))",
+        badge: {
+          DEFAULT: "hsl(var(--badge-bg))",
+          foreground: "hsl(var(--badge-text))",
+        },
+        highlight: "hsl(var(--highlight))",
+        star: "hsl(var(--star))",
         sidebar: {
           DEFAULT: "hsl(var(--sidebar-background))",
           foreground: "hsl(var(--sidebar-foreground))",
