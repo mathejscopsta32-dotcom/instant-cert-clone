@@ -21,7 +21,14 @@ const finalidades = [
   { value: "outro", label: "Outro" },
 ];
 
-const diasOpcoes = ["1 dia", "2 dias", "3 dias", "5 dias", "7 dias", "15 dias"];
+const diasOpcoes = [
+  { label: "1 dia", preco: "R$ 29,90" },
+  { label: "2 dias", preco: "R$ 34,90" },
+  { label: "3 dias", preco: "R$ 39,90" },
+  { label: "5 dias", preco: "R$ 44,90" },
+  { label: "7 dias", preco: "R$ 49,90" },
+  { label: "15 dias", preco: "R$ 59,90" },
+];
 
 const StepDetalhes = ({ formData, updateForm, errors }: Props) => {
   return (
@@ -89,19 +96,20 @@ const StepDetalhes = ({ formData, updateForm, errors }: Props) => {
       {/* Dias de afastamento */}
       <div>
         <Label>Dias de afastamento *</Label>
-        <div className="grid grid-cols-3 gap-3 mt-2">
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mt-2">
           {diasOpcoes.map((d) => (
             <button
-              key={d}
+              key={d.label}
               type="button"
-              onClick={() => updateForm({ diasAfastamento: d })}
-              className={`p-3 rounded-xl border text-sm font-medium transition-colors ${
-                formData.diasAfastamento === d
+              onClick={() => updateForm({ diasAfastamento: d.label })}
+              className={`p-4 rounded-xl border text-left transition-colors ${
+                formData.diasAfastamento === d.label
                   ? "border-primary bg-secondary text-secondary-foreground"
                   : "border-border text-foreground hover:bg-muted"
               }`}
             >
-              {d}
+              <span className="block text-sm font-semibold">{d.label}</span>
+              <span className="block text-xs text-primary font-bold mt-1">{d.preco}</span>
             </button>
           ))}
         </div>
