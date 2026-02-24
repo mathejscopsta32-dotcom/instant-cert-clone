@@ -2,6 +2,12 @@ import { useState } from "react";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
+import imgSocorromed from "@/assets/hospitals/socorromed.png";
+import imgUpa24h from "@/assets/hospitals/upa24h.png";
+import imgSus from "@/assets/hospitals/sus.png";
+import imgUnimed from "@/assets/hospitals/unimed.png";
+import imgHapvida from "@/assets/hospitals/hapvida.png";
+import imgUbs from "@/assets/hospitals/ubs.png";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -32,6 +38,15 @@ const inicioOpcoes = [
   { value: "hoje", label: "Hoje" },
   { value: "ontem", label: "Ontem" },
   { value: "personalizado", label: "Personalizado" },
+];
+
+const hospitaisOpcoes = [
+  { value: "UBS", label: "UBS", img: imgUbs },
+  { value: "UPA 24h", label: "UPA 24h", img: imgUpa24h },
+  { value: "SUS", label: "SUS", img: imgSus },
+  { value: "Unimed", label: "Unimed", img: imgUnimed },
+  { value: "Hapvida", label: "Hapvida", img: imgHapvida },
+  { value: "Socorromed", label: "Socorromed", img: imgSocorromed },
 ];
 
 const estadosBR = [
@@ -185,14 +200,25 @@ const StepDetalhes = ({ formData, updateForm, errors }: Props) => {
 
       {/* Hospital de Preferência */}
       <div>
-        <Label htmlFor="hospital">Hospital de Preferência</Label>
-        <Input
-          id="hospital"
-          placeholder="Ex: Hospital São Luiz, UPA Central..."
-          value={formData.hospitalPreferencia}
-          onChange={(e) => updateForm({ hospitalPreferencia: e.target.value })}
-          className="mt-2"
-        />
+        <Label>Hospital de Preferência *</Label>
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mt-2">
+          {hospitaisOpcoes.map((h) => (
+            <button
+              key={h.value}
+              type="button"
+              onClick={() => updateForm({ hospitalPreferencia: h.value })}
+              className={`p-4 rounded-xl border flex flex-col items-center gap-2 transition-colors ${
+                formData.hospitalPreferencia === h.value
+                  ? "border-primary bg-secondary text-secondary-foreground ring-2 ring-primary/20"
+                  : "border-border text-foreground hover:bg-muted"
+              }`}
+            >
+              <img src={h.img} alt={h.label} className="h-10 object-contain" />
+              <span className="text-xs font-semibold">{h.label}</span>
+            </button>
+          ))}
+        </div>
+        {errors.hospitalPreferencia && <p className="text-xs text-destructive mt-1">{errors.hospitalPreferencia}</p>}
       </div>
 
       {/* Cidade e Estado */}

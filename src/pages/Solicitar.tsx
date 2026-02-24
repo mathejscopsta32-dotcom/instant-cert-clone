@@ -23,6 +23,10 @@ export interface FormData {
   hospitalPreferencia: string;
   cidade: string;
   estado: string;
+  addonCid: boolean;
+  addonQrCode: boolean;
+  addonPacote3: boolean;
+  aceitaTermos: boolean;
 }
 
 const initialFormData: FormData = {
@@ -40,6 +44,10 @@ const initialFormData: FormData = {
   hospitalPreferencia: "",
   cidade: "",
   estado: "",
+  addonCid: false,
+  addonQrCode: false,
+  addonPacote3: false,
+  aceitaTermos: false,
 };
 
 const stepsMeta = [
@@ -99,6 +107,11 @@ const Solicitar = () => {
       if (!formData.diasAfastamento) newErrors.diasAfastamento = "Selecione os dias de afastamento";
       if (!formData.cidade.trim()) newErrors.cidade = "Cidade é obrigatória";
       if (!formData.estado) newErrors.estado = "Estado é obrigatório";
+      if (!formData.hospitalPreferencia) newErrors.hospitalPreferencia = "Selecione um hospital";
+    }
+
+    if (step === 3) {
+      if (!formData.aceitaTermos) newErrors.aceitaTermos = "Você precisa aceitar os termos para continuar";
     }
 
     setErrors(newErrors);
@@ -228,7 +241,14 @@ const Solicitar = () => {
           {currentStep === 2 && (
             <StepDetalhes formData={formData} updateForm={updateForm} errors={errors} />
           )}
-          {currentStep === 3 && <StepRevisao formData={formData} />}
+          {currentStep === 3 && (
+            <StepRevisao
+              formData={formData}
+              updateForm={updateForm}
+              onFinalize={handleNext}
+              errors={errors}
+            />
+          )}
           {currentStep === 4 && (
             <StepPagamento formData={formData} onPaymentConfirmed={handlePaymentConfirmed} />
           )}
@@ -265,9 +285,9 @@ const Solicitar = () => {
               ) : (
                 <button
                   onClick={handleNext}
-                  className="inline-flex items-center gap-2 bg-primary text-primary-foreground px-6 py-2.5 rounded-lg font-semibold hover:opacity-90 transition-opacity text-sm"
+                  className="inline-flex items-center gap-2 bg-primary text-primary-foreground px-6 py-3 rounded-lg font-semibold hover:opacity-90 transition-opacity text-sm"
                 >
-                  Ir para Pagamento
+                  Finalizar Pedido
                   <CreditCard className="w-4 h-4" />
                 </button>
               )}
