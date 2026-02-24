@@ -3,6 +3,7 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { Check, Clock, Copy, ShieldCheck, QrCode, AlertCircle } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import type { FormData } from "@/pages/Solicitar";
+import { diasOpcoes } from "@/components/solicitar/StepDetalhes";
 
 const PIX_KEY = "00020126580014br.gov.bcb.pix0136a1b2c3d4-e5f6-7890-abcd-ef1234567890520400005303986540529.005802BR5925ATESTADO24H SERVICOS MED6009SAO PAULO62070503***6304";
 
@@ -61,6 +62,8 @@ const Pagamento = () => {
   const handleConfirmPayment = () => {
     setPaymentConfirmed(true);
   };
+
+  const precoSelecionado = diasOpcoes.find(d => d.label === formData?.diasAfastamento)?.preco || "R$ 29,99";
 
   if (!formData) return null;
 
@@ -185,7 +188,7 @@ const Pagamento = () => {
 
               <div className="border-t mt-4 pt-4 flex items-center justify-between">
                 <span className="text-sm font-medium text-muted-foreground">Total</span>
-                <span className="text-2xl font-extrabold text-primary">R$ 29,00</span>
+                <span className="text-2xl font-extrabold text-primary">{precoSelecionado}</span>
               </div>
             </div>
 

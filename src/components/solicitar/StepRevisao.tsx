@@ -2,6 +2,7 @@ import { ShieldCheck } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import type { FormData } from "@/pages/Solicitar";
+import { diasOpcoes } from "./StepDetalhes";
 
 interface Props {
   formData: FormData;
@@ -68,9 +69,11 @@ const StepRevisao = ({ formData }: Props) => {
         <div className="bg-secondary rounded-xl p-4 flex items-center justify-between">
           <div>
             <p className="text-sm font-bold text-foreground">Valor Total</p>
-            <p className="text-xs text-muted-foreground">Pagamento via PIX ou Cartão</p>
+            <p className="text-xs text-muted-foreground">Pagamento via PIX</p>
           </div>
-          <p className="text-2xl font-extrabold text-primary">R$ 29</p>
+          <p className="text-2xl font-extrabold text-primary">
+            {diasOpcoes.find(d => d.label === formData.diasAfastamento)?.preco || "R$ 29,99"}
+          </p>
         </div>
 
         <div className="flex items-center gap-2 text-xs text-muted-foreground">
