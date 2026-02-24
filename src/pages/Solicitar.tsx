@@ -105,8 +105,7 @@ const Solicitar = () => {
   };
 
   const handleSubmit = () => {
-    alert("Solicitação enviada com sucesso! Você receberá um e-mail com as instruções de pagamento.");
-    navigate("/");
+    navigate("/pagamento", { state: { formData } });
   };
 
   return (
