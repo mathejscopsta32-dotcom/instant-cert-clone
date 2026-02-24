@@ -63,7 +63,7 @@ const Pagamento = () => {
     setPaymentConfirmed(true);
   };
 
-  const precoSelecionado = diasOpcoes.find(d => d.label === formData?.diasAfastamento)?.preco || "R$ 29,99";
+  const precoSelecionado = diasOpcoes.find(d => d.label === formData?.diasAfastamento)?.preco || "R$ 39,90";
 
   if (!formData) return null;
 

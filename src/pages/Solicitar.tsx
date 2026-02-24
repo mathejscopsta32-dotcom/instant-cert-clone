@@ -16,10 +16,13 @@ export interface FormData {
   dataNascimento: string;
   sintomas: string[];
   outrosSintomas: string;
-  finalidade: string;
-  dataInicio: Date | undefined;
+  inicioSintomas: string;
+  inicioSintomasData: Date | undefined;
   diasAfastamento: string;
   observacoes: string;
+  hospitalPreferencia: string;
+  cidade: string;
+  estado: string;
 }
 
 const initialFormData: FormData = {
@@ -30,10 +33,13 @@ const initialFormData: FormData = {
   dataNascimento: "",
   sintomas: [],
   outrosSintomas: "",
-  finalidade: "",
-  dataInicio: undefined,
+  inicioSintomas: "",
+  inicioSintomasData: undefined,
   diasAfastamento: "",
   observacoes: "",
+  hospitalPreferencia: "",
+  cidade: "",
+  estado: "",
 };
 
 const stepsMeta = [
@@ -85,9 +91,11 @@ const Solicitar = () => {
     }
 
     if (step === 2) {
-      if (!formData.finalidade) newErrors.finalidade = "Selecione a finalidade";
-      if (!formData.dataInicio) newErrors.dataInicio = "Selecione a data de início";
+      if (!formData.inicioSintomas) newErrors.inicioSintomas = "Selecione quando começaram os sintomas";
+      if (formData.inicioSintomas === "personalizado" && !formData.inicioSintomasData) newErrors.inicioSintomasData = "Selecione a data personalizada";
       if (!formData.diasAfastamento) newErrors.diasAfastamento = "Selecione os dias de afastamento";
+      if (!formData.cidade.trim()) newErrors.cidade = "Cidade é obrigatória";
+      if (!formData.estado) newErrors.estado = "Estado é obrigatório";
     }
 
     setErrors(newErrors);
