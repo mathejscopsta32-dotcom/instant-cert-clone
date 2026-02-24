@@ -5,6 +5,10 @@ import type { FormData } from "@/pages/Solicitar";
 import { diasOpcoes } from "./StepDetalhes";
 import { generatePixPayload } from "@/lib/pix";
 
+const ADDON_CID_PRICE = 9.9;
+const ADDON_QR_PRICE = 9.9;
+const ADDON_PACOTE_PRICE = 39.9;
+
 interface Props {
   formData: FormData;
   onPaymentConfirmed: () => void;
@@ -17,8 +21,14 @@ const StepPagamento = ({ formData, onPaymentConfirmed }: Props) => {
   const [copied, setCopied] = useState(false);
 
   const selected = diasOpcoes.find((d) => d.label === formData.diasAfastamento);
-  const amount = selected?.valor || 39.9;
-  const precoLabel = selected?.preco || "R$ 39,90";
+  const basePrice = selected?.valor || 39.9;
+
+  let amount = basePrice;
+  if (formData.addonCid) amount += ADDON_CID_PRICE;
+  if (formData.addonQrCode) amount += ADDON_QR_PRICE;
+  if (formData.addonPacote3) amount += ADDON_PACOTE_PRICE;
+
+  const precoLabel = `R$ ${amount.toFixed(2).replace(".", ",")}`;
 
   const pixPayload = generatePixPayload({
     pixKey: PIX_KEY,
