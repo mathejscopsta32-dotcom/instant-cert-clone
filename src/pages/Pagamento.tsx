@@ -5,7 +5,7 @@ import Navbar from "@/components/Navbar";
 import type { FormData } from "@/pages/Solicitar";
 import { diasOpcoes } from "@/components/solicitar/StepDetalhes";
 
-const PIX_KEY = "00020126580014br.gov.bcb.pix0136a1b2c3d4-e5f6-7890-abcd-ef1234567890520400005303986540529.005802BR5925ATESTADO24H SERVICOS MED6009SAO PAULO62070503***6304";
+const PIX_KEY = "c3a20682-cc6f-4a3c-ae81-982b97780dc6";
 
 const Pagamento = () => {
   const navigate = useNavigate();
