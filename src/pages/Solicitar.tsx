@@ -1,12 +1,12 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { z } from "zod";
-import { ArrowLeft, ArrowRight, CheckCircle2, ShieldCheck, User, FileText, Stethoscope, CreditCard } from "lucide-react";
+import { ArrowLeft, ArrowRight, CheckCircle2, ShieldCheck, User, FileText, Stethoscope, CreditCard, Check } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import StepDadosPessoais from "@/components/solicitar/StepDadosPessoais";
 import StepSintomas from "@/components/solicitar/StepSintomas";
 import StepDetalhes from "@/components/solicitar/StepDetalhes";
 import StepRevisao from "@/components/solicitar/StepRevisao";
+import StepPagamento from "@/components/solicitar/StepPagamento";
 
 export interface FormData {
   nomeCompleto: string;
@@ -46,18 +46,21 @@ const stepsMeta = [
   { icon: User, label: "Dados Pessoais" },
   { icon: Stethoscope, label: "Sintomas" },
   { icon: FileText, label: "Detalhes" },
-  { icon: CreditCard, label: "Revisão" },
+  { icon: CheckCircle2, label: "Revisão" },
+  { icon: CreditCard, label: "Pagamento" },
 ];
+
+const TOTAL_STEPS = 5;
 
 const Solicitar = () => {
   const [currentStep, setCurrentStep] = useState(0);
   const [formData, setFormData] = useState<FormData>(initialFormData);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [paymentConfirmed, setPaymentConfirmed] = useState(false);
   const navigate = useNavigate();
 
   const updateForm = (updates: Partial<FormData>) => {
     setFormData((prev) => ({ ...prev, ...updates }));
-    // Clear errors for updated fields
     const clearedErrors = { ...errors };
     Object.keys(updates).forEach((key) => delete clearedErrors[key]);
     setErrors(clearedErrors);
@@ -104,7 +107,7 @@ const Solicitar = () => {
 
   const handleNext = () => {
     if (validateStep(currentStep)) {
-      setCurrentStep((prev) => Math.min(prev + 1, 3));
+      setCurrentStep((prev) => Math.min(prev + 1, TOTAL_STEPS - 1));
     }
   };
 
@@ -112,9 +115,42 @@ const Solicitar = () => {
     setCurrentStep((prev) => Math.max(prev - 1, 0));
   };
 
-  const handleSubmit = () => {
-    navigate("/pagamento", { state: { formData } });
+  const handlePaymentConfirmed = () => {
+    setPaymentConfirmed(true);
   };
+
+  // Payment confirmed view
+  if (paymentConfirmed) {
+    return (
+      <div className="min-h-screen bg-hero">
+        <Navbar />
+        <div className="max-w-lg mx-auto px-4 py-20 text-center">
+          <div className="bg-card border rounded-2xl p-8 shadow-sm">
+            <div className="w-16 h-16 mx-auto mb-6 rounded-full bg-primary flex items-center justify-center">
+              <Check className="w-8 h-8 text-primary-foreground" />
+            </div>
+            <h1 className="text-2xl font-bold text-foreground mb-2">Pagamento em Análise!</h1>
+            <p className="text-muted-foreground mb-6">
+              Seu pagamento está sendo processado. Assim que confirmado, seu atestado será
+              enviado para o e-mail <strong className="text-foreground">{formData.email}</strong> em poucos minutos.
+            </p>
+            <div className="bg-muted rounded-xl p-4 text-sm text-muted-foreground mb-6">
+              <p>
+                Caso não receba em até 30 minutos, verifique sua caixa de spam ou entre em contato
+                com nosso suporte.
+              </p>
+            </div>
+            <button
+              onClick={() => navigate("/")}
+              className="inline-flex items-center gap-2 bg-primary text-primary-foreground px-6 py-3 rounded-lg font-semibold hover:opacity-90 transition-opacity"
+            >
+              Voltar ao Início
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-hero">
@@ -193,45 +229,50 @@ const Solicitar = () => {
             <StepDetalhes formData={formData} updateForm={updateForm} errors={errors} />
           )}
           {currentStep === 3 && <StepRevisao formData={formData} />}
+          {currentStep === 4 && (
+            <StepPagamento formData={formData} onPaymentConfirmed={handlePaymentConfirmed} />
+          )}
 
           {/* Navigation Buttons */}
-          <div className="flex justify-between mt-8 pt-6 border-t">
-            {currentStep > 0 ? (
-              <button
-                onClick={handlePrev}
-                className="inline-flex items-center gap-2 border border-border text-foreground px-5 py-2.5 rounded-lg font-semibold hover:bg-muted transition-colors text-sm"
-              >
-                <ArrowLeft className="w-4 h-4" />
-                Voltar
-              </button>
-            ) : (
-              <button
-                onClick={() => navigate("/")}
-                className="inline-flex items-center gap-2 border border-border text-foreground px-5 py-2.5 rounded-lg font-semibold hover:bg-muted transition-colors text-sm"
-              >
-                <ArrowLeft className="w-4 h-4" />
-                Início
-              </button>
-            )}
+          {currentStep < 4 && (
+            <div className="flex justify-between mt-8 pt-6 border-t">
+              {currentStep > 0 ? (
+                <button
+                  onClick={handlePrev}
+                  className="inline-flex items-center gap-2 border border-border text-foreground px-5 py-2.5 rounded-lg font-semibold hover:bg-muted transition-colors text-sm"
+                >
+                  <ArrowLeft className="w-4 h-4" />
+                  Voltar
+                </button>
+              ) : (
+                <button
+                  onClick={() => navigate("/")}
+                  className="inline-flex items-center gap-2 border border-border text-foreground px-5 py-2.5 rounded-lg font-semibold hover:bg-muted transition-colors text-sm"
+                >
+                  <ArrowLeft className="w-4 h-4" />
+                  Início
+                </button>
+              )}
 
-            {currentStep < 3 ? (
-              <button
-                onClick={handleNext}
-                className="inline-flex items-center gap-2 bg-primary text-primary-foreground px-6 py-2.5 rounded-lg font-semibold hover:opacity-90 transition-opacity text-sm"
-              >
-                Próximo
-                <ArrowRight className="w-4 h-4" />
-              </button>
-            ) : (
-              <button
-                onClick={handleSubmit}
-                className="inline-flex items-center gap-2 bg-primary text-primary-foreground px-6 py-2.5 rounded-lg font-semibold hover:opacity-90 transition-opacity text-sm"
-              >
-                Enviar Solicitação
-                <CheckCircle2 className="w-4 h-4" />
-              </button>
-            )}
-          </div>
+              {currentStep < 3 ? (
+                <button
+                  onClick={handleNext}
+                  className="inline-flex items-center gap-2 bg-primary text-primary-foreground px-6 py-2.5 rounded-lg font-semibold hover:opacity-90 transition-opacity text-sm"
+                >
+                  Próximo
+                  <ArrowRight className="w-4 h-4" />
+                </button>
+              ) : (
+                <button
+                  onClick={handleNext}
+                  className="inline-flex items-center gap-2 bg-primary text-primary-foreground px-6 py-2.5 rounded-lg font-semibold hover:opacity-90 transition-opacity text-sm"
+                >
+                  Ir para Pagamento
+                  <CreditCard className="w-4 h-4" />
+                </button>
+              )}
+            </div>
+          )}
         </div>
       </div>
     </div>
