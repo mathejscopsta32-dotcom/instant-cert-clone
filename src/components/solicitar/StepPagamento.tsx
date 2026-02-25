@@ -4,6 +4,7 @@ import { QRCodeSVG } from "qrcode.react";
 import type { FormData } from "@/pages/Solicitar";
 import { diasOpcoes } from "./StepDetalhes";
 import { generatePixPayload } from "@/lib/pix";
+import { supabase } from "@/integrations/supabase/client";
 
 const ADDON_CID_PRICE = 9.9;
 const ADDON_QR_PRICE = 9.9;
@@ -11,7 +12,7 @@ const ADDON_PACOTE_PRICE = 39.9;
 
 interface Props {
   formData: FormData;
-  onPaymentConfirmed: () => void;
+  onPaymentConfirmed: (pedidoId: string) => void;
 }
 
 const PIX_KEY = "566a023b-14b4-4306-aed5-a05f4ec92d26";
@@ -20,6 +21,7 @@ const StepPagamento = ({ formData, onPaymentConfirmed }: Props) => {
   const [timeLeft, setTimeLeft] = useState(30 * 60);
   const [copied, setCopied] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [submitting, setSubmitting] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const selected = diasOpcoes.find((d) => d.label === formData.diasAfastamento);
@@ -81,6 +83,56 @@ const StepPagamento = ({ formData, onPaymentConfirmed }: Props) => {
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) setSelectedFile(file);
+  };
+
+  const handleSubmitPayment = async () => {
+    setSubmitting(true);
+    try {
+      let comprovanteUrl: string | null = null;
+
+      // Upload comprovante if selected
+      if (selectedFile) {
+        const fileExt = selectedFile.name.split(".").pop();
+        const filePath = `${Date.now()}-${Math.random().toString(36).slice(2)}.${fileExt}`;
+        const { error: uploadError } = await supabase.storage
+          .from("comprovantes")
+          .upload(filePath, selectedFile);
+        if (!uploadError) {
+          comprovanteUrl = filePath;
+        }
+      }
+
+      // Insert order
+      const { data, error } = await supabase.from("pedidos").insert({
+        nome_completo: formData.nomeCompleto,
+        cpf: formData.cpf,
+        email: formData.email,
+        telefone: formData.telefone,
+        data_nascimento: formData.dataNascimento || null,
+        sintomas: formData.sintomas,
+        outros_sintomas: formData.outrosSintomas || null,
+        inicio_sintomas: formData.inicioSintomas || null,
+        inicio_sintomas_data: formData.inicioSintomasData?.toISOString() || null,
+        dias_afastamento: formData.diasAfastamento || null,
+        observacoes: formData.observacoes || null,
+        hospital_preferencia: formData.hospitalPreferencia || null,
+        cidade: formData.cidade || null,
+        estado: formData.estado || null,
+        addon_cid: formData.addonCid,
+        addon_qr_code: formData.addonQrCode,
+        addon_pacote3: formData.addonPacote3,
+        valor_total: amount,
+        comprovante_url: comprovanteUrl,
+      }).select("id").single();
+
+      if (error) throw error;
+      onPaymentConfirmed(data.id);
+    } catch (err) {
+      console.error("Erro ao salvar pedido:", err);
+      alert("Erro ao enviar pedido. Tente novamente.");
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -167,23 +219,6 @@ const StepPagamento = ({ formData, onPaymentConfirmed }: Props) => {
         </button>
       </div>
 
-      {/* Verificando pagamento */}
-      <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
-        <Loader2 className="w-4 h-4 animate-spin text-primary" />
-        Verificando pagamento automaticamente...
-      </div>
-
-      {/* Já fiz o pagamento */}
-      <button
-        type="button"
-        onClick={onPaymentConfirmed}
-        disabled={timeLeft === 0}
-        className="w-full inline-flex items-center justify-center gap-2 bg-primary text-primary-foreground px-6 py-3.5 rounded-xl font-semibold hover:opacity-90 transition-opacity disabled:opacity-50 text-sm"
-      >
-        <Check className="w-4 h-4" />
-        Já fiz o pagamento
-      </button>
-
       {/* Enviar comprovante */}
       <div className="bg-muted rounded-xl p-4 space-y-3">
         <div>
@@ -208,6 +243,26 @@ const StepPagamento = ({ formData, onPaymentConfirmed }: Props) => {
           {selectedFile ? selectedFile.name : "Selecionar Arquivo"}
         </button>
       </div>
+
+      {/* Já fiz o pagamento */}
+      <button
+        type="button"
+        onClick={handleSubmitPayment}
+        disabled={timeLeft === 0 || submitting}
+        className="w-full inline-flex items-center justify-center gap-2 bg-primary text-primary-foreground px-6 py-3.5 rounded-xl font-semibold hover:opacity-90 transition-opacity disabled:opacity-50 text-sm"
+      >
+        {submitting ? (
+          <>
+            <Loader2 className="w-4 h-4 animate-spin" />
+            Enviando pedido...
+          </>
+        ) : (
+          <>
+            <Check className="w-4 h-4" />
+            Já fiz o pagamento
+          </>
+        )}
+      </button>
 
       {/* Footer badges */}
       <div className="flex items-center justify-center gap-6 pt-2">

@@ -14,7 +14,84 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      pedidos: {
+        Row: {
+          addon_cid: boolean | null
+          addon_pacote3: boolean | null
+          addon_qr_code: boolean | null
+          cidade: string | null
+          comprovante_url: string | null
+          cpf: string
+          created_at: string
+          data_nascimento: string | null
+          dias_afastamento: string | null
+          email: string
+          estado: string | null
+          hospital_preferencia: string | null
+          id: string
+          inicio_sintomas: string | null
+          inicio_sintomas_data: string | null
+          nome_completo: string
+          observacoes: string | null
+          outros_sintomas: string | null
+          sintomas: string[] | null
+          status: string
+          telefone: string
+          updated_at: string
+          valor_total: number
+        }
+        Insert: {
+          addon_cid?: boolean | null
+          addon_pacote3?: boolean | null
+          addon_qr_code?: boolean | null
+          cidade?: string | null
+          comprovante_url?: string | null
+          cpf: string
+          created_at?: string
+          data_nascimento?: string | null
+          dias_afastamento?: string | null
+          email: string
+          estado?: string | null
+          hospital_preferencia?: string | null
+          id?: string
+          inicio_sintomas?: string | null
+          inicio_sintomas_data?: string | null
+          nome_completo: string
+          observacoes?: string | null
+          outros_sintomas?: string | null
+          sintomas?: string[] | null
+          status?: string
+          telefone: string
+          updated_at?: string
+          valor_total: number
+        }
+        Update: {
+          addon_cid?: boolean | null
+          addon_pacote3?: boolean | null
+          addon_qr_code?: boolean | null
+          cidade?: string | null
+          comprovante_url?: string | null
+          cpf?: string
+          created_at?: string
+          data_nascimento?: string | null
+          dias_afastamento?: string | null
+          email?: string
+          estado?: string | null
+          hospital_preferencia?: string | null
+          id?: string
+          inicio_sintomas?: string | null
+          inicio_sintomas_data?: string | null
+          nome_completo?: string
+          observacoes?: string | null
+          outros_sintomas?: string | null
+          sintomas?: string[] | null
+          status?: string
+          telefone?: string
+          updated_at?: string
+          valor_total?: number
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

@@ -65,7 +65,6 @@ const Solicitar = () => {
   const [currentStep, setCurrentStep] = useState(0);
   const [formData, setFormData] = useState<FormData>(initialFormData);
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const [paymentConfirmed, setPaymentConfirmed] = useState(false);
   const navigate = useNavigate();
 
   const updateForm = (updates: Partial<FormData>) => {
@@ -129,55 +128,9 @@ const Solicitar = () => {
     setCurrentStep((prev) => Math.max(prev - 1, 0));
   };
 
-  const handlePaymentConfirmed = () => {
-    setPaymentConfirmed(true);
+  const handlePaymentConfirmed = (pedidoId: string) => {
+    navigate(`/meu-pedido?id=${pedidoId}`);
   };
-
-  const handleDownloadPDF = () => {
-    const doc = generateAtestadoPDF(formData);
-    doc.save(`atestado-${formData.nomeCompleto.replace(/\s+/g, "_").toLowerCase()}.pdf`);
-  };
-
-  // Payment confirmed view
-  if (paymentConfirmed) {
-    return (
-      <div className="min-h-screen bg-hero">
-        <Navbar />
-        <div className="max-w-lg mx-auto px-4 py-20 text-center">
-          <div className="bg-card border rounded-2xl p-8 shadow-sm">
-            <div className="w-16 h-16 mx-auto mb-6 rounded-full bg-primary flex items-center justify-center">
-              <Check className="w-8 h-8 text-primary-foreground" />
-            </div>
-            <h1 className="text-2xl font-bold text-foreground mb-2">Pagamento Confirmado!</h1>
-            <p className="text-muted-foreground mb-6">
-              Seu atestado médico foi gerado com sucesso. Clique no botão abaixo para fazer o download do seu documento.
-            </p>
-
-            <button
-              onClick={handleDownloadPDF}
-              className="w-full inline-flex items-center justify-center gap-2 bg-primary text-primary-foreground px-6 py-3.5 rounded-xl font-semibold hover:opacity-90 transition-opacity mb-4"
-            >
-              <Download className="w-5 h-5" />
-              Baixar Atestado em PDF
-            </button>
-
-            <div className="bg-muted rounded-xl p-4 text-sm text-muted-foreground mb-6">
-              <p>
-                Uma cópia também será enviada para o e-mail <strong className="text-foreground">{formData.email}</strong>.
-                Caso não receba, verifique sua caixa de spam.
-              </p>
-            </div>
-            <button
-              onClick={() => navigate("/")}
-              className="inline-flex items-center gap-2 border border-border text-foreground px-6 py-3 rounded-lg font-semibold hover:bg-muted transition-colors"
-            >
-              Voltar ao Início
-            </button>
-          </div>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-secondary/60 via-background to-background">
