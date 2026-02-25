@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { CheckCircle2, XCircle, Eye, Loader2, RefreshCw, LogOut, MousePointerClick, Key, Save } from "lucide-react";
+import { CheckCircle2, XCircle, Eye, Loader2, RefreshCw, LogOut, MousePointerClick, Key, Save, Trash2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
@@ -133,6 +133,22 @@ const Admin = () => {
   const generateRandomPixKey = () => {
     const uuid = crypto.randomUUID();
     setPixKeyInput(uuid);
+  };
+
+  const handleDeleteAllClicks = async () => {
+    if (!confirm("Tem certeza que deseja apagar TODOS os clicks?")) return;
+    setClicksLoading(true);
+    await supabase.from("click_events").delete().neq("id", "00000000-0000-0000-0000-000000000000");
+    setClicks([]);
+    setClicksLoading(false);
+  };
+
+  const handleDeleteAllPedidos = async () => {
+    if (!confirm("Tem certeza que deseja apagar TODOS os pedidos? Esta ação não pode ser desfeita.")) return;
+    setLoading(true);
+    await supabase.from("pedidos").delete().neq("id", "00000000-0000-0000-0000-000000000000");
+    setPedidos([]);
+    setLoading(false);
   };
 
   const statusBadge = (status: string) => {
