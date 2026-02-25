@@ -53,6 +53,53 @@
     --sidebar-border: 220 13% 91%;
     --sidebar-ring: 217.2 91.2% 59.8%;
   }
+
+  .dark {
+    --background: 160 10% 10%;
+    --foreground: 0 0% 92%;
+
+    --card: 160 8% 14%;
+    --card-foreground: 0 0% 92%;
+
+    --popover: 160 8% 14%;
+    --popover-foreground: 0 0% 92%;
+
+    --primary: 152 60% 40%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 160 10% 18%;
+    --secondary-foreground: 150 20% 80%;
+
+    --muted: 160 8% 18%;
+    --muted-foreground: 160 5% 55%;
+
+    --accent: 152 60% 40%;
+    --accent-foreground: 0 0% 100%;
+
+    --destructive: 0 62% 50%;
+    --destructive-foreground: 0 0% 98%;
+
+    --border: 160 8% 22%;
+    --input: 160 8% 22%;
+    --ring: 152 60% 40%;
+
+    --hero-bg: 160 10% 12%;
+    --badge-bg: 160 10% 18%;
+    --badge-text: 152 60% 50%;
+    --step-number-bg: 152 60% 40%;
+    --step-number-text: 0 0% 100%;
+    --highlight: 152 60% 40%;
+    --star: 45 100% 51%;
+
+    --sidebar-background: 160 10% 10%;
+    --sidebar-foreground: 0 0% 92%;
+    --sidebar-primary: 0 0% 92%;
+    --sidebar-primary-foreground: 160 10% 10%;
+    --sidebar-accent: 160 8% 18%;
+    --sidebar-accent-foreground: 0 0% 92%;
+    --sidebar-border: 160 8% 22%;
+    --sidebar-ring: 152 60% 40%;
+  }
 }
 
 @layer base {
