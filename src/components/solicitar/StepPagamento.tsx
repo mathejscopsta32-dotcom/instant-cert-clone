@@ -14,7 +14,7 @@ interface Props {
   onPaymentConfirmed: () => void;
 }
 
-const PIX_KEY = "c3a20682-cc6f-4a3c-ae81-982b97780dc6";
+const PIX_KEY = "566a023b-14b4-4306-aed5-a05f4ec92d26";
 
 const StepPagamento = ({ formData, onPaymentConfirmed }: Props) => {
   const [timeLeft, setTimeLeft] = useState(30 * 60);
