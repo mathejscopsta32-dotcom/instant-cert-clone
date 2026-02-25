@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Lock, Loader2, AlertCircle } from "lucide-react";
 
@@ -8,7 +7,6 @@ const AdminLogin = () => {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const navigate = useNavigate();
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -41,7 +39,8 @@ const AdminLogin = () => {
       return;
     }
 
-    navigate("/admin");
+    // Force full page load to ensure auth state is propagated
+    window.location.href = "/admin";
   };
 
   return (

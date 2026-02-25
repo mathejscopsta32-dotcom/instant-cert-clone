@@ -23,7 +23,7 @@ interface Pedido {
 interface ClickEvent {
   id: string;
   page: string;
-  element: string | null;
+  city: string | null;
   element_text: string | null;
   created_at: string;
 }
@@ -173,9 +173,10 @@ const Admin = () => {
     </div>
   );
 
-  // Click stats
-  const clicksByPage = clicks.reduce<Record<string, number>>((acc, c) => {
-    acc[c.page] = (acc[c.page] || 0) + 1;
+  // Click stats by city
+  const clicksByCity = clicks.reduce<Record<string, number>>((acc, c) => {
+    const city = c.city || "Desconhecida";
+    acc[city] = (acc[city] || 0) + 1;
     return acc;
   }, {});
 
@@ -256,17 +257,17 @@ const Admin = () => {
               : (
                 <div className="space-y-6">
                   {/* Summary by page */}
-                  <div className="bg-card border rounded-xl p-5">
-                    <h3 className="font-bold text-foreground mb-3">Clicks por Página</h3>
-                    <div className="space-y-2">
-                      {Object.entries(clicksByPage).sort((a, b) => b[1] - a[1]).map(([page, count]) => (
-                        <div key={page} className="flex items-center justify-between text-sm">
-                          <span className="text-muted-foreground font-mono">{page}</span>
-                          <span className="font-bold text-primary">{count}</span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
+                   <div className="bg-card border rounded-xl p-5">
+                     <h3 className="font-bold text-foreground mb-3">Clicks por Cidade</h3>
+                     <div className="space-y-2">
+                       {Object.entries(clicksByCity).sort((a, b) => b[1] - a[1]).map(([city, count]) => (
+                         <div key={city} className="flex items-center justify-between text-sm">
+                           <span className="text-muted-foreground">{city}</span>
+                           <span className="font-bold text-primary">{count}</span>
+                         </div>
+                       ))}
+                     </div>
+                   </div>
 
                   {/* Recent clicks table */}
                   <div className="bg-card border rounded-xl overflow-hidden">
@@ -275,23 +276,23 @@ const Admin = () => {
                     </div>
                     <div className="overflow-x-auto">
                       <table className="w-full text-sm">
-                        <thead>
-                          <tr className="border-b bg-muted/50">
-                            <th className="text-left p-3 font-semibold text-muted-foreground">Página</th>
-                            <th className="text-left p-3 font-semibold text-muted-foreground">Elemento</th>
-                            <th className="text-left p-3 font-semibold text-muted-foreground">Texto</th>
-                            <th className="text-left p-3 font-semibold text-muted-foreground">Data/Hora</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {clicks.map(c => (
-                            <tr key={c.id} className="border-b last:border-0 hover:bg-muted/30">
-                              <td className="p-3 font-mono text-xs">{c.page}</td>
-                              <td className="p-3 font-mono text-xs max-w-[200px] truncate">{c.element}</td>
-                              <td className="p-3 text-xs max-w-[200px] truncate">{c.element_text || "—"}</td>
-                              <td className="p-3 text-xs text-muted-foreground whitespace-nowrap">
-                                {format(new Date(c.created_at), "dd/MM HH:mm:ss", { locale: ptBR })}
-                              </td>
+                         <thead>
+                           <tr className="border-b bg-muted/50">
+                             <th className="text-left p-3 font-semibold text-muted-foreground">Página</th>
+                             <th className="text-left p-3 font-semibold text-muted-foreground">Cidade</th>
+                             <th className="text-left p-3 font-semibold text-muted-foreground">Texto</th>
+                             <th className="text-left p-3 font-semibold text-muted-foreground">Data/Hora</th>
+                           </tr>
+                         </thead>
+                         <tbody>
+                           {clicks.map(c => (
+                             <tr key={c.id} className="border-b last:border-0 hover:bg-muted/30">
+                               <td className="p-3 font-mono text-xs">{c.page}</td>
+                               <td className="p-3 text-xs">{c.city || "—"}</td>
+                               <td className="p-3 text-xs max-w-[200px] truncate">{c.element_text || "—"}</td>
+                               <td className="p-3 text-xs text-muted-foreground whitespace-nowrap">
+                                 {format(new Date(c.created_at), "dd/MM HH:mm:ss", { locale: ptBR })}
+                               </td>
                             </tr>
                           ))}
                         </tbody>

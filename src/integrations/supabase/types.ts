@@ -16,6 +16,7 @@ export type Database = {
     Tables: {
       click_events: {
         Row: {
+          city: string | null
           created_at: string
           element: string | null
           element_text: string | null
@@ -23,6 +24,7 @@ export type Database = {
           page: string
         }
         Insert: {
+          city?: string | null
           created_at?: string
           element?: string | null
           element_text?: string | null
@@ -30,6 +32,7 @@ export type Database = {
           page: string
         }
         Update: {
+          city?: string | null
           created_at?: string
           element?: string | null
           element_text?: string | null

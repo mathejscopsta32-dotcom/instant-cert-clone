@@ -136,7 +136,8 @@ const Solicitar = () => {
       console.warn("Não foi possível salvar os dados localmente:", error);
     }
 
-    navigate(`/meu-pedido?id=${pedidoId}`);
+    // Force full page load to ensure fresh data fetch
+    window.location.href = `/meu-pedido?id=${pedidoId}`;
   };
 
   return (
