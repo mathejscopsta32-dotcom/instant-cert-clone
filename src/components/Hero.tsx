@@ -42,6 +42,17 @@ const Hero = () => {
               </li>
             </ul>
 
+            {/* Doctor highlight */}
+            <div className="flex items-center gap-3 bg-card border border-border rounded-xl px-4 py-3 w-fit">
+              <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+                <ShieldCheck className="w-5 h-5 text-primary" />
+              </div>
+              <div>
+                <p className="text-sm font-bold text-foreground">Dr. Carlos Eduardo Mendes</p>
+                <p className="text-xs text-muted-foreground">CRM/SP 142.857 — Clínico Geral</p>
+              </div>
+            </div>
+
             <div className="flex flex-wrap gap-3 pt-2">
               <Link
                 to="/solicitar"
