@@ -59,6 +59,27 @@ export type Database = {
         }
         Relationships: []
       }
+      comprovante_hashes: {
+        Row: {
+          created_at: string
+          hash: string
+          id: string
+          pedido_id: string
+        }
+        Insert: {
+          created_at?: string
+          hash: string
+          id?: string
+          pedido_id: string
+        }
+        Update: {
+          created_at?: string
+          hash?: string
+          id?: string
+          pedido_id?: string
+        }
+        Relationships: []
+      }
       pedidos: {
         Row: {
           addon_cid: boolean | null

@@ -23,6 +23,9 @@ const StepPagamento = ({ formData, onPaymentConfirmed }: Props) => {
   const [copied, setCopied] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [validating, setValidating] = useState(false);
+  const [validationError, setValidationError] = useState<string | null>(null);
+  const [comprovanteHash, setComprovanteHash] = useState<string | null>(null);
   const [pixKey, setPixKey] = useState(FALLBACK_PIX_KEY);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -94,9 +97,44 @@ const StepPagamento = ({ formData, onPaymentConfirmed }: Props) => {
     fileInputRef.current?.click();
   };
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    if (file) setSelectedFile(file);
+    if (!file) return;
+    setSelectedFile(file);
+    setValidationError(null);
+    setComprovanteHash(null);
+    setValidating(true);
+
+    try {
+      const form = new FormData();
+      form.append("file", file);
+      const response = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/validate-comprovante`,
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+          },
+          body: form,
+        }
+      );
+      const result = await response.json();
+      if (result.valid) {
+        setComprovanteHash(result.hash);
+        setValidationError(null);
+      } else {
+        setValidationError(result.reason || "Comprovante inválido.");
+        setSelectedFile(null);
+        if (fileInputRef.current) fileInputRef.current.value = "";
+      }
+    } catch (err) {
+      console.error("Validation error:", err);
+      // If validation fails, still allow (don't block)
+      setComprovanteHash(null);
+      setValidationError(null);
+    } finally {
+      setValidating(false);
+    }
   };
 
   const handleSubmitPayment = async () => {
@@ -161,6 +199,15 @@ const StepPagamento = ({ formData, onPaymentConfirmed }: Props) => {
       } as any);
 
       if (error) throw error;
+
+      // Save comprovante hash for duplicate detection
+      if (comprovanteHash) {
+        await supabase.from("comprovante_hashes").insert({
+          hash: comprovanteHash,
+          pedido_id: pedidoId,
+        } as any);
+      }
+
       onPaymentConfirmed(pedidoId);
     } catch (err) {
       console.error("Erro ao salvar pedido:", err);
@@ -280,15 +327,33 @@ const StepPagamento = ({ formData, onPaymentConfirmed }: Props) => {
         <button
           type="button"
           onClick={handleFileSelect}
-          className="w-full inline-flex items-center justify-center gap-2 border border-border text-foreground px-4 py-3 rounded-xl font-semibold text-sm hover:bg-secondary transition-colors"
+          disabled={validating}
+          className="w-full inline-flex items-center justify-center gap-2 border border-border text-foreground px-4 py-3 rounded-xl font-semibold text-sm hover:bg-secondary transition-colors disabled:opacity-50"
         >
-          <Upload className="w-4 h-4" />
-          {selectedFile ? selectedFile.name : "Selecionar Arquivo"}
+          {validating ? (
+            <>
+              <Loader2 className="w-4 h-4 animate-spin" />
+              Validando comprovante...
+            </>
+          ) : (
+            <>
+              <Upload className="w-4 h-4" />
+              {selectedFile ? selectedFile.name : "Selecionar Arquivo"}
+            </>
+          )}
         </button>
       </div>
 
+      {/* Validation error */}
+      {validationError && (
+        <div className="bg-red-50 border border-red-300 rounded-xl p-4 flex items-start gap-3">
+          <AlertCircle className="w-5 h-5 text-red-600 shrink-0 mt-0.5" />
+          <p className="text-sm text-red-800 font-medium">{validationError}</p>
+        </div>
+      )}
+
       {/* Aviso comprovante obrigatório */}
-      {!selectedFile && (
+      {!selectedFile && !validationError && (
         <div className="bg-red-50 border border-red-300 rounded-xl p-4 flex items-start gap-3">
           <AlertCircle className="w-5 h-5 text-red-600 shrink-0 mt-0.5" />
           <p className="text-sm text-red-800 font-medium">
@@ -301,7 +366,7 @@ const StepPagamento = ({ formData, onPaymentConfirmed }: Props) => {
       <button
         type="button"
         onClick={handleSubmitPayment}
-        disabled={timeLeft === 0 || submitting || !selectedFile}
+        disabled={timeLeft === 0 || submitting || !selectedFile || validating || !!validationError}
         className="w-full inline-flex items-center justify-center gap-2 bg-primary text-primary-foreground px-6 py-3.5 rounded-xl font-semibold hover:opacity-90 transition-opacity disabled:opacity-50 text-sm"
       >
         {submitting ? (
