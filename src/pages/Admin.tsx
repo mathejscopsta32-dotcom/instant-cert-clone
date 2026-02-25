@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { CheckCircle2, XCircle, Eye, Loader2, RefreshCw, LogOut, MousePointerClick, Key, Save, Trash2 } from "lucide-react";
+import { CheckCircle2, XCircle, Eye, Loader2, RefreshCw, LogOut, MousePointerClick, Key, Save, Trash2, Sun, Moon } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
@@ -258,6 +258,17 @@ const Admin = () => {
         <div className="flex items-center justify-between mb-8">
           <h1 className="text-2xl font-bold text-foreground">Painel Admin</h1>
           <div className="flex items-center gap-3">
+            <button
+              onClick={() => {
+                const html = document.documentElement;
+                html.classList.toggle("dark");
+              }}
+              className="inline-flex items-center justify-center w-9 h-9 rounded-lg border border-border hover:bg-muted transition-colors"
+              title="Alternar tema"
+            >
+              <Sun className="w-4 h-4 hidden dark:block" />
+              <Moon className="w-4 h-4 block dark:hidden" />
+            </button>
             <button onClick={() => { fetchPedidos(); if (activeTab === "clicks") fetchClicks(); }} className="inline-flex items-center gap-2 text-sm text-primary font-semibold hover:underline">
               <RefreshCw className="w-4 h-4" /> Atualizar
             </button>
