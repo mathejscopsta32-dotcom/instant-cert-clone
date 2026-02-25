@@ -243,11 +243,6 @@ const Admin = () => {
     </div>
   );
 
-  const clicksByCity = clicks.reduce<Record<string, number>>((acc, c) => {
-    const city = c.city || "Desconhecida";
-    acc[city] = (acc[city] || 0) + 1;
-    return acc;
-  }, {});
 
   if (authChecking) {
     return (
@@ -339,18 +334,6 @@ const Admin = () => {
               ? renderEmptyState("Nenhum click registrado ainda.")
               : (
                 <div className="space-y-6">
-                  <div className="bg-card border rounded-xl p-5">
-                    <h3 className="font-bold text-foreground mb-3">Clicks por Cidade</h3>
-                    <div className="space-y-2">
-                      {Object.entries(clicksByCity).sort((a, b) => b[1] - a[1]).map(([city, count]) => (
-                        <div key={city} className="flex items-center justify-between text-sm">
-                          <span className="text-muted-foreground">{city}</span>
-                          <span className="font-bold text-primary">{count}</span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-
                   <div className="bg-card border rounded-xl overflow-hidden">
                     <div className="p-4 border-b">
                       <h3 className="font-bold text-foreground">Últimos Clicks ({clicks.length})</h3>
