@@ -102,8 +102,10 @@ const StepPagamento = ({ formData, onPaymentConfirmed }: Props) => {
         }
       }
 
-      // Insert order
-      const { data, error } = await supabase.from("pedidos").insert({
+      // Insert order without SELECT return (base table SELECT is admin-only)
+      const pedidoId = crypto.randomUUID();
+      const { error } = await supabase.from("pedidos").insert({
+        id: pedidoId,
         nome_completo: formData.nomeCompleto,
         cpf: formData.cpf,
         email: formData.email,
@@ -123,10 +125,10 @@ const StepPagamento = ({ formData, onPaymentConfirmed }: Props) => {
         addon_pacote3: formData.addonPacote3,
         valor_total: amount,
         comprovante_url: comprovanteUrl,
-      }).select("id").single();
+      });
 
       if (error) throw error;
-      onPaymentConfirmed(data.id);
+      onPaymentConfirmed(pedidoId);
     } catch (err) {
       console.error("Erro ao salvar pedido:", err);
       alert("Erro ao enviar pedido. Tente novamente.");
