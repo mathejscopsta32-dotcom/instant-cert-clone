@@ -10,18 +10,18 @@ interface Props {
 }
 
 const sintomasOpcoes = [
-  "🤕 Dor de cabeça / Enxaqueca",
+  "🧠 Dor de cabeça / Enxaqueca",
   "🌡️ Febre",
-  "😩 Dor no corpo / Mal-estar",
-  "🤢 Náusea / Vômito",
-  "💩 Diarreia",
-  "🗣️ Dor de garganta",
-  "🤧 Gripe / Resfriado",
-  "🤰 Dor abdominal / Cólica",
-  "😵 Tontura / Vertigem",
-  "🦴 Dor lombar / Costas",
-  "😰 Ansiedade / Crise emocional",
-  "🤧 Alergia",
+  "💊 Dor no corpo / Mal-estar",
+  "⚕️ Náusea / Vômito",
+  "🏥 Diarreia",
+  "🩺 Dor de garganta",
+  "🫁 Gripe / Resfriado",
+  "🩻 Dor abdominal / Cólica",
+  "💉 Tontura / Vertigem",
+  "🦷 Dor lombar / Costas",
+  "🧬 Ansiedade / Crise emocional",
+  "🔬 Alergia",
 ];
 
 const StepSintomas = ({ formData, updateForm, errors }: Props) => {
