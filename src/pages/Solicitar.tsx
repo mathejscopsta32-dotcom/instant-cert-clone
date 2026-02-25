@@ -129,6 +129,8 @@ const Solicitar = () => {
   };
 
   const handlePaymentConfirmed = (pedidoId: string) => {
+    // Store form data locally for PDF generation (base table is restricted)
+    localStorage.setItem(`pedido_form_${pedidoId}`, JSON.stringify(formData));
     navigate(`/meu-pedido?id=${pedidoId}`);
   };
 

@@ -8,25 +8,9 @@ import type { FormData } from "@/pages/Solicitar";
 
 type PedidoStatus = "pendente" | "aprovado" | "rejeitado";
 
-interface Pedido {
+interface PedidoPublic {
   id: string;
   nome_completo: string;
-  cpf: string;
-  email: string;
-  telefone: string;
-  data_nascimento: string | null;
-  sintomas: string[] | null;
-  outros_sintomas: string | null;
-  inicio_sintomas: string | null;
-  inicio_sintomas_data: string | null;
-  dias_afastamento: string | null;
-  observacoes: string | null;
-  hospital_preferencia: string | null;
-  cidade: string | null;
-  estado: string | null;
-  addon_cid: boolean;
-  addon_qr_code: boolean;
-  addon_pacote3: boolean;
   valor_total: number;
   status: PedidoStatus;
   created_at: string;
@@ -60,51 +44,37 @@ const MeuPedido = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const pedidoId = searchParams.get("id");
-  const [pedido, setPedido] = useState<Pedido | null>(null);
+  const [pedido, setPedido] = useState<PedidoPublic | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (!pedidoId) return;
 
     const fetchPedido = async () => {
+      // Query the public view (only exposes name, value, status)
       const { data, error } = await supabase
-        .from("pedidos")
+        .from("pedidos_public" as any)
         .select("*")
         .eq("id", pedidoId)
         .single();
-      if (!error && data) setPedido(data as Pedido);
+      if (!error && data) setPedido(data as unknown as PedidoPublic);
       setLoading(false);
     };
 
     fetchPedido();
-
-    // Poll for status updates every 10 seconds
     const interval = setInterval(fetchPedido, 10000);
     return () => clearInterval(interval);
   }, [pedidoId]);
 
   const handleDownloadPDF = () => {
-    if (!pedido) return;
-    const formData: FormData = {
-      nomeCompleto: pedido.nome_completo,
-      cpf: pedido.cpf,
-      email: pedido.email,
-      telefone: pedido.telefone,
-      dataNascimento: pedido.data_nascimento || "",
-      sintomas: pedido.sintomas || [],
-      outrosSintomas: pedido.outros_sintomas || "",
-      inicioSintomas: pedido.inicio_sintomas || "",
-      inicioSintomasData: pedido.inicio_sintomas_data ? new Date(pedido.inicio_sintomas_data) : undefined,
-      diasAfastamento: pedido.dias_afastamento || "",
-      observacoes: pedido.observacoes || "",
-      hospitalPreferencia: pedido.hospital_preferencia || "",
-      cidade: pedido.cidade || "",
-      estado: pedido.estado || "",
-      addonCid: pedido.addon_cid,
-      addonQrCode: pedido.addon_qr_code,
-      addonPacote3: pedido.addon_pacote3,
-      aceitaTermos: true,
-    };
+    if (!pedido || !pedidoId) return;
+    // Retrieve form data stored locally during order creation
+    const stored = localStorage.getItem(`pedido_form_${pedidoId}`);
+    if (!stored) {
+      alert("Dados do formulário não encontrados. Por favor, entre em contato conosco.");
+      return;
+    }
+    const formData: FormData = JSON.parse(stored);
     const doc = generateAtestadoPDF(formData);
     doc.save(`atestado-${pedido.nome_completo.replace(/\s+/g, "_").toLowerCase()}.pdf`);
   };
@@ -163,7 +133,7 @@ const MeuPedido = () => {
             <p className="text-sm text-muted-foreground mt-2">{config.description}</p>
           </div>
 
-          {/* Order details */}
+          {/* Order details - only name and value */}
           <div className="space-y-3 text-sm mb-6">
             <div className="flex justify-between">
               <span className="text-muted-foreground">Nome</span>
