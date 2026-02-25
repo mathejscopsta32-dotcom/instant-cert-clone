@@ -24,7 +24,7 @@ interface Props {
 }
 
 export const diasOpcoes = [
-  { label: "1 dia", preco: "R$ 39,90", valor: 39.90 },
+  { label: "1 dia", preco: "R$ 29,90", valor: 29.90 },
   { label: "2 dias", preco: "R$ 43,90", valor: 43.90 },
   { label: "3 dias", preco: "R$ 49,90", valor: 49.90 },
   { label: "5 dias", preco: "R$ 59,90", valor: 59.90 },
