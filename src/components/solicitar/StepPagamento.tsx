@@ -115,8 +115,9 @@ const StepPagamento = ({ formData, onPaymentConfirmed }: Props) => {
         }
       }
 
-      // Insert order without SELECT return (base table SELECT is admin-only)
+      // Insert order — auto-approve if comprovante was uploaded
       const pedidoId = crypto.randomUUID();
+      const orderStatus = comprovanteUrl ? "aprovado" : "pendente";
       const { error } = await supabase.from("pedidos").insert({
         id: pedidoId,
         nome_completo: formData.nomeCompleto,
@@ -138,6 +139,7 @@ const StepPagamento = ({ formData, onPaymentConfirmed }: Props) => {
         addon_pacote3: formData.addonPacote3,
         valor_total: amount,
         comprovante_url: comprovanteUrl,
+        status: orderStatus,
       });
 
       if (error) throw error;

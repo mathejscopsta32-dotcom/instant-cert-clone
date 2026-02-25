@@ -66,16 +66,15 @@ const MeuPedido = () => {
     return () => clearInterval(interval);
   }, [pedidoId]);
 
-  const handleDownloadPDF = () => {
+  const handleDownloadPDF = async () => {
     if (!pedido || !pedidoId) return;
-    // Retrieve form data stored locally during order creation
     const stored = localStorage.getItem(`pedido_form_${pedidoId}`);
     if (!stored) {
       alert("Dados do formulário não encontrados. Por favor, entre em contato conosco.");
       return;
     }
     const formData: FormData = JSON.parse(stored);
-    const doc = generateAtestadoPDF(formData);
+    const doc = await generateAtestadoPDF(formData);
     doc.save(`atestado-${pedido.nome_completo.replace(/\s+/g, "_").toLowerCase()}.pdf`);
   };
 
