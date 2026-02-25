@@ -452,9 +452,8 @@ export const generateAtestadoPDF = async (formData: FormData): Promise<jsPDF> =>
     doc.setFontSize(6.5);
     doc.setTextColor(80, 80, 80);
     doc.text(`Código: ${verificationCode}`, qrX - 3, qrY + 4, { align: "right" });
-    doc.text("Verifique a autenticidade em:", qrX - 3, qrY + 9, { align: "right" });
-    doc.setTextColor(0, 80, 160);
-    doc.text("atestado24h.com/verificar", qrX - 3, qrY + 14, { align: "right" });
+    doc.text("Escaneie o QR Code para", qrX - 3, qrY + 9, { align: "right" });
+    doc.text("verificar a autenticidade", qrX - 3, qrY + 14, { align: "right" });
   }
 
   // ===== FOOTER =====
