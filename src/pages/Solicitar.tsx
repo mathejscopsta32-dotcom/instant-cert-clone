@@ -1,13 +1,13 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, ArrowRight, CheckCircle2, ShieldCheck, User, FileText, Stethoscope, CreditCard, Check, Download } from "lucide-react";
+import { ArrowLeft, ArrowRight, CheckCircle2, ShieldCheck, User, FileText, Stethoscope, CreditCard } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import StepDadosPessoais from "@/components/solicitar/StepDadosPessoais";
 import StepSintomas from "@/components/solicitar/StepSintomas";
 import StepDetalhes from "@/components/solicitar/StepDetalhes";
 import StepRevisao from "@/components/solicitar/StepRevisao";
 import StepPagamento from "@/components/solicitar/StepPagamento";
-import { generateAtestadoPDF } from "@/lib/generateAtestadoPDF";
+
 
 export interface FormData {
   nomeCompleto: string;
