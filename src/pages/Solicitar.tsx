@@ -180,72 +180,74 @@ const Solicitar = () => {
   }
 
   return (
-    <div className="min-h-screen bg-hero">
+    <div className="min-h-screen bg-gradient-to-b from-secondary/60 via-background to-background">
       <Navbar />
 
-      <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+      <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12">
         {/* Header */}
-        <div className="text-center mb-8">
-          <span className="inline-flex items-center gap-1.5 bg-badge text-badge-foreground text-xs font-semibold px-3 py-1.5 rounded-full mb-4">
+        <div className="text-center mb-10">
+          <span className="inline-flex items-center gap-1.5 bg-primary/10 text-primary text-xs font-semibold px-4 py-2 rounded-full mb-5 shadow-sm">
             <ShieldCheck className="w-3.5 h-3.5" />
             100% Seguro e Confidencial
           </span>
-          <h1 className="text-2xl md:text-3xl font-bold text-foreground">
+          <h1 className="text-2xl md:text-3xl font-extrabold text-foreground tracking-tight">
             Solicitar Atestado Médico
           </h1>
-          <p className="text-muted-foreground mt-2">
+          <p className="text-muted-foreground mt-2 text-sm md:text-base">
             Preencha o formulário abaixo para solicitar seu atestado médico online.
           </p>
         </div>
 
-        {/* Progress Steps */}
-        <div className="flex items-center justify-between mb-10">
-          {stepsMeta.map((step, i) => (
-            <div key={i} className="flex flex-col items-center flex-1">
-              <div className="flex items-center w-full">
-                {i > 0 && (
-                  <div
-                    className={`h-0.5 flex-1 transition-colors ${
-                      i <= currentStep ? "bg-primary" : "bg-border"
-                    }`}
-                  />
-                )}
+        {/* Progress Steps — pill-style */}
+        <div className="relative mb-10">
+          {/* Background track */}
+          <div className="absolute top-5 left-0 right-0 h-0.5 bg-border mx-10 sm:mx-16" />
+          {/* Active track */}
+          <div
+            className="absolute top-5 left-0 h-0.5 bg-primary transition-all duration-500 mx-10 sm:mx-16"
+            style={{
+              width: `${(currentStep / (TOTAL_STEPS - 1)) * 100}%`,
+              maxWidth: `calc(100% - ${window.innerWidth >= 640 ? 128 : 80}px)`,
+            }}
+          />
+
+          <div className="relative flex items-start justify-between">
+            {stepsMeta.map((step, i) => (
+              <div key={i} className="flex flex-col items-center z-10">
                 <div
-                  className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 transition-colors ${
+                  className={`w-10 h-10 rounded-full flex items-center justify-center transition-all duration-300 shadow-sm ${
                     i < currentStep
-                      ? "bg-primary text-primary-foreground"
+                      ? "bg-primary text-primary-foreground scale-100"
                       : i === currentStep
-                      ? "bg-primary text-primary-foreground"
-                      : "bg-muted text-muted-foreground"
+                      ? "bg-primary text-primary-foreground ring-4 ring-primary/20 scale-110"
+                      : "bg-card text-muted-foreground border-2 border-border"
                   }`}
                 >
                   {i < currentStep ? (
                     <CheckCircle2 className="w-5 h-5" />
                   ) : (
-                    <step.icon className="w-5 h-5" />
+                    <step.icon className="w-4 h-4" />
                   )}
                 </div>
-                {i < stepsMeta.length - 1 && (
-                  <div
-                    className={`h-0.5 flex-1 transition-colors ${
-                      i < currentStep ? "bg-primary" : "bg-border"
-                    }`}
-                  />
-                )}
+                <span
+                  className={`text-[11px] mt-2 font-medium hidden sm:block transition-colors ${
+                    i <= currentStep ? "text-primary" : "text-muted-foreground"
+                  }`}
+                >
+                  {step.label}
+                </span>
               </div>
-              <span
-                className={`text-xs mt-2 font-medium hidden sm:block ${
-                  i <= currentStep ? "text-primary" : "text-muted-foreground"
-                }`}
-              >
-                {step.label}
-              </span>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
 
+        {/* Step counter (mobile) */}
+        <p className="sm:hidden text-center text-xs text-muted-foreground mb-4 font-medium">
+          Etapa {currentStep + 1} de {TOTAL_STEPS} — {stepsMeta[currentStep].label}
+        </p>
+
         {/* Form Card */}
-        <div className="bg-card border rounded-2xl p-6 md:p-8 shadow-sm">
+        <div className="bg-card border border-border/60 rounded-2xl p-6 md:p-10 shadow-lg shadow-primary/5">
           {currentStep === 0 && (
             <StepDadosPessoais formData={formData} updateForm={updateForm} errors={errors} />
           )}
@@ -269,11 +271,11 @@ const Solicitar = () => {
 
           {/* Navigation Buttons */}
           {currentStep < 4 && (
-            <div className="flex justify-between mt-8 pt-6 border-t">
+            <div className="flex justify-between mt-8 pt-6 border-t border-border/50">
               {currentStep > 0 ? (
                 <button
                   onClick={handlePrev}
-                  className="inline-flex items-center gap-2 border border-border text-foreground px-5 py-2.5 rounded-lg font-semibold hover:bg-muted transition-colors text-sm"
+                  className="inline-flex items-center gap-2 border border-border text-foreground px-5 py-2.5 rounded-xl font-semibold hover:bg-muted transition-colors text-sm"
                 >
                   <ArrowLeft className="w-4 h-4" />
                   Voltar
@@ -281,7 +283,7 @@ const Solicitar = () => {
               ) : (
                 <button
                   onClick={() => navigate("/")}
-                  className="inline-flex items-center gap-2 border border-border text-foreground px-5 py-2.5 rounded-lg font-semibold hover:bg-muted transition-colors text-sm"
+                  className="inline-flex items-center gap-2 border border-border text-foreground px-5 py-2.5 rounded-xl font-semibold hover:bg-muted transition-colors text-sm"
                 >
                   <ArrowLeft className="w-4 h-4" />
                   Início
@@ -291,7 +293,7 @@ const Solicitar = () => {
               {currentStep < 3 ? (
                 <button
                   onClick={handleNext}
-                  className="inline-flex items-center gap-2 bg-primary text-primary-foreground px-6 py-2.5 rounded-lg font-semibold hover:opacity-90 transition-opacity text-sm"
+                  className="inline-flex items-center gap-2 bg-primary text-primary-foreground px-7 py-2.5 rounded-xl font-semibold hover:opacity-90 transition-all text-sm shadow-md shadow-primary/20"
                 >
                   Próximo
                   <ArrowRight className="w-4 h-4" />
@@ -299,7 +301,7 @@ const Solicitar = () => {
               ) : (
                 <button
                   onClick={handleNext}
-                  className="inline-flex items-center gap-2 bg-primary text-primary-foreground px-6 py-3 rounded-lg font-semibold hover:opacity-90 transition-opacity text-sm"
+                  className="inline-flex items-center gap-2 bg-primary text-primary-foreground px-7 py-3 rounded-xl font-semibold hover:opacity-90 transition-all text-sm shadow-md shadow-primary/20"
                 >
                   Finalizar Pedido
                   <CreditCard className="w-4 h-4" />
@@ -307,6 +309,18 @@ const Solicitar = () => {
               )}
             </div>
           )}
+        </div>
+
+        {/* Trust badges */}
+        <div className="flex items-center justify-center gap-6 mt-6 text-[11px] text-muted-foreground">
+          <span className="flex items-center gap-1">
+            <ShieldCheck className="w-3.5 h-3.5 text-primary" />
+            Dados protegidos (LGPD)
+          </span>
+          <span className="flex items-center gap-1">
+            <CheckCircle2 className="w-3.5 h-3.5 text-primary" />
+            Médicos com CRM ativo
+          </span>
         </div>
       </div>
     </div>

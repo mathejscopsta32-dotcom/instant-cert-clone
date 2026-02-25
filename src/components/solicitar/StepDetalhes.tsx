@@ -73,11 +73,18 @@ const StepDetalhes = ({ formData, updateForm, errors }: Props) => {
   const validadeDate = inicioDate ? addDays(inicioDate, 1) : null;
 
   return (
-    <div className="space-y-5">
-      <h2 className="text-lg font-bold text-foreground mb-1">Detalhes Finais</h2>
-      <p className="text-sm text-muted-foreground mb-4">
-        Informações sobre o início dos sintomas e período desejado.
-      </p>
+    <div className="space-y-6">
+      <div className="flex items-center gap-3 mb-2">
+        <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
+          <CalendarIcon className="w-5 h-5 text-primary" />
+        </div>
+        <div>
+          <h2 className="text-lg font-bold text-foreground">Detalhes Finais</h2>
+          <p className="text-xs text-muted-foreground">
+            Informações sobre o início dos sintomas e período desejado.
+          </p>
+        </div>
+      </div>
 
       {/* Observações / outros detalhes */}
       <div>
