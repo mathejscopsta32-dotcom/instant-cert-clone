@@ -21,7 +21,7 @@ const Hero = () => {
 
             <p className="text-muted-foreground text-lg">
               Obtenha seu atestado médico agora por apenas{" "}
-              <span className="text-primary font-bold">R$ 29</span>, simplesmente
+              <span className="text-primary font-bold">R$ 29,90</span>, simplesmente
               por meio de um questionário on-line em{" "}
               <strong className="text-foreground">5 minutos</strong>.
             </p>
