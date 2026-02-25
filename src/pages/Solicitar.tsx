@@ -1,12 +1,13 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, ArrowRight, CheckCircle2, ShieldCheck, User, FileText, Stethoscope, CreditCard, Check } from "lucide-react";
+import { ArrowLeft, ArrowRight, CheckCircle2, ShieldCheck, User, FileText, Stethoscope, CreditCard, Check, Download } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import StepDadosPessoais from "@/components/solicitar/StepDadosPessoais";
 import StepSintomas from "@/components/solicitar/StepSintomas";
 import StepDetalhes from "@/components/solicitar/StepDetalhes";
 import StepRevisao from "@/components/solicitar/StepRevisao";
 import StepPagamento from "@/components/solicitar/StepPagamento";
+import { generateAtestadoPDF } from "@/lib/generateAtestadoPDF";
 
 export interface FormData {
   nomeCompleto: string;
@@ -132,6 +133,11 @@ const Solicitar = () => {
     setPaymentConfirmed(true);
   };
 
+  const handleDownloadPDF = () => {
+    const doc = generateAtestadoPDF(formData);
+    doc.save(`atestado-${formData.nomeCompleto.replace(/\s+/g, "_").toLowerCase()}.pdf`);
+  };
+
   // Payment confirmed view
   if (paymentConfirmed) {
     return (
@@ -142,20 +148,28 @@ const Solicitar = () => {
             <div className="w-16 h-16 mx-auto mb-6 rounded-full bg-primary flex items-center justify-center">
               <Check className="w-8 h-8 text-primary-foreground" />
             </div>
-            <h1 className="text-2xl font-bold text-foreground mb-2">Pagamento em Análise!</h1>
+            <h1 className="text-2xl font-bold text-foreground mb-2">Pagamento Confirmado!</h1>
             <p className="text-muted-foreground mb-6">
-              Seu pagamento está sendo processado. Assim que confirmado, seu atestado será
-              enviado para o e-mail <strong className="text-foreground">{formData.email}</strong> em poucos minutos.
+              Seu atestado médico foi gerado com sucesso. Clique no botão abaixo para fazer o download do seu documento.
             </p>
+
+            <button
+              onClick={handleDownloadPDF}
+              className="w-full inline-flex items-center justify-center gap-2 bg-primary text-primary-foreground px-6 py-3.5 rounded-xl font-semibold hover:opacity-90 transition-opacity mb-4"
+            >
+              <Download className="w-5 h-5" />
+              Baixar Atestado em PDF
+            </button>
+
             <div className="bg-muted rounded-xl p-4 text-sm text-muted-foreground mb-6">
               <p>
-                Caso não receba em até 30 minutos, verifique sua caixa de spam ou entre em contato
-                com nosso suporte.
+                Uma cópia também será enviada para o e-mail <strong className="text-foreground">{formData.email}</strong>.
+                Caso não receba, verifique sua caixa de spam.
               </p>
             </div>
             <button
               onClick={() => navigate("/")}
-              className="inline-flex items-center gap-2 bg-primary text-primary-foreground px-6 py-3 rounded-lg font-semibold hover:opacity-90 transition-opacity"
+              className="inline-flex items-center gap-2 border border-border text-foreground px-6 py-3 rounded-lg font-semibold hover:bg-muted transition-colors"
             >
               Voltar ao Início
             </button>
