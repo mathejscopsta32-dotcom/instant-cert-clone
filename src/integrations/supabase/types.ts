@@ -14,6 +14,30 @@ export type Database = {
   }
   public: {
     Tables: {
+      click_events: {
+        Row: {
+          created_at: string
+          element: string | null
+          element_text: string | null
+          id: string
+          page: string
+        }
+        Insert: {
+          created_at?: string
+          element?: string | null
+          element_text?: string | null
+          id?: string
+          page: string
+        }
+        Update: {
+          created_at?: string
+          element?: string | null
+          element_text?: string | null
+          id?: string
+          page?: string
+        }
+        Relationships: []
+      }
       pedidos: {
         Row: {
           addon_cid: boolean | null
