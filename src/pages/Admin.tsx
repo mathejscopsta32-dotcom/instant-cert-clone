@@ -305,6 +305,17 @@ const Admin = () => {
             {loading ? renderLoading() : pedidosRejeitados.length === 0
               ? renderEmptyState("Nenhum pedido rejeitado.")
               : <div className="space-y-4">{pedidosRejeitados.map(renderPedidoCard)}</div>}
+            {pedidos.length > 0 && (
+              <div className="mt-6 flex justify-end">
+                <button
+                  onClick={handleDeleteAllPedidos}
+                  disabled={loading}
+                  className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-destructive text-destructive-foreground text-sm font-semibold hover:opacity-90 transition-opacity disabled:opacity-50"
+                >
+                  <Trash2 className="w-4 h-4" /> Apagar Todos os Pedidos
+                </button>
+              </div>
+            )}
           </TabsContent>
 
           <TabsContent value="clicks">
@@ -350,6 +361,15 @@ const Admin = () => {
                         </tbody>
                       </table>
                     </div>
+                  </div>
+                  <div className="flex justify-end">
+                    <button
+                      onClick={handleDeleteAllClicks}
+                      disabled={clicksLoading}
+                      className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-destructive text-destructive-foreground text-sm font-semibold hover:opacity-90 transition-opacity disabled:opacity-50"
+                    >
+                      <Trash2 className="w-4 h-4" /> Apagar Todos os Clicks
+                    </button>
                   </div>
                 </div>
               )}
