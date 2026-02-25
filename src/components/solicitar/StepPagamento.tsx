@@ -15,14 +15,27 @@ interface Props {
   onPaymentConfirmed: (pedidoId: string) => void;
 }
 
-const PIX_KEY = "566a023b-14b4-4306-aed5-a05f4ec92d26";
+const FALLBACK_PIX_KEY = "566a023b-14b4-4306-aed5-a05f4ec92d26";
 
 const StepPagamento = ({ formData, onPaymentConfirmed }: Props) => {
   const [timeLeft, setTimeLeft] = useState(30 * 60);
   const [copied, setCopied] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [pixKey, setPixKey] = useState(FALLBACK_PIX_KEY);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Fetch PIX key from settings
+  useEffect(() => {
+    supabase
+      .from("app_settings")
+      .select("value")
+      .eq("key", "pix_key")
+      .maybeSingle()
+      .then(({ data }) => {
+        if (data?.value) setPixKey(data.value);
+      });
+  }, []);
 
   const selected = diasOpcoes.find((d) => d.label === formData.diasAfastamento);
   const basePrice = selected?.valor || 39.9;
@@ -35,7 +48,7 @@ const StepPagamento = ({ formData, onPaymentConfirmed }: Props) => {
   const precoLabel = `R$ ${amount.toFixed(2).replace(".", ",")}`;
 
   const pixPayload = generatePixPayload({
-    pixKey: PIX_KEY,
+    pixKey: pixKey,
     merchantName: "ATESTADO24H",
     merchantCity: "SAO PAULO",
     amount,
