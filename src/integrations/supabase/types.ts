@@ -136,7 +136,30 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      pedidos_public: {
+        Row: {
+          created_at: string | null
+          id: string | null
+          nome_completo: string | null
+          status: string | null
+          valor_total: number | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string | null
+          nome_completo?: string | null
+          status?: string | null
+          valor_total?: number | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string | null
+          nome_completo?: string | null
+          status?: string | null
+          valor_total?: number | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       has_role: {
