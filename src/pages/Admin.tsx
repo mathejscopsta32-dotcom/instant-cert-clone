@@ -130,6 +130,14 @@ const Admin = () => {
     setPixSaving(false);
   };
 
+  const handleDeletePedido = async (id: string) => {
+    if (!confirm("Tem certeza que deseja apagar este pedido?")) return;
+    setActionLoading(id);
+    await supabase.from("pedidos").delete().eq("id", id);
+    await fetchPedidos();
+    setActionLoading(null);
+  };
+
   const generateRandomPixKey = () => {
     const uuid = crypto.randomUUID();
     setPixKeyInput(uuid);
@@ -213,6 +221,14 @@ const Admin = () => {
             </button>
           </>
         )}
+        <button
+          onClick={() => handleDeletePedido(p.id)}
+          disabled={actionLoading === p.id}
+          className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg border border-destructive/30 text-destructive text-sm font-semibold hover:bg-destructive/10 transition-colors disabled:opacity-50"
+          title="Apagar pedido"
+        >
+          {actionLoading === p.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
+        </button>
       </div>
     </div>
   );
