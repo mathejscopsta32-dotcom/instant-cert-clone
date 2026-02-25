@@ -234,6 +234,14 @@ const StepPagamento = ({ formData, onPaymentConfirmed }: Props) => {
         </button>
       </div>
 
+      {/* Aviso importante */}
+      <div className="bg-amber-50 border border-amber-300 rounded-xl p-4 flex items-start gap-3">
+        <AlertCircle className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
+        <p className="text-sm text-amber-800 font-medium">
+          Envie o comprovante logo após o pagamento para agilizar a entrega do seu atestado!
+        </p>
+      </div>
+
       {/* Enviar comprovante */}
       <div className="bg-muted rounded-xl p-4 space-y-3">
         <div>
