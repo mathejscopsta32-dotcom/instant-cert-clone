@@ -9,8 +9,14 @@ import MeuPedido from "./pages/MeuPedido";
 import Admin from "./pages/Admin";
 import AdminLogin from "./pages/AdminLogin";
 import NotFound from "./pages/NotFound";
+import { useClickTracker } from "./hooks/useClickTracker";
 
 const queryClient = new QueryClient();
+
+const ClickTracker = () => {
+  useClickTracker();
+  return null;
+};
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
@@ -18,6 +24,7 @@ const App = () => (
       <Toaster />
       <Sonner />
       <BrowserRouter>
+        <ClickTracker />
         <Routes>
           <Route path="/" element={<Index />} />
           <Route path="/solicitar" element={<Solicitar />} />
