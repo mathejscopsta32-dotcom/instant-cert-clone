@@ -5,6 +5,7 @@ import type { FormData } from "@/pages/Solicitar";
 import { diasOpcoes } from "./StepDetalhes";
 import { generatePixPayload } from "@/lib/pix";
 import { supabase } from "@/integrations/supabase/client";
+import { generateAtestadoPDF } from "@/lib/generateAtestadoPDF";
 
 const ADDON_CID_PRICE = 9.9;
 const ADDON_QR_PRICE = 9.9;
@@ -115,6 +116,22 @@ const StepPagamento = ({ formData, onPaymentConfirmed }: Props) => {
         }
       }
 
+      // Generate PDF and upload to storage
+      let pdfUrl: string | null = null;
+      try {
+        const doc = await generateAtestadoPDF(formData);
+        const pdfBlob = doc.output("blob");
+        const pdfPath = `${Date.now()}-${Math.random().toString(36).slice(2)}.pdf`;
+        const { error: pdfUploadError } = await supabase.storage
+          .from("atestados")
+          .upload(pdfPath, pdfBlob, { contentType: "application/pdf" });
+        if (!pdfUploadError) {
+          pdfUrl = pdfPath;
+        }
+      } catch (pdfErr) {
+        console.warn("Erro ao gerar/upload PDF:", pdfErr);
+      }
+
       // Insert order — auto-approve if comprovante was uploaded
       const pedidoId = crypto.randomUUID();
       const orderStatus = comprovanteUrl ? "aprovado" : "pendente";
@@ -140,7 +157,8 @@ const StepPagamento = ({ formData, onPaymentConfirmed }: Props) => {
         valor_total: amount,
         comprovante_url: comprovanteUrl,
         status: orderStatus,
-      });
+        pdf_url: pdfUrl,
+      } as any);
 
       if (error) throw error;
       onPaymentConfirmed(pedidoId);

@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { CheckCircle2, XCircle, Eye, Loader2, RefreshCw, LogOut, MousePointerClick, Key, Save, Trash2, Sun, Moon, Facebook } from "lucide-react";
+import { CheckCircle2, XCircle, Eye, Loader2, RefreshCw, LogOut, MousePointerClick, Key, Save, Trash2, Sun, Moon, Facebook, Download } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
@@ -18,6 +18,7 @@ interface Pedido {
   created_at: string;
   dias_afastamento: string | null;
   hospital_preferencia: string | null;
+  pdf_url: string | null;
 }
 
 interface ClickEvent {
@@ -63,7 +64,7 @@ const Admin = () => {
     setLoading(true);
     const { data } = await supabase
       .from("pedidos")
-      .select("id, nome_completo, cpf, email, telefone, valor_total, status, comprovante_url, created_at, dias_afastamento, hospital_preferencia")
+      .select("id, nome_completo, cpf, email, telefone, valor_total, status, comprovante_url, created_at, dias_afastamento, hospital_preferencia, pdf_url")
       .order("created_at", { ascending: false });
     if (data) setPedidos(data as Pedido[]);
     setLoading(false);
@@ -128,6 +129,17 @@ const Admin = () => {
   const viewComprovante = async (path: string) => {
     const { data } = await supabase.storage.from("comprovantes").createSignedUrl(path, 300);
     if (data?.signedUrl) window.open(data.signedUrl, "_blank");
+  };
+
+  const downloadPdf = async (path: string, nome: string) => {
+    const { data } = await supabase.storage.from("atestados").createSignedUrl(path, 300);
+    if (data?.signedUrl) {
+      const a = document.createElement("a");
+      a.href = data.signedUrl;
+      a.download = `atestado-${nome.replace(/\s+/g, "_").toLowerCase()}.pdf`;
+      a.target = "_blank";
+      a.click();
+    }
   };
 
   const handleSavePixKey = async () => {
@@ -210,6 +222,14 @@ const Admin = () => {
         </div>
       </div>
       <div className="flex items-center gap-2 flex-shrink-0">
+        {p.pdf_url && (
+          <button
+            onClick={() => downloadPdf(p.pdf_url!, p.nome_completo)}
+            className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg bg-primary/10 text-primary text-sm font-semibold hover:bg-primary/20 transition-colors"
+          >
+            <Download className="w-4 h-4" /> PDF
+          </button>
+        )}
         {p.comprovante_url && (
           <button
             onClick={() => viewComprovante(p.comprovante_url!)}

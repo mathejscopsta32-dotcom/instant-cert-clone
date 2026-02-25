@@ -79,6 +79,7 @@ export type Database = {
           nome_completo: string
           observacoes: string | null
           outros_sintomas: string | null
+          pdf_url: string | null
           sintomas: string[] | null
           status: string
           telefone: string
@@ -104,6 +105,7 @@ export type Database = {
           nome_completo: string
           observacoes?: string | null
           outros_sintomas?: string | null
+          pdf_url?: string | null
           sintomas?: string[] | null
           status?: string
           telefone: string
@@ -129,6 +131,7 @@ export type Database = {
           nome_completo?: string
           observacoes?: string | null
           outros_sintomas?: string | null
+          pdf_url?: string | null
           sintomas?: string[] | null
           status?: string
           telefone?: string
