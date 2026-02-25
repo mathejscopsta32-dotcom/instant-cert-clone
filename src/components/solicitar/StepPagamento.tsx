@@ -269,11 +269,21 @@ const StepPagamento = ({ formData, onPaymentConfirmed }: Props) => {
         </button>
       </div>
 
+      {/* Aviso comprovante obrigatório */}
+      {!selectedFile && (
+        <div className="bg-red-50 border border-red-300 rounded-xl p-4 flex items-start gap-3">
+          <AlertCircle className="w-5 h-5 text-red-600 shrink-0 mt-0.5" />
+          <p className="text-sm text-red-800 font-medium">
+            Para confirmar o pagamento, é obrigatório enviar o comprovante. Selecione o arquivo acima antes de continuar.
+          </p>
+        </div>
+      )}
+
       {/* Já fiz o pagamento */}
       <button
         type="button"
         onClick={handleSubmitPayment}
-        disabled={timeLeft === 0 || submitting}
+        disabled={timeLeft === 0 || submitting || !selectedFile}
         className="w-full inline-flex items-center justify-center gap-2 bg-primary text-primary-foreground px-6 py-3.5 rounded-xl font-semibold hover:opacity-90 transition-opacity disabled:opacity-50 text-sm"
       >
         {submitting ? (
