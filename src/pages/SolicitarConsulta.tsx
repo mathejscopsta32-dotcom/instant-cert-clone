@@ -29,6 +29,9 @@ export interface ConsultaFormData {
   possuiAlergia: string;
   alergias: string;
   observacoes: string;
+  // Upsells
+  addonCid: boolean;
+  addonQrCode: boolean;
   // Revisão
   aceitaTermos: boolean;
 }
@@ -52,6 +55,8 @@ const initialFormData: ConsultaFormData = {
   possuiAlergia: "",
   alergias: "",
   observacoes: "",
+  addonCid: false,
+  addonQrCode: false,
   aceitaTermos: false,
 };
 
