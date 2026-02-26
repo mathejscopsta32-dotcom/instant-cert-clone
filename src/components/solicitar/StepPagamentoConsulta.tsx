@@ -10,10 +10,11 @@ const FALLBACK_PIX_KEY = "566a023b-14b4-4306-aed5-a05f4ec92d26";
 
 interface Props {
   formData: ConsultaFormData;
+  pedidoId: string;
   onPaymentConfirmed: (pedidoId: string) => void;
 }
 
-const StepPagamentoConsulta = ({ formData, onPaymentConfirmed }: Props) => {
+const StepPagamentoConsulta = ({ formData, pedidoId, onPaymentConfirmed }: Props) => {
   const totalPrice = calcConsultaTotal(formData);
   const [timeLeft, setTimeLeft] = useState(30 * 60);
   const [copied, setCopied] = useState(false);
@@ -128,25 +129,11 @@ const StepPagamentoConsulta = ({ formData, onPaymentConfirmed }: Props) => {
         if (!uploadError) comprovanteUrl = filePath;
       }
 
-      const pedidoId = crypto.randomUUID();
-      const { error } = await supabase.from("pedidos").insert({
-        id: pedidoId,
-        nome_completo: formData.nomeCompleto,
-        cpf: formData.cpf,
-        email: formData.email,
-        telefone: formData.telefone,
-        data_nascimento: formData.dataNascimento || null,
-        cidade: formData.cidade || null,
-        estado: formData.estado || null,
-        valor_total: totalPrice,
-        comprovante_url: comprovanteUrl,
-        status: "pendente",
-        tipo: "consulta",
-        addon_cid: formData.addonCid,
-        addon_qr_code: formData.addonQrCode,
-      } as any);
-
-      if (error) throw error;
+      if (comprovanteUrl) {
+        await supabase.from("pedidos").update({
+          comprovante_url: comprovanteUrl,
+        } as any).eq("id", pedidoId);
+      }
 
       if (comprovanteHash) {
         await supabase.from("comprovante_hashes").insert({
@@ -157,8 +144,8 @@ const StepPagamentoConsulta = ({ formData, onPaymentConfirmed }: Props) => {
 
       onPaymentConfirmed(pedidoId);
     } catch (err) {
-      console.error("Erro ao salvar pedido:", err);
-      alert("Erro ao enviar pedido. Tente novamente.");
+      console.error("Erro ao enviar comprovante:", err);
+      alert("Erro ao enviar comprovante. Tente novamente.");
     } finally {
       setSubmitting(false);
     }

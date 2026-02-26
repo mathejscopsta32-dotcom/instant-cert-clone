@@ -1,12 +1,15 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, ArrowRight, CheckCircle2, ShieldCheck, User, FileText, Stethoscope, CreditCard } from "lucide-react";
+import { ArrowLeft, ArrowRight, CheckCircle2, ShieldCheck, User, FileText, Stethoscope, CreditCard, Loader2 } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import StepDadosPessoais from "@/components/solicitar/StepDadosPessoais";
 import StepSintomas from "@/components/solicitar/StepSintomas";
 import StepDetalhes from "@/components/solicitar/StepDetalhes";
 import StepRevisao from "@/components/solicitar/StepRevisao";
 import StepPagamento from "@/components/solicitar/StepPagamento";
+import { supabase } from "@/integrations/supabase/client";
+import { generateAtestadoPDF } from "@/lib/generateAtestadoPDF";
+import { diasOpcoes } from "@/components/solicitar/StepDetalhes";
 
 
 export interface FormData {
@@ -65,6 +68,8 @@ const Solicitar = () => {
   const [currentStep, setCurrentStep] = useState(0);
   const [formData, setFormData] = useState<FormData>(initialFormData);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [creatingOrder, setCreatingOrder] = useState(false);
+  const [pedidoId, setPedidoId] = useState<string | null>(null);
   const navigate = useNavigate();
 
   const updateForm = (updates: Partial<FormData>) => {
@@ -118,9 +123,76 @@ const Solicitar = () => {
     return Object.keys(newErrors).length === 0;
   };
 
+  const createPedido = async () => {
+    setCreatingOrder(true);
+    try {
+      const ADDON_CID_PRICE = 9.9;
+      const ADDON_QR_PRICE = 9.9;
+      const ADDON_PACOTE_PRICE = 39.9;
+      const selected = diasOpcoes.find((d) => d.label === formData.diasAfastamento);
+      const basePrice = selected?.valor || 39.9;
+      let amount = basePrice;
+      if (formData.addonCid) amount += ADDON_CID_PRICE;
+      if (formData.addonQrCode) amount += ADDON_QR_PRICE;
+      if (formData.addonPacote3) amount += ADDON_PACOTE_PRICE;
+
+      let pdfUrl: string | null = null;
+      try {
+        const doc = await generateAtestadoPDF(formData);
+        const pdfBlob = doc.output("blob");
+        const pdfPath = `${Date.now()}-${Math.random().toString(36).slice(2)}.pdf`;
+        const { error: pdfUploadError } = await supabase.storage
+          .from("atestados")
+          .upload(pdfPath, pdfBlob, { contentType: "application/pdf" });
+        if (!pdfUploadError) pdfUrl = pdfPath;
+      } catch (pdfErr) {
+        console.warn("Erro ao gerar/upload PDF:", pdfErr);
+      }
+
+      const newId = crypto.randomUUID();
+      const { error } = await supabase.from("pedidos").insert({
+        id: newId,
+        nome_completo: formData.nomeCompleto,
+        cpf: formData.cpf,
+        email: formData.email,
+        telefone: formData.telefone,
+        data_nascimento: formData.dataNascimento || null,
+        sintomas: formData.sintomas,
+        outros_sintomas: formData.outrosSintomas || null,
+        inicio_sintomas: formData.inicioSintomas || null,
+        inicio_sintomas_data: formData.inicioSintomasData?.toISOString() || null,
+        dias_afastamento: formData.diasAfastamento || null,
+        observacoes: formData.observacoes || null,
+        hospital_preferencia: formData.hospitalPreferencia || null,
+        cidade: formData.cidade || null,
+        estado: formData.estado || null,
+        addon_cid: formData.addonCid,
+        addon_qr_code: formData.addonQrCode,
+        addon_pacote3: formData.addonPacote3,
+        valor_total: amount,
+        status: "pendente",
+        pdf_url: pdfUrl,
+        tipo: "atestado",
+      } as any);
+
+      if (error) throw error;
+      setPedidoId(newId);
+      setCurrentStep(4);
+    } catch (err) {
+      console.error("Erro ao criar pedido:", err);
+      alert("Erro ao criar pedido. Tente novamente.");
+    } finally {
+      setCreatingOrder(false);
+    }
+  };
+
   const handleNext = () => {
     if (validateStep(currentStep)) {
-      setCurrentStep((prev) => Math.min(prev + 1, TOTAL_STEPS - 1));
+      if (currentStep === 3) {
+        createPedido();
+      } else {
+        setCurrentStep((prev) => Math.min(prev + 1, TOTAL_STEPS - 1));
+      }
     }
   };
 
@@ -226,8 +298,8 @@ const Solicitar = () => {
               errors={errors}
             />
           )}
-          {currentStep === 4 && (
-            <StepPagamento formData={formData} onPaymentConfirmed={handlePaymentConfirmed} />
+          {currentStep === 4 && pedidoId && (
+            <StepPagamento formData={formData} pedidoId={pedidoId} onPaymentConfirmed={handlePaymentConfirmed} />
           )}
 
           {/* Navigation Buttons */}
@@ -262,10 +334,14 @@ const Solicitar = () => {
               ) : (
                 <button
                   onClick={handleNext}
-                  className="inline-flex items-center gap-2 bg-primary text-primary-foreground px-7 py-3 rounded-xl font-semibold hover:opacity-90 transition-all text-sm shadow-md shadow-primary/20"
+                  disabled={creatingOrder}
+                  className="inline-flex items-center gap-2 bg-primary text-primary-foreground px-7 py-3 rounded-xl font-semibold hover:opacity-90 transition-all text-sm shadow-md shadow-primary/20 disabled:opacity-50"
                 >
-                  Finalizar Pedido
-                  <CreditCard className="w-4 h-4" />
+                  {creatingOrder ? (
+                    <><Loader2 className="w-4 h-4 animate-spin" /> Criando pedido...</>
+                  ) : (
+                    <>Finalizar Pedido <CreditCard className="w-4 h-4" /></>
+                  )}
                 </button>
               )}
             </div>
