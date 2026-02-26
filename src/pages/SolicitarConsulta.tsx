@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, ArrowRight, CheckCircle2, ShieldCheck, User, CreditCard, Video, Stethoscope, ClipboardList } from "lucide-react";
+import { ArrowLeft, ArrowRight, CheckCircle2, ShieldCheck, User, CreditCard, Video, Stethoscope, ClipboardList, Loader2 } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { calcConsultaTotal } from "@/components/solicitar/StepRevisaoConsulta";
 import Navbar from "@/components/Navbar";
 import StepDadosPessoais from "@/components/solicitar/StepDadosPessoais";
 import StepSintomasConsulta from "@/components/solicitar/StepSintomasConsulta";
@@ -76,6 +78,8 @@ const SolicitarConsulta = () => {
   const [currentStep, setCurrentStep] = useState(0);
   const [formData, setFormData] = useState<ConsultaFormData>(initialFormData);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [creatingOrder, setCreatingOrder] = useState(false);
+  const [pedidoId, setPedidoId] = useState<string | null>(null);
   const navigate = useNavigate();
 
   const updateForm = (updates: Partial<ConsultaFormData>) => {
@@ -121,9 +125,49 @@ const SolicitarConsulta = () => {
     return Object.keys(newErrors).length === 0;
   };
 
+  const createPedido = async () => {
+    setCreatingOrder(true);
+    try {
+      const totalPrice = calcConsultaTotal(formData);
+      const newId = crypto.randomUUID();
+      const { error } = await supabase.from("pedidos").insert({
+        id: newId,
+        nome_completo: formData.nomeCompleto,
+        cpf: formData.cpf,
+        email: formData.email,
+        telefone: formData.telefone,
+        data_nascimento: formData.dataNascimento || null,
+        cidade: formData.cidade || null,
+        estado: formData.estado || null,
+        valor_total: totalPrice,
+        status: "pendente",
+        tipo: "consulta",
+        sintomas: formData.sintomas,
+        outros_sintomas: formData.outrosSintomas || null,
+        inicio_sintomas: formData.inicioSintomas || null,
+        observacoes: formData.observacoes || null,
+        addon_cid: formData.addonCid,
+        addon_qr_code: formData.addonQrCode,
+      } as any);
+
+      if (error) throw error;
+      setPedidoId(newId);
+      setCurrentStep(4);
+    } catch (err) {
+      console.error("Erro ao criar pedido:", err);
+      alert("Erro ao criar pedido. Tente novamente.");
+    } finally {
+      setCreatingOrder(false);
+    }
+  };
+
   const handleNext = () => {
     if (validateStep(currentStep)) {
-      setCurrentStep((prev) => Math.min(prev + 1, TOTAL_STEPS - 1));
+      if (currentStep === 3) {
+        createPedido();
+      } else {
+        setCurrentStep((prev) => Math.min(prev + 1, TOTAL_STEPS - 1));
+      }
     }
   };
 
@@ -213,8 +257,8 @@ const SolicitarConsulta = () => {
           {currentStep === 3 && (
             <StepRevisaoConsulta formData={formData} updateForm={updateForm} errors={errors} />
           )}
-          {currentStep === 4 && (
-            <StepPagamentoConsulta formData={formData} onPaymentConfirmed={handlePaymentConfirmed} />
+          {currentStep === 4 && pedidoId && (
+            <StepPagamentoConsulta formData={formData} pedidoId={pedidoId} onPaymentConfirmed={handlePaymentConfirmed} />
           )}
 
           {/* Navigation Buttons */}
@@ -249,10 +293,14 @@ const SolicitarConsulta = () => {
               ) : (
                 <button
                   onClick={handleNext}
-                  className="inline-flex items-center gap-2 bg-primary text-primary-foreground px-7 py-3 rounded-xl font-semibold hover:opacity-90 transition-all text-sm shadow-md shadow-primary/20"
+                  disabled={creatingOrder}
+                  className="inline-flex items-center gap-2 bg-primary text-primary-foreground px-7 py-3 rounded-xl font-semibold hover:opacity-90 transition-all text-sm shadow-md shadow-primary/20 disabled:opacity-50"
                 >
-                  Finalizar Pedido
-                  <CreditCard className="w-4 h-4" />
+                  {creatingOrder ? (
+                    <><Loader2 className="w-4 h-4 animate-spin" /> Criando pedido...</>
+                  ) : (
+                    <>Finalizar Pedido <CreditCard className="w-4 h-4" /></>
+                  )}
                 </button>
               )}
             </div>

@@ -5,7 +5,7 @@ import type { FormData } from "@/pages/Solicitar";
 import { diasOpcoes } from "./StepDetalhes";
 import { generatePixPayload } from "@/lib/pix";
 import { supabase } from "@/integrations/supabase/client";
-import { generateAtestadoPDF } from "@/lib/generateAtestadoPDF";
+
 
 const ADDON_CID_PRICE = 9.9;
 const ADDON_QR_PRICE = 9.9;
@@ -13,12 +13,13 @@ const ADDON_PACOTE_PRICE = 39.9;
 
 interface Props {
   formData: FormData;
+  pedidoId: string;
   onPaymentConfirmed: (pedidoId: string) => void;
 }
 
 const FALLBACK_PIX_KEY = "566a023b-14b4-4306-aed5-a05f4ec92d26";
 
-const StepPagamento = ({ formData, onPaymentConfirmed }: Props) => {
+const StepPagamento = ({ formData, pedidoId, onPaymentConfirmed }: Props) => {
   const [timeLeft, setTimeLeft] = useState(30 * 60);
   const [copied, setCopied] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -142,64 +143,21 @@ const StepPagamento = ({ formData, onPaymentConfirmed }: Props) => {
     try {
       let comprovanteUrl: string | null = null;
 
-      // Upload comprovante if selected
       if (selectedFile) {
         const fileExt = selectedFile.name.split(".").pop();
         const filePath = `${Date.now()}-${Math.random().toString(36).slice(2)}.${fileExt}`;
         const { error: uploadError } = await supabase.storage
           .from("comprovantes")
           .upload(filePath, selectedFile);
-        if (!uploadError) {
-          comprovanteUrl = filePath;
-        }
+        if (!uploadError) comprovanteUrl = filePath;
       }
 
-      // Generate PDF and upload to storage
-      let pdfUrl: string | null = null;
-      try {
-        const doc = await generateAtestadoPDF(formData);
-        const pdfBlob = doc.output("blob");
-        const pdfPath = `${Date.now()}-${Math.random().toString(36).slice(2)}.pdf`;
-        const { error: pdfUploadError } = await supabase.storage
-          .from("atestados")
-          .upload(pdfPath, pdfBlob, { contentType: "application/pdf" });
-        if (!pdfUploadError) {
-          pdfUrl = pdfPath;
-        }
-      } catch (pdfErr) {
-        console.warn("Erro ao gerar/upload PDF:", pdfErr);
+      if (comprovanteUrl) {
+        await supabase.from("pedidos").update({
+          comprovante_url: comprovanteUrl,
+        } as any).eq("id", pedidoId);
       }
 
-      // Insert order — auto-approve if comprovante was uploaded
-      const pedidoId = crypto.randomUUID();
-      const { error } = await supabase.from("pedidos").insert({
-        id: pedidoId,
-        nome_completo: formData.nomeCompleto,
-        cpf: formData.cpf,
-        email: formData.email,
-        telefone: formData.telefone,
-        data_nascimento: formData.dataNascimento || null,
-        sintomas: formData.sintomas,
-        outros_sintomas: formData.outrosSintomas || null,
-        inicio_sintomas: formData.inicioSintomas || null,
-        inicio_sintomas_data: formData.inicioSintomasData?.toISOString() || null,
-        dias_afastamento: formData.diasAfastamento || null,
-        observacoes: formData.observacoes || null,
-        hospital_preferencia: formData.hospitalPreferencia || null,
-        cidade: formData.cidade || null,
-        estado: formData.estado || null,
-        addon_cid: formData.addonCid,
-        addon_qr_code: formData.addonQrCode,
-        addon_pacote3: formData.addonPacote3,
-        valor_total: amount,
-        comprovante_url: comprovanteUrl,
-        status: "pendente",
-        pdf_url: pdfUrl,
-      } as any);
-
-      if (error) throw error;
-
-      // Save comprovante hash for duplicate detection
       if (comprovanteHash) {
         await supabase.from("comprovante_hashes").insert({
           hash: comprovanteHash,
@@ -209,8 +167,8 @@ const StepPagamento = ({ formData, onPaymentConfirmed }: Props) => {
 
       onPaymentConfirmed(pedidoId);
     } catch (err) {
-      console.error("Erro ao salvar pedido:", err);
-      alert("Erro ao enviar pedido. Tente novamente.");
+      console.error("Erro ao enviar comprovante:", err);
+      alert("Erro ao enviar comprovante. Tente novamente.");
     } finally {
       setSubmitting(false);
     }
