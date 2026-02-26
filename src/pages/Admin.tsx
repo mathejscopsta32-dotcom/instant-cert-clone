@@ -49,6 +49,15 @@ const Admin = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
+    const savedTheme = localStorage.getItem("theme");
+    if (savedTheme === "dark") {
+      document.documentElement.classList.add("dark");
+    } else {
+      document.documentElement.classList.remove("dark");
+    }
+  }, []);
+
+  useEffect(() => {
     const checkAuth = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) { navigate("/admin/login"); return; }
@@ -317,6 +326,7 @@ const Admin = () => {
               onClick={() => {
                 const html = document.documentElement;
                 html.classList.toggle("dark");
+                localStorage.setItem("theme", html.classList.contains("dark") ? "dark" : "light");
               }}
               className="inline-flex items-center justify-center w-9 h-9 rounded-lg border border-border hover:bg-muted transition-colors"
               title="Alternar tema"
