@@ -68,7 +68,7 @@ const getCID10 = (sintomas: string[]): { code: string; description: string } => 
   return { code: "R69", description: "Causas desconhecidas de morbidade" };
 };
 
-const DOCTOR_NAME = "Dr. Carlos Eduardo Mendes";
+const DOCTOR_NAME = "Dr. Rodrigo V. Vasconcelos";
 const DOCTOR_CRM = "CRM/SP 142.857";
 const DOCTOR_SPECIALTY = "Clínico Geral";
 
