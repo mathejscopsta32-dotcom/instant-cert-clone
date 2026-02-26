@@ -19,6 +19,7 @@ interface Pedido {
   dias_afastamento: string | null;
   hospital_preferencia: string | null;
   pdf_url: string | null;
+  tipo: string;
 }
 
 interface ClickEvent {
@@ -64,7 +65,7 @@ const Admin = () => {
     setLoading(true);
     const { data } = await supabase
       .from("pedidos")
-      .select("id, nome_completo, cpf, email, telefone, valor_total, status, comprovante_url, created_at, dias_afastamento, hospital_preferencia, pdf_url")
+      .select("id, nome_completo, cpf, email, telefone, valor_total, status, comprovante_url, created_at, dias_afastamento, hospital_preferencia, pdf_url, tipo")
       .order("created_at", { ascending: false });
     if (data) setPedidos(data as Pedido[]);
     setLoading(false);
@@ -213,7 +214,10 @@ const Admin = () => {
           <p>CPF: {p.cpf} | Tel: {p.telefone}</p>
           <p>Email: {p.email}</p>
           <p>
-            {p.dias_afastamento} — {p.hospital_preferencia} —{" "}
+            <span className={`inline-block text-[10px] font-bold px-2 py-0.5 rounded mr-2 ${p.tipo === 'consulta' ? 'bg-blue-100 text-blue-700' : 'bg-emerald-100 text-emerald-700'}`}>
+              {p.tipo === 'consulta' ? 'CONSULTA' : 'ATESTADO'}
+            </span>
+            {p.dias_afastamento && <>{p.dias_afastamento} — </>}{p.hospital_preferencia && <>{p.hospital_preferencia} — </>}
             <span className="font-bold text-primary">R$ {Number(p.valor_total).toFixed(2).replace(".", ",")}</span>
           </p>
           <p className="text-[10px]">

@@ -104,6 +104,7 @@ export type Database = {
           sintomas: string[] | null
           status: string
           telefone: string
+          tipo: string
           updated_at: string
           valor_total: number
         }
@@ -130,6 +131,7 @@ export type Database = {
           sintomas?: string[] | null
           status?: string
           telefone: string
+          tipo?: string
           updated_at?: string
           valor_total: number
         }
@@ -156,6 +158,7 @@ export type Database = {
           sintomas?: string[] | null
           status?: string
           telefone?: string
+          tipo?: string
           updated_at?: string
           valor_total?: number
         }
@@ -187,6 +190,7 @@ export type Database = {
           id: string | null
           nome_completo: string | null
           status: string | null
+          tipo: string | null
           valor_total: number | null
         }
         Insert: {
@@ -194,6 +198,7 @@ export type Database = {
           id?: string | null
           nome_completo?: string | null
           status?: string | null
+          tipo?: string | null
           valor_total?: number | null
         }
         Update: {
@@ -201,6 +206,7 @@ export type Database = {
           id?: string | null
           nome_completo?: string | null
           status?: string | null
+          tipo?: string | null
           valor_total?: number | null
         }
         Relationships: []
