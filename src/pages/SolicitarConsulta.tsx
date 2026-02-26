@@ -32,6 +32,7 @@ export interface ConsultaFormData {
   // Upsells
   addonCid: boolean;
   addonQrCode: boolean;
+  addonAtestado2dias: boolean;
   // Revisão
   aceitaTermos: boolean;
 }
@@ -57,6 +58,7 @@ const initialFormData: ConsultaFormData = {
   observacoes: "",
   addonCid: false,
   addonQrCode: false,
+  addonAtestado2dias: false,
   aceitaTermos: false,
 };
 

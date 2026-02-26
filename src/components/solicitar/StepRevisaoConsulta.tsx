@@ -1,4 +1,4 @@
-import { ShieldCheck, Stethoscope, User, ClipboardList, CheckCircle2, Sparkles, FileText, QrCode } from "lucide-react";
+import { ShieldCheck, Stethoscope, User, ClipboardList, CheckCircle2, Sparkles, FileText, QrCode, FileBadge } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import type { ConsultaFormData } from "@/pages/SolicitarConsulta";
 
@@ -11,11 +11,13 @@ interface Props {
 const CONSULTA_PRICE = 29.9;
 const ADDON_CID_PRICE = 9.9;
 const ADDON_QR_PRICE = 9.9;
+const ADDON_ATESTADO_2DIAS_PRICE = 49.9;
 
 export const calcConsultaTotal = (formData: ConsultaFormData) => {
   let total = CONSULTA_PRICE;
   if (formData.addonCid) total += ADDON_CID_PRICE;
   if (formData.addonQrCode) total += ADDON_QR_PRICE;
+  if (formData.addonAtestado2dias) total += ADDON_ATESTADO_2DIAS_PRICE;
   return total;
 };
 
@@ -87,6 +89,33 @@ const StepRevisaoConsulta = ({ formData, updateForm, errors }: Props) => {
               </p>
             </div>
             <span className="text-sm font-bold text-primary whitespace-nowrap">+R$ 9,90</span>
+          </div>
+        </button>
+
+        {/* Atestado 2 dias */}
+        <button
+          type="button"
+          onClick={() => updateForm({ addonAtestado2dias: !formData.addonAtestado2dias })}
+          className={`w-full text-left p-4 rounded-xl border transition-colors ${
+            formData.addonAtestado2dias
+              ? "border-primary bg-secondary ring-2 ring-primary/20"
+              : "border-border hover:bg-muted"
+          }`}
+        >
+          <div className="flex items-start gap-3">
+            <FileBadge className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
+            <div className="flex-1">
+              <div className="flex items-center gap-2">
+                <p className="text-sm font-semibold text-foreground">Atestado Médico – 2 dias</p>
+                <span className="text-[10px] font-bold bg-primary text-primary-foreground px-1.5 py-0.5 rounded">
+                  MAIS VENDIDO
+                </span>
+              </div>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                Receba um atestado médico de 2 dias de afastamento junto com sua consulta. Emitido por médico com CRM ativo.
+              </p>
+            </div>
+            <span className="text-sm font-bold text-primary whitespace-nowrap">+R$ 49,90</span>
           </div>
         </button>
       </div>
@@ -175,6 +204,12 @@ const StepRevisaoConsulta = ({ formData, updateForm, errors }: Props) => {
           <div className="flex justify-between text-sm">
             <span className="text-muted-foreground">QR Code Digital</span>
             <span className="font-medium text-foreground">R$ 9,90</span>
+          </div>
+        )}
+        {formData.addonAtestado2dias && (
+          <div className="flex justify-between text-sm">
+            <span className="text-muted-foreground">Atestado Médico – 2 dias</span>
+            <span className="font-medium text-foreground">R$ 49,90</span>
           </div>
         )}
         <div className="border-t border-border pt-3">
