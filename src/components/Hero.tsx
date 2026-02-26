@@ -48,7 +48,7 @@ const Hero = () => {
                 <ShieldCheck className="w-5 h-5 text-primary" />
               </div>
               <div>
-                <p className="text-sm font-bold text-foreground">Dr. Carlos Eduardo Mendes</p>
+                <p className="text-sm font-bold text-foreground">Dr. Rodrigo V. Vasconcelos</p>
                 <p className="text-xs text-muted-foreground">CRM/SP 142.857 — Clínico Geral</p>
               </div>
             </div>
