@@ -36,6 +36,7 @@ export const diasOpcoes = [
 const inicioOpcoes = [
   { value: "hoje", label: "Hoje" },
   { value: "ontem", label: "Ontem" },
+  { value: "anteontem", label: "Anteontem" },
   { value: "personalizado", label: "Personalizado" },
 ];
 
@@ -60,6 +61,7 @@ const getDateFromInicio = (inicio: string, customDate?: Date): Date => {
   switch (inicio) {
     case "hoje": return today;
     case "ontem": return subDays(today, 1);
+    case "anteontem": return subDays(today, 2);
     case "personalizado": return customDate || today;
     default: return today;
   }
@@ -70,7 +72,7 @@ const StepDetalhes = ({ formData, updateForm, errors }: Props) => {
     ? getDateFromInicio(formData.inicioSintomas, formData.inicioSintomasData)
     : null;
 
-  const validadeDate = inicioDate ? addDays(inicioDate, 1) : null;
+  const validadeDate = inicioDate || null;
 
   return (
     <div className="space-y-6">
@@ -165,7 +167,7 @@ const StepDetalhes = ({ formData, updateForm, errors }: Props) => {
             <strong className="text-foreground">
               {validadeDate ? format(validadeDate, "dd/MM/yyyy", { locale: ptBR }) : "—"}
             </strong>{" "}
-            (1 dia após o início dos sintomas).
+            (data de início dos sintomas).
           </span>
         </div>
       )}

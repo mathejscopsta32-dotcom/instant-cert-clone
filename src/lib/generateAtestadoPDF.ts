@@ -28,6 +28,8 @@ const getInicioDate = (formData: FormData): Date => {
       return today;
     case "ontem":
       return addDays(today, -1);
+    case "anteontem":
+      return addDays(today, -2);
     case "personalizado":
       return formData.inicioSintomasData || today;
     default:
