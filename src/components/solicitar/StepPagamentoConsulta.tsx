@@ -130,9 +130,10 @@ const StepPagamentoConsulta = ({ formData, pedidoId, onPaymentConfirmed }: Props
       }
 
       if (comprovanteUrl) {
-        await supabase.from("pedidos").update({
-          comprovante_url: comprovanteUrl,
-        } as any).eq("id", pedidoId);
+        await supabase.rpc("submit_comprovante", {
+          p_pedido_id: pedidoId,
+          p_comprovante_url: comprovanteUrl,
+        });
       }
 
       if (comprovanteHash) {

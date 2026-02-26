@@ -220,6 +220,10 @@ export type Database = {
         }
         Returns: boolean
       }
+      submit_comprovante: {
+        Args: { p_comprovante_url: string; p_pedido_id: string }
+        Returns: undefined
+      }
     }
     Enums: {
       app_role: "admin" | "user"
