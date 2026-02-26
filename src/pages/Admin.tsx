@@ -70,14 +70,14 @@ const Admin = () => {
     checkAuth();
   }, [navigate]);
 
-  const fetchPedidos = async () => {
-    setLoading(true);
+  const fetchPedidos = async (showLoading = true) => {
+    if (showLoading) setLoading(true);
     const { data } = await supabase
       .from("pedidos")
       .select("id, nome_completo, cpf, email, telefone, valor_total, status, comprovante_url, created_at, dias_afastamento, hospital_preferencia, pdf_url, tipo")
       .order("created_at", { ascending: false });
     if (data) setPedidos(data as Pedido[]);
-    setLoading(false);
+    if (showLoading) setLoading(false);
   };
 
   const fetchClicks = async () => {
@@ -132,7 +132,7 @@ const Admin = () => {
   const updateStatus = async (id: string, status: string) => {
     setActionLoading(id);
     await supabase.from("pedidos").update({ status }).eq("id", id);
-    await fetchPedidos();
+    await fetchPedidos(false);
     setActionLoading(null);
   };
 
@@ -172,7 +172,7 @@ const Admin = () => {
     if (!confirm("Tem certeza que deseja apagar este pedido?")) return;
     setActionLoading(id);
     await supabase.from("pedidos").delete().eq("id", id);
-    await fetchPedidos();
+    await fetchPedidos(false);
     setActionLoading(null);
   };
 
