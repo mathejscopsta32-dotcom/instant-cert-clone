@@ -8,12 +8,9 @@ const Navbar = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between h-16">
         <Link to="/" className="flex items-center gap-2.5">
           <img src={logoDr} alt="Dr. Rodrigo V. Vasconcelos" className="h-10 object-contain" />
-          <div className="flex flex-col leading-tight">
-            <span className="font-extrabold text-lg text-foreground tracking-tight">
-              Atestado<span className="text-primary">24h</span>
-            </span>
-            <span className="text-[10px] text-muted-foreground font-medium -mt-0.5">Saúde Digital</span>
-          </div>
+          <span className="font-extrabold text-lg text-foreground tracking-tight">
+            Dr. Rodrigo V. Vasconcelos
+          </span>
         </Link>
 
         <div className="hidden md:flex items-center gap-6">
