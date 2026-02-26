@@ -128,7 +128,6 @@ const StepPagamentoConsulta = ({ formData, onPaymentConfirmed }: Props) => {
       }
 
       const pedidoId = crypto.randomUUID();
-      const orderStatus = comprovanteUrl ? "aprovado" : "pendente";
       const { error } = await supabase.from("pedidos").insert({
         id: pedidoId,
         nome_completo: formData.nomeCompleto,
@@ -140,7 +139,7 @@ const StepPagamentoConsulta = ({ formData, onPaymentConfirmed }: Props) => {
         estado: formData.estado || null,
         valor_total: CONSULTA_PRICE,
         comprovante_url: comprovanteUrl,
-        status: orderStatus,
+        status: "pendente",
         tipo: "consulta",
       } as any);
 
