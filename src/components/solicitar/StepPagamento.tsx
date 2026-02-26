@@ -24,9 +24,7 @@ const StepPagamento = ({ formData, pedidoId, onPaymentConfirmed }: Props) => {
   const [copied, setCopied] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [submitting, setSubmitting] = useState(false);
-  const [validating, setValidating] = useState(false);
   const [validationError, setValidationError] = useState<string | null>(null);
-  const [comprovanteHash, setComprovanteHash] = useState<string | null>(null);
   const [pixKey, setPixKey] = useState(FALLBACK_PIX_KEY);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -98,44 +96,11 @@ const StepPagamento = ({ formData, pedidoId, onPaymentConfirmed }: Props) => {
     fileInputRef.current?.click();
   };
 
-  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
     setSelectedFile(file);
     setValidationError(null);
-    setComprovanteHash(null);
-    setValidating(true);
-
-    try {
-      const form = new FormData();
-      form.append("file", file);
-      const response = await fetch(
-        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/validate-comprovante`,
-        {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
-          },
-          body: form,
-        }
-      );
-      const result = await response.json();
-      if (result.valid) {
-        setComprovanteHash(result.hash);
-        setValidationError(null);
-      } else {
-        setValidationError(result.reason || "Comprovante inválido.");
-        setSelectedFile(null);
-        if (fileInputRef.current) fileInputRef.current.value = "";
-      }
-    } catch (err) {
-      console.error("Validation error:", err);
-      // If validation fails, still allow (don't block)
-      setComprovanteHash(null);
-      setValidationError(null);
-    } finally {
-      setValidating(false);
-    }
   };
 
   const handleSubmitPayment = async () => {
@@ -159,12 +124,6 @@ const StepPagamento = ({ formData, pedidoId, onPaymentConfirmed }: Props) => {
         });
       }
 
-      if (comprovanteHash) {
-        await supabase.from("comprovante_hashes").insert({
-          hash: comprovanteHash,
-          pedido_id: pedidoId,
-        } as any);
-      }
 
       onPaymentConfirmed(pedidoId);
     } catch (err) {
@@ -285,20 +244,10 @@ const StepPagamento = ({ formData, pedidoId, onPaymentConfirmed }: Props) => {
         <button
           type="button"
           onClick={handleFileSelect}
-          disabled={validating}
-          className="w-full inline-flex items-center justify-center gap-2 border border-border text-foreground px-4 py-3 rounded-xl font-semibold text-sm hover:bg-secondary transition-colors disabled:opacity-50"
+          className="w-full inline-flex items-center justify-center gap-2 border border-border text-foreground px-4 py-3 rounded-xl font-semibold text-sm hover:bg-secondary transition-colors"
         >
-          {validating ? (
-            <>
-              <Loader2 className="w-4 h-4 animate-spin" />
-              Validando comprovante...
-            </>
-          ) : (
-            <>
-              <Upload className="w-4 h-4" />
-              {selectedFile ? selectedFile.name : "Selecionar Arquivo"}
-            </>
-          )}
+          <Upload className="w-4 h-4" />
+          {selectedFile ? selectedFile.name : "Selecionar Arquivo"}
         </button>
       </div>
 
@@ -324,7 +273,7 @@ const StepPagamento = ({ formData, pedidoId, onPaymentConfirmed }: Props) => {
       <button
         type="button"
         onClick={handleSubmitPayment}
-        disabled={timeLeft === 0 || submitting || !selectedFile || validating || !!validationError}
+        disabled={timeLeft === 0 || submitting || !selectedFile || !!validationError}
         className="w-full inline-flex items-center justify-center gap-2 bg-primary text-primary-foreground px-6 py-3.5 rounded-xl font-semibold hover:opacity-90 transition-opacity disabled:opacity-50 text-sm"
       >
         {submitting ? (
@@ -342,7 +291,7 @@ const StepPagamento = ({ formData, pedidoId, onPaymentConfirmed }: Props) => {
 
       {/* WhatsApp */}
       <a
-        href={`https://wa.me/5511999999999?text=${encodeURIComponent(`Olá! Acabei de fazer um pedido de atestado.\nID: ${pedidoId}\nNome: ${formData.nomeCompleto}\nValor: ${precoLabel}`)}`}
+        href={`https://wa.me/5599984899640?text=${encodeURIComponent(`Olá! Acabei de fazer um pedido de atestado.\nID: ${pedidoId}\nNome: ${formData.nomeCompleto}\nValor: ${precoLabel}`)}`}
         target="_blank"
         rel="noopener noreferrer"
         className="w-full inline-flex items-center justify-center gap-2 bg-[#25D366] text-white px-6 py-3.5 rounded-xl font-semibold hover:opacity-90 transition-opacity text-sm"
