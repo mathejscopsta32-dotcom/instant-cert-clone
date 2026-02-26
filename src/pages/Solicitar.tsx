@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft, ArrowRight, CheckCircle2, ShieldCheck, User, FileText, Stethoscope, CreditCard, Loader2 } from "lucide-react";
 import Navbar from "@/components/Navbar";
@@ -64,13 +64,33 @@ const stepsMeta = [
 
 const TOTAL_STEPS = 5;
 
+const STORAGE_KEY = "solicitar_atestado_state";
+
 const Solicitar = () => {
-  const [currentStep, setCurrentStep] = useState(0);
-  const [formData, setFormData] = useState<FormData>(initialFormData);
+  const [currentStep, setCurrentStep] = useState(() => {
+    try { const s = sessionStorage.getItem(STORAGE_KEY); return s ? JSON.parse(s).currentStep ?? 0 : 0; } catch { return 0; }
+  });
+  const [formData, setFormData] = useState<FormData>(() => {
+    try {
+      const s = sessionStorage.getItem(STORAGE_KEY);
+      if (s) {
+        const parsed = JSON.parse(s);
+        return { ...initialFormData, ...parsed.formData, inicioSintomasData: parsed.formData?.inicioSintomasData ? new Date(parsed.formData.inicioSintomasData) : undefined };
+      }
+      return initialFormData;
+    } catch { return initialFormData; }
+  });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [creatingOrder, setCreatingOrder] = useState(false);
-  const [pedidoId, setPedidoId] = useState<string | null>(null);
+  const [pedidoId, setPedidoId] = useState<string | null>(() => {
+    try { const s = sessionStorage.getItem(STORAGE_KEY); return s ? JSON.parse(s).pedidoId ?? null : null; } catch { return null; }
+  });
   const navigate = useNavigate();
+
+  // Persist state to sessionStorage
+  useEffect(() => {
+    sessionStorage.setItem(STORAGE_KEY, JSON.stringify({ currentStep, formData, pedidoId }));
+  }, [currentStep, formData, pedidoId]);
 
   const updateForm = (updates: Partial<FormData>) => {
     setFormData((prev) => ({ ...prev, ...updates }));
@@ -201,14 +221,12 @@ const Solicitar = () => {
   };
 
   const handlePaymentConfirmed = (pedidoId: string) => {
-    // Store form data locally for PDF generation (base table is restricted)
+    sessionStorage.removeItem(STORAGE_KEY);
     try {
       localStorage.setItem(`pedido_form_${pedidoId}`, JSON.stringify(formData));
     } catch (error) {
       console.warn("Não foi possível salvar os dados localmente:", error);
     }
-
-    // Force full page load to ensure fresh data fetch
     window.location.href = `/meu-pedido?id=${pedidoId}`;
   };
 

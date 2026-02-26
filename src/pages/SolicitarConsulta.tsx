@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft, ArrowRight, CheckCircle2, ShieldCheck, User, CreditCard, Video, Stethoscope, ClipboardList, Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -74,13 +74,30 @@ const stepsMeta = [
 
 const TOTAL_STEPS = 5;
 
+const STORAGE_KEY = "solicitar_consulta_state";
+
 const SolicitarConsulta = () => {
-  const [currentStep, setCurrentStep] = useState(0);
-  const [formData, setFormData] = useState<ConsultaFormData>(initialFormData);
+  const [currentStep, setCurrentStep] = useState(() => {
+    try { const s = sessionStorage.getItem(STORAGE_KEY); return s ? JSON.parse(s).currentStep ?? 0 : 0; } catch { return 0; }
+  });
+  const [formData, setFormData] = useState<ConsultaFormData>(() => {
+    try {
+      const s = sessionStorage.getItem(STORAGE_KEY);
+      if (s) return { ...initialFormData, ...JSON.parse(s).formData };
+      return initialFormData;
+    } catch { return initialFormData; }
+  });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [creatingOrder, setCreatingOrder] = useState(false);
-  const [pedidoId, setPedidoId] = useState<string | null>(null);
+  const [pedidoId, setPedidoId] = useState<string | null>(() => {
+    try { const s = sessionStorage.getItem(STORAGE_KEY); return s ? JSON.parse(s).pedidoId ?? null : null; } catch { return null; }
+  });
   const navigate = useNavigate();
+
+  // Persist state to sessionStorage
+  useEffect(() => {
+    sessionStorage.setItem(STORAGE_KEY, JSON.stringify({ currentStep, formData, pedidoId }));
+  }, [currentStep, formData, pedidoId]);
 
   const updateForm = (updates: Partial<ConsultaFormData>) => {
     setFormData((prev) => ({ ...prev, ...updates }));
@@ -176,6 +193,7 @@ const SolicitarConsulta = () => {
   };
 
   const handlePaymentConfirmed = (pedidoId: string) => {
+    sessionStorage.removeItem(STORAGE_KEY);
     window.location.href = `/meu-pedido?id=${pedidoId}`;
   };
 
