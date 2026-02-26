@@ -2,10 +2,10 @@ import { useState, useEffect, useRef } from "react";
 import { Check, Clock, Copy, ShieldCheck, AlertCircle, RefreshCw, Upload, Loader2 } from "lucide-react";
 import { QRCodeSVG } from "qrcode.react";
 import type { ConsultaFormData } from "@/pages/SolicitarConsulta";
+import { calcConsultaTotal } from "@/components/solicitar/StepRevisaoConsulta";
 import { generatePixPayload } from "@/lib/pix";
 import { supabase } from "@/integrations/supabase/client";
 
-const CONSULTA_PRICE = 29.9;
 const FALLBACK_PIX_KEY = "566a023b-14b4-4306-aed5-a05f4ec92d26";
 
 interface Props {
@@ -14,6 +14,7 @@ interface Props {
 }
 
 const StepPagamentoConsulta = ({ formData, onPaymentConfirmed }: Props) => {
+  const totalPrice = calcConsultaTotal(formData);
   const [timeLeft, setTimeLeft] = useState(30 * 60);
   const [copied, setCopied] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -35,13 +36,13 @@ const StepPagamentoConsulta = ({ formData, onPaymentConfirmed }: Props) => {
       });
   }, []);
 
-  const precoLabel = `R$ ${CONSULTA_PRICE.toFixed(2).replace(".", ",")}`;
+  const precoLabel = `R$ ${totalPrice.toFixed(2).replace(".", ",")}`;
 
   const pixPayload = generatePixPayload({
     pixKey,
     merchantName: "CONSULTA24H",
     merchantCity: "SAO PAULO",
-    amount: CONSULTA_PRICE,
+    amount: totalPrice,
     description: "Consulta Medica Online",
   });
 
@@ -137,10 +138,12 @@ const StepPagamentoConsulta = ({ formData, onPaymentConfirmed }: Props) => {
         data_nascimento: formData.dataNascimento || null,
         cidade: formData.cidade || null,
         estado: formData.estado || null,
-        valor_total: CONSULTA_PRICE,
+        valor_total: totalPrice,
         comprovante_url: comprovanteUrl,
         status: "pendente",
         tipo: "consulta",
+        addon_cid: formData.addonCid,
+        addon_qr_code: formData.addonQrCode,
       } as any);
 
       if (error) throw error;

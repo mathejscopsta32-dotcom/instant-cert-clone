@@ -1,4 +1,4 @@
-import { ShieldCheck, Stethoscope, User, ClipboardList, CheckCircle2 } from "lucide-react";
+import { ShieldCheck, Stethoscope, User, ClipboardList, CheckCircle2, Sparkles, FileText, QrCode } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import type { ConsultaFormData } from "@/pages/SolicitarConsulta";
 
@@ -9,9 +9,19 @@ interface Props {
 }
 
 const CONSULTA_PRICE = 29.9;
+const ADDON_CID_PRICE = 9.9;
+const ADDON_QR_PRICE = 9.9;
+
+export const calcConsultaTotal = (formData: ConsultaFormData) => {
+  let total = CONSULTA_PRICE;
+  if (formData.addonCid) total += ADDON_CID_PRICE;
+  if (formData.addonQrCode) total += ADDON_QR_PRICE;
+  return total;
+};
 
 const StepRevisaoConsulta = ({ formData, updateForm, errors }: Props) => {
   const firstName = formData.nomeCompleto.split(" ")[0] || "Paciente";
+  const total = calcConsultaTotal(formData);
 
   return (
     <div className="space-y-6">
@@ -29,6 +39,56 @@ const StepRevisaoConsulta = ({ formData, updateForm, errors }: Props) => {
         <p className="text-sm text-muted-foreground mt-1">
           Confira os detalhes da sua consulta médica online antes de finalizar.
         </p>
+      </div>
+
+      {/* Upsells */}
+      <div className="space-y-3">
+        <h3 className="text-sm font-bold text-foreground flex items-center gap-1.5">
+          <Sparkles className="w-4 h-4 text-primary" />
+          Adicione ao seu pedido
+        </h3>
+
+        <button
+          type="button"
+          onClick={() => updateForm({ addonCid: !formData.addonCid })}
+          className={`w-full text-left p-4 rounded-xl border transition-colors ${
+            formData.addonCid
+              ? "border-primary bg-secondary ring-2 ring-primary/20"
+              : "border-border hover:bg-muted"
+          }`}
+        >
+          <div className="flex items-start gap-3">
+            <FileText className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
+            <div className="flex-1">
+              <p className="text-sm font-semibold text-foreground">Incluir CID no atestado</p>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                Código internacional da doença (CID-10). Recomendado para INSS, empresas grandes e perícias.
+              </p>
+            </div>
+            <span className="text-sm font-bold text-primary whitespace-nowrap">+R$ 9,90</span>
+          </div>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => updateForm({ addonQrCode: !formData.addonQrCode })}
+          className={`w-full text-left p-4 rounded-xl border transition-colors ${
+            formData.addonQrCode
+              ? "border-primary bg-secondary ring-2 ring-primary/20"
+              : "border-border hover:bg-muted"
+          }`}
+        >
+          <div className="flex items-start gap-3">
+            <QrCode className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
+            <div className="flex-1">
+              <p className="text-sm font-semibold text-foreground">Verificação Digital com QR Code</p>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                QR Code que permite à empresa verificar a autenticidade online. Ideal para RH rigoroso.
+              </p>
+            </div>
+            <span className="text-sm font-bold text-primary whitespace-nowrap">+R$ 9,90</span>
+          </div>
+        </button>
       </div>
 
       {/* Dados pessoais */}
@@ -100,12 +160,30 @@ const StepRevisaoConsulta = ({ formData, updateForm, errors }: Props) => {
       </div>
 
       {/* Total */}
-      <div className="bg-muted rounded-xl p-4">
-        <div className="flex justify-between items-center">
-          <span className="text-sm font-bold text-foreground">Total da Consulta:</span>
-          <span className="text-xl font-extrabold text-primary">
-            R$ {CONSULTA_PRICE.toFixed(2).replace(".", ",")}
-          </span>
+      <div className="bg-muted rounded-xl p-4 space-y-3">
+        <div className="flex justify-between text-sm">
+          <span className="text-muted-foreground">Consulta Médica Online</span>
+          <span className="font-medium text-foreground">R$ 29,90</span>
+        </div>
+        {formData.addonCid && (
+          <div className="flex justify-between text-sm">
+            <span className="text-muted-foreground">CID-10</span>
+            <span className="font-medium text-foreground">R$ 9,90</span>
+          </div>
+        )}
+        {formData.addonQrCode && (
+          <div className="flex justify-between text-sm">
+            <span className="text-muted-foreground">QR Code Digital</span>
+            <span className="font-medium text-foreground">R$ 9,90</span>
+          </div>
+        )}
+        <div className="border-t border-border pt-3">
+          <div className="flex justify-between items-center">
+            <span className="text-sm font-bold text-foreground">Total:</span>
+            <span className="text-xl font-extrabold text-primary">
+              R$ {total.toFixed(2).replace(".", ",")}
+            </span>
+          </div>
         </div>
       </div>
 
