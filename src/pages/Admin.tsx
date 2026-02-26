@@ -1,10 +1,11 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { CheckCircle2, XCircle, Eye, Loader2, RefreshCw, LogOut, MousePointerClick, Key, Save, Trash2, Sun, Moon, Facebook, Download } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useToast } from "@/hooks/use-toast";
 
 interface Pedido {
   id: string;
@@ -47,6 +48,8 @@ const Admin = () => {
   const [pixelSaving, setPixelSaving] = useState(false);
   const [pixelSaved, setPixelSaved] = useState(false);
   const navigate = useNavigate();
+  const { toast } = useToast();
+  const initialLoadDone = useRef(false);
 
   useEffect(() => {
     const savedTheme = localStorage.getItem("theme");
@@ -116,8 +119,51 @@ const Admin = () => {
   };
 
   useEffect(() => {
-    if (!authChecking) fetchPedidos();
+    if (!authChecking) {
+      fetchPedidos().then(() => {
+        initialLoadDone.current = true;
+      });
+    }
   }, [authChecking]);
+
+  // Realtime subscription for new orders
+  useEffect(() => {
+    if (authChecking) return;
+    const channel = supabase
+      .channel("admin-pedidos-realtime")
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "pedidos" },
+        (payload) => {
+          const novo = payload.new as Pedido;
+          setPedidos((prev) => [novo, ...prev]);
+          if (initialLoadDone.current) {
+            toast({
+              title: "🔔 Novo pedido recebido!",
+              description: `${novo.nome_completo} — R$ ${Number(novo.valor_total).toFixed(2).replace(".", ",")}`,
+            });
+          }
+        }
+      )
+      .on(
+        "postgres_changes",
+        { event: "UPDATE", schema: "public", table: "pedidos" },
+        (payload) => {
+          const updated = payload.new as Pedido;
+          setPedidos((prev) => prev.map((p) => (p.id === updated.id ? updated : p)));
+        }
+      )
+      .on(
+        "postgres_changes",
+        { event: "DELETE", schema: "public", table: "pedidos" },
+        (payload) => {
+          const deletedId = (payload.old as any).id;
+          setPedidos((prev) => prev.filter((p) => p.id !== deletedId));
+        }
+      )
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [authChecking, toast]);
 
   useEffect(() => {
     if (!authChecking && activeTab === "clicks") fetchClicks();
