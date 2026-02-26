@@ -172,7 +172,6 @@ const StepPagamento = ({ formData, onPaymentConfirmed }: Props) => {
 
       // Insert order — auto-approve if comprovante was uploaded
       const pedidoId = crypto.randomUUID();
-      const orderStatus = comprovanteUrl ? "aprovado" : "pendente";
       const { error } = await supabase.from("pedidos").insert({
         id: pedidoId,
         nome_completo: formData.nomeCompleto,
@@ -194,7 +193,7 @@ const StepPagamento = ({ formData, onPaymentConfirmed }: Props) => {
         addon_pacote3: formData.addonPacote3,
         valor_total: amount,
         comprovante_url: comprovanteUrl,
-        status: orderStatus,
+        status: "pendente",
         pdf_url: pdfUrl,
       } as any);
 
