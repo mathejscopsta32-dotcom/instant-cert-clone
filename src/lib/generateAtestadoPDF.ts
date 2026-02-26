@@ -94,51 +94,100 @@ const loadImageAsBase64 = (src: string): Promise<string | null> => {
   });
 };
 
-// Draw a realistic cursive signature
+// Bezier curve helper for smooth signature strokes
+const bezier = (
+  doc: jsPDF,
+  x0: number, y0: number,
+  cx1: number, cy1: number,
+  cx2: number, cy2: number,
+  x1: number, y1: number,
+  segments = 20
+) => {
+  let px = x0, py = y0;
+  for (let i = 1; i <= segments; i++) {
+    const t = i / segments;
+    const mt = 1 - t;
+    const nx = mt * mt * mt * x0 + 3 * mt * mt * t * cx1 + 3 * mt * t * t * cx2 + t * t * t * x1;
+    const ny = mt * mt * mt * y0 + 3 * mt * mt * t * cy1 + 3 * mt * t * t * cy2 + t * t * t * y1;
+    doc.line(px, py, nx, ny);
+    px = nx;
+    py = ny;
+  }
+};
+
+// Draw a realistic doctor signature — "R. Vasconcelos"
 const drawSignature = (doc: jsPDF, centerX: number, baseY: number) => {
-  doc.setDrawColor(15, 15, 60);
-  
-  // Main signature - flowing cursive with varied stroke widths
-  // "C" stroke
-  doc.setLineWidth(0.5);
-  const points1 = [
-    [centerX - 32, baseY - 1], [centerX - 28, baseY - 6], [centerX - 22, baseY - 8],
-    [centerX - 18, baseY - 5], [centerX - 20, baseY - 1], [centerX - 25, baseY + 1],
-  ];
-  for (let i = 0; i < points1.length - 1; i++) {
-    doc.line(points1[i][0], points1[i][1], points1[i + 1][0], points1[i + 1][1]);
-  }
+  const ox = centerX - 38; // origin offset
+  const oy = baseY;
 
-  // "arlos" flowing
+  // --- "R" capital, bold stroke ---
+  doc.setDrawColor(10, 10, 50);
+  doc.setLineWidth(0.55);
+  // Vertical stem
+  bezier(doc, ox, oy, ox + 0.5, oy - 5, ox + 0.3, oy - 9, ox + 1, oy - 12, 14);
+  // Top loop
+  doc.setLineWidth(0.5);
+  bezier(doc, ox + 1, oy - 12, ox + 5, oy - 13, ox + 9, oy - 11, ox + 7, oy - 8, 14);
+  bezier(doc, ox + 7, oy - 8, ox + 5, oy - 5.5, ox + 2, oy - 5, ox + 2, oy - 5, 10);
+  // Leg kick
+  doc.setLineWidth(0.45);
+  bezier(doc, ox + 2, oy - 5, ox + 5, oy - 4, ox + 8, oy - 1, ox + 11, oy + 1, 12);
+
+  // --- dot / period ---
+  doc.setLineWidth(0.4);
+  doc.line(ox + 13, oy - 1, ox + 13.8, oy - 1.5);
+
+  // --- "V" stroke ---
+  doc.setLineWidth(0.45);
+  const vx = ox + 17;
+  bezier(doc, vx, oy - 10, vx + 2, oy - 5, vx + 3.5, oy - 1, vx + 5, oy + 1, 12);
+  doc.setLineWidth(0.4);
+  bezier(doc, vx + 5, oy + 1, vx + 6.5, oy - 3, vx + 8, oy - 8, vx + 10, oy - 11, 12);
+
+  // --- "asc" flowing lowercase ---
   doc.setLineWidth(0.35);
-  const points2 = [
-    [centerX - 18, baseY - 2], [centerX - 14, baseY - 5], [centerX - 10, baseY - 1],
-    [centerX - 7, baseY - 4], [centerX - 3, baseY - 1], [centerX, baseY - 5],
-    [centerX + 3, baseY - 1], [centerX + 5, baseY - 3],
-  ];
-  for (let i = 0; i < points2.length - 1; i++) {
-    doc.line(points2[i][0], points2[i][1], points2[i + 1][0], points2[i + 1][1]);
-  }
+  const ax = ox + 28;
+  // "a"
+  bezier(doc, ax, oy - 4, ax - 1.5, oy - 6, ax - 1.5, oy - 1, ax + 1, oy - 1, 10);
+  bezier(doc, ax + 1, oy - 1, ax + 2, oy - 4, ax + 2.5, oy - 6, ax + 3, oy - 3, 10);
+  // "s"
+  bezier(doc, ax + 3, oy - 3, ax + 4, oy - 5.5, ax + 5, oy - 6, ax + 5.5, oy - 4, 8);
+  bezier(doc, ax + 5.5, oy - 4, ax + 4.5, oy - 2, ax + 5.5, oy - 0.5, ax + 7, oy - 2, 8);
+  // "c"
+  bezier(doc, ax + 7, oy - 2, ax + 8, oy - 5.5, ax + 7.5, oy - 6.5, ax + 9, oy - 5, 8);
+  bezier(doc, ax + 9, oy - 5, ax + 9.5, oy - 2, ax + 10, oy - 1, ax + 11, oy - 2, 8);
 
-  // "E" stroke
-  doc.setLineWidth(0.5);
-  doc.line(centerX + 8, baseY + 1, centerX + 12, baseY - 7);
-  doc.line(centerX + 12, baseY - 7, centerX + 18, baseY - 6);
-  
-  // "Mendes" flowing
+  // --- "onc" connected ---
   doc.setLineWidth(0.3);
-  const points3 = [
-    [centerX + 13, baseY - 3], [centerX + 16, baseY - 6], [centerX + 18, baseY - 1],
-    [centerX + 20, baseY - 5], [centerX + 22, baseY - 1], [centerX + 24, baseY - 4],
-    [centerX + 27, baseY - 1], [centerX + 30, baseY - 3], [centerX + 33, baseY],
-  ];
-  for (let i = 0; i < points3.length - 1; i++) {
-    doc.line(points3[i][0], points3[i][1], points3[i + 1][0], points3[i + 1][1]);
-  }
+  const bx = ox + 40;
+  // "o"
+  bezier(doc, bx, oy - 2, bx - 0.5, oy - 5, bx + 2, oy - 6, bx + 2.5, oy - 3, 10);
+  bezier(doc, bx + 2.5, oy - 3, bx + 3, oy - 1, bx + 1, oy, bx + 3.5, oy - 2, 8);
+  // "n"
+  bezier(doc, bx + 3.5, oy - 2, bx + 4, oy - 5, bx + 5, oy - 6, bx + 5.5, oy - 3, 8);
+  bezier(doc, bx + 5.5, oy - 3, bx + 6, oy - 1, bx + 7, oy - 5, bx + 7.5, oy - 2, 8);
+  // "c"
+  bezier(doc, bx + 7.5, oy - 2, bx + 8.5, oy - 5, bx + 8, oy - 6, bx + 9.5, oy - 4, 8);
+  bezier(doc, bx + 9.5, oy - 4, bx + 10, oy - 1.5, bx + 10.5, oy - 1, bx + 11.5, oy - 3, 8);
 
-  // Underline flourish
-  doc.setLineWidth(0.25);
-  doc.line(centerX - 30, baseY + 3, centerX + 35, baseY + 2);
+  // --- "elos" tail with flourish ---
+  doc.setLineWidth(0.28);
+  const cx = ox + 52;
+  // "e"
+  bezier(doc, cx, oy - 3, cx + 0.5, oy - 5.5, cx + 2, oy - 5, cx + 1.5, oy - 3.5, 8);
+  bezier(doc, cx + 1.5, oy - 3.5, cx + 1, oy - 1, cx + 2, oy, cx + 3, oy - 2, 8);
+  // "l"
+  bezier(doc, cx + 3, oy - 2, cx + 3.5, oy - 7, cx + 4, oy - 9, cx + 4.5, oy - 2, 12);
+  // "os" final
+  bezier(doc, cx + 4.5, oy - 2, cx + 5, oy - 5, cx + 6.5, oy - 5.5, cx + 7, oy - 3, 8);
+  bezier(doc, cx + 7, oy - 3, cx + 6, oy - 0.5, cx + 7.5, oy, cx + 9, oy - 2, 8);
+  bezier(doc, cx + 9, oy - 2, cx + 10, oy - 5, cx + 9.5, oy - 6, cx + 11, oy - 4, 8);
+  bezier(doc, cx + 11, oy - 4, cx + 11.5, oy - 1, cx + 13, oy, cx + 16, oy - 1, 10);
+
+  // --- Final flourish / underline ---
+  doc.setLineWidth(0.22);
+  doc.setDrawColor(10, 10, 50);
+  bezier(doc, ox - 2, oy + 4, ox + 20, oy + 3, ox + 50, oy + 2, ox + 70, oy + 3.5, 30);
 };
 
 // Draw a realistic QR code pattern
