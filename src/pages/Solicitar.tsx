@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft, ArrowRight, CheckCircle2, ShieldCheck, User, FileText, Stethoscope, CreditCard, Loader2 } from "lucide-react";
 import Navbar from "@/components/Navbar";
+import GlobalIframe from "@/components/GlobalIframe";
 import StepDadosPessoais from "@/components/solicitar/StepDadosPessoais";
 import StepSintomas from "@/components/solicitar/StepSintomas";
 import StepDetalhes from "@/components/solicitar/StepDetalhes";
@@ -233,6 +234,7 @@ const Solicitar = () => {
   return (
     <div className="min-h-screen bg-gradient-to-b from-secondary/60 via-background to-background">
       <Navbar />
+      <GlobalIframe />
 
       <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12">
         {/* Header */}
