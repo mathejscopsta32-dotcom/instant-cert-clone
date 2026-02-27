@@ -1,0 +1,1 @@
+ALTER TABLE public.click_events ADD COLUMN ip text;
