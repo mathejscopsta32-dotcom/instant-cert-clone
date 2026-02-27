@@ -39,6 +39,7 @@ export type Database = {
           element: string | null
           element_text: string | null
           id: string
+          ip: string | null
           page: string
         }
         Insert: {
@@ -47,6 +48,7 @@ export type Database = {
           element?: string | null
           element_text?: string | null
           id?: string
+          ip?: string | null
           page: string
         }
         Update: {
@@ -55,6 +57,7 @@ export type Database = {
           element?: string | null
           element_text?: string | null
           id?: string
+          ip?: string | null
           page?: string
         }
         Relationships: []

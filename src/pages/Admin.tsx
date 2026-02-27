@@ -479,25 +479,25 @@ const Admin = () => {
                 <div className="space-y-6">
                   <div className="bg-card border rounded-xl overflow-hidden">
                     <div className="p-4 border-b">
-                      <h3 className="font-bold text-foreground">Últimos Clicks ({clicks.length})</h3>
+                      <h3 className="font-bold text-foreground">Visitantes ({clicks.length})</h3>
                     </div>
                     <div className="overflow-x-auto">
                       <table className="w-full text-sm">
                         <thead>
                           <tr className="border-b bg-muted/50">
-                            <th className="text-left p-3 font-semibold text-muted-foreground">Página</th>
                             <th className="text-left p-3 font-semibold text-muted-foreground">Cidade</th>
                             <th className="text-left p-3 font-semibold text-muted-foreground">Data/Hora</th>
+                            <th className="text-left p-3 font-semibold text-muted-foreground">IP</th>
                           </tr>
                         </thead>
                         <tbody>
                           {clicks.map(c => (
                             <tr key={c.id} className="border-b last:border-0 hover:bg-muted/30">
-                              <td className="p-3 font-mono text-xs">{c.page}</td>
                               <td className="p-3 text-xs">{c.city || "—"}</td>
                               <td className="p-3 text-xs text-muted-foreground whitespace-nowrap">
                                 {format(new Date(c.created_at), "dd/MM HH:mm:ss", { locale: ptBR })}
                               </td>
+                              <td className="p-3 font-mono text-xs text-muted-foreground">{c.element_text || "—"}</td>
                             </tr>
                           ))}
                         </tbody>
@@ -510,7 +510,7 @@ const Admin = () => {
                       disabled={clicksLoading}
                       className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-destructive text-destructive-foreground text-sm font-semibold hover:opacity-90 transition-opacity disabled:opacity-50"
                     >
-                      <Trash2 className="w-4 h-4" /> Apagar Todos os Clicks
+                      <Trash2 className="w-4 h-4" /> Apagar Todos
                     </button>
                   </div>
                 </div>
