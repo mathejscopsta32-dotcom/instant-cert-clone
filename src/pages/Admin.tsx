@@ -243,6 +243,14 @@ const Admin = () => {
     setLoading(false);
   };
 
+  const handleDeleteAllPendentes = async () => {
+    if (!confirm("Tem certeza que deseja apagar TODOS os pedidos pendentes?")) return;
+    setLoading(true);
+    await supabase.from("pedidos").delete().eq("status", "pendente");
+    setPedidos((prev) => prev.filter((p) => p.status !== "pendente"));
+    setLoading(false);
+  };
+
   const statusBadge = (status: string) => {
     const map: Record<string, string> = {
       pendente: "bg-yellow-100 text-yellow-800",
@@ -426,6 +434,17 @@ const Admin = () => {
             {loading ? renderLoading() : pedidosGerados.length === 0
               ? renderEmptyState("Nenhum pedido pendente.")
               : <div className="space-y-4">{pedidosGerados.map(renderPedidoCard)}</div>}
+            {pedidosGerados.length > 0 && (
+              <div className="mt-6 flex justify-end gap-3">
+                <button
+                  onClick={handleDeleteAllPendentes}
+                  disabled={loading}
+                  className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-destructive text-destructive-foreground text-sm font-semibold hover:opacity-90 transition-opacity disabled:opacity-50"
+                >
+                  <Trash2 className="w-4 h-4" /> Apagar Todos Pendentes
+                </button>
+              </div>
+            )}
           </TabsContent>
 
           <TabsContent value="pagos">
@@ -438,18 +457,20 @@ const Admin = () => {
             {loading ? renderLoading() : pedidosRejeitados.length === 0
               ? renderEmptyState("Nenhum pedido rejeitado.")
               : <div className="space-y-4">{pedidosRejeitados.map(renderPedidoCard)}</div>}
-            {pedidos.length > 0 && (
-              <div className="mt-6 flex justify-end">
-                <button
-                  onClick={handleDeleteAllPedidos}
-                  disabled={loading}
-                  className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-destructive text-destructive-foreground text-sm font-semibold hover:opacity-90 transition-opacity disabled:opacity-50"
-                >
-                  <Trash2 className="w-4 h-4" /> Apagar Todos os Pedidos
-                </button>
-              </div>
-            )}
           </TabsContent>
+
+          {/* Botão global de apagar todos */}
+          {pedidos.length > 0 && (activeTab === "gerados" || activeTab === "pagos" || activeTab === "rejeitados") && (
+            <div className="mt-6 flex justify-end">
+              <button
+                onClick={handleDeleteAllPedidos}
+                disabled={loading}
+                className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-destructive text-destructive-foreground text-sm font-semibold hover:opacity-90 transition-opacity disabled:opacity-50"
+              >
+                <Trash2 className="w-4 h-4" /> Apagar Todos os Pedidos
+              </button>
+            </div>
+          )}
 
           <TabsContent value="clicks">
             {clicksLoading ? renderLoading() : clicks.length === 0
