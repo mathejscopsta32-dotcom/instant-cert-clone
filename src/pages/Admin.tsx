@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { CheckCircle2, XCircle, Eye, Loader2, RefreshCw, LogOut, MousePointerClick, Key, Save, Trash2, Sun, Moon, Facebook, Download } from "lucide-react";
+import { CheckCircle2, XCircle, Eye, Loader2, RefreshCw, LogOut, MousePointerClick, Key, Save, Trash2, Sun, Moon, Facebook, Download, Code } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
@@ -47,6 +47,11 @@ const Admin = () => {
   const [pixelIdInput, setPixelIdInput] = useState("");
   const [pixelSaving, setPixelSaving] = useState(false);
   const [pixelSaved, setPixelSaved] = useState(false);
+  const [iframeUrl, setIframeUrl] = useState("");
+  const [iframeUrlInput, setIframeUrlInput] = useState("");
+  const [iframeEnabled, setIframeEnabled] = useState(false);
+  const [iframeSaving, setIframeSaving] = useState(false);
+  const [iframeSaved, setIframeSaved] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
   const initialLoadDone = useRef(false);
@@ -168,7 +173,37 @@ const Admin = () => {
   useEffect(() => {
     if (!authChecking && activeTab === "clicks") fetchClicks();
     if (!authChecking && activeTab === "config") { fetchPixKey(); fetchPixelId(); }
+    if (!authChecking && activeTab === "iframe") fetchIframeSettings();
   }, [authChecking, activeTab]);
+
+  const fetchIframeSettings = async () => {
+    const { data } = await supabase
+      .from("app_settings")
+      .select("key, value")
+      .in("key", ["iframe_url", "iframe_enabled"]);
+    if (data) {
+      data.forEach((row) => {
+        if (row.key === "iframe_url") { setIframeUrl(row.value); setIframeUrlInput(row.value); }
+        if (row.key === "iframe_enabled") setIframeEnabled(row.value === "true");
+      });
+    }
+  };
+
+  const handleSaveIframe = async () => {
+    setIframeSaving(true);
+    setIframeSaved(false);
+    await supabase.from("app_settings").update({ value: iframeUrlInput.trim(), updated_at: new Date().toISOString() }).eq("key", "iframe_url");
+    await supabase.from("app_settings").update({ value: iframeEnabled ? "true" : "false", updated_at: new Date().toISOString() }).eq("key", "iframe_enabled");
+    setIframeUrl(iframeUrlInput.trim());
+    setIframeSaved(true);
+    setTimeout(() => setIframeSaved(false), 3000);
+    setIframeSaving(false);
+  };
+
+  const handleToggleIframe = async (val: boolean) => {
+    setIframeEnabled(val);
+    await supabase.from("app_settings").update({ value: val ? "true" : "false", updated_at: new Date().toISOString() }).eq("key", "iframe_enabled");
+  };
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
@@ -418,12 +453,15 @@ const Admin = () => {
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="w-full grid grid-cols-5 mb-6">
+           <TabsList className="w-full grid grid-cols-6 mb-6">
             <TabsTrigger value="gerados">Pendentes ({pedidosGerados.length})</TabsTrigger>
             <TabsTrigger value="pagos">Aprovados ({pedidosPagos.length})</TabsTrigger>
             <TabsTrigger value="rejeitados">Rejeitados ({pedidosRejeitados.length})</TabsTrigger>
             <TabsTrigger value="clicks" className="gap-1.5">
               <MousePointerClick className="w-4 h-4" /> Clicks
+            </TabsTrigger>
+            <TabsTrigger value="iframe" className="gap-1.5">
+              <Code className="w-4 h-4" /> Iframe
             </TabsTrigger>
             <TabsTrigger value="config" className="gap-1.5">
               <Key className="w-4 h-4" /> PIX
@@ -515,6 +553,68 @@ const Admin = () => {
                   </div>
                 </div>
               )}
+          </TabsContent>
+
+          <TabsContent value="iframe">
+            <div className="max-w-xl mx-auto space-y-6">
+              <div className="bg-card border rounded-xl p-6 space-y-4">
+                <div>
+                  <h3 className="font-bold text-foreground text-lg flex items-center gap-2">
+                    <Code className="w-5 h-5 text-primary" />
+                    Iframe Global
+                  </h3>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    Configure uma URL de iframe para exibir em todas as páginas do site.
+                  </p>
+                </div>
+
+                <div className="flex items-center justify-between bg-muted rounded-lg p-4">
+                  <div>
+                    <p className="text-sm font-medium text-foreground">Iframe ativo</p>
+                    <p className="text-xs text-muted-foreground">Liga/desliga a exibição do iframe em todas as páginas</p>
+                  </div>
+                  <button
+                    onClick={() => handleToggleIframe(!iframeEnabled)}
+                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${iframeEnabled ? 'bg-primary' : 'bg-border'}`}
+                  >
+                    <span className={`inline-block h-4 w-4 transform rounded-full bg-background shadow-lg transition-transform ${iframeEnabled ? 'translate-x-6' : 'translate-x-1'}`} />
+                  </button>
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-foreground">URL do Iframe</label>
+                  <input
+                    type="text"
+                    value={iframeUrlInput}
+                    onChange={(e) => setIframeUrlInput(e.target.value)}
+                    placeholder="https://exemplo.com/pagina"
+                    className="w-full px-3 py-2.5 rounded-xl border border-border bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary font-mono"
+                  />
+                </div>
+
+                <button
+                  onClick={handleSaveIframe}
+                  disabled={iframeSaving || !iframeUrlInput.trim()}
+                  className="inline-flex items-center gap-2 px-6 py-2.5 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:opacity-90 transition-opacity disabled:opacity-50"
+                >
+                  {iframeSaving ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  ) : iframeSaved ? (
+                    <CheckCircle2 className="w-4 h-4" />
+                  ) : (
+                    <Save className="w-4 h-4" />
+                  )}
+                  {iframeSaved ? "Salvo!" : "Salvar URL"}
+                </button>
+
+                {iframeUrl && (
+                  <div className="bg-muted rounded-lg p-3">
+                    <p className="text-xs text-muted-foreground mb-1">URL atual:</p>
+                    <p className="font-mono text-sm text-foreground break-all">{iframeUrl}</p>
+                  </div>
+                )}
+              </div>
+            </div>
           </TabsContent>
 
           <TabsContent value="config">

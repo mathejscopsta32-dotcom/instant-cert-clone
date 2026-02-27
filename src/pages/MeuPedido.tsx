@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { Clock, CheckCircle2, XCircle, Download, ArrowLeft, Loader2 } from "lucide-react";
 import Navbar from "@/components/Navbar";
+import GlobalIframe from "@/components/GlobalIframe";
 import { supabase } from "@/integrations/supabase/client";
 import { generateAtestadoPDF } from "@/lib/generateAtestadoPDF";
 import type { FormData } from "@/pages/Solicitar";
@@ -123,6 +124,7 @@ const MeuPedido = () => {
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
+      <GlobalIframe />
       <div className="max-w-lg mx-auto px-4 py-12">
         <div className="bg-card border rounded-2xl p-8 shadow-sm">
           {/* Status */}

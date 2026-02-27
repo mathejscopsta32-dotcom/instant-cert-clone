@@ -4,6 +4,7 @@ import { ArrowLeft, ArrowRight, CheckCircle2, ShieldCheck, User, CreditCard, Vid
 import { supabase } from "@/integrations/supabase/client";
 import { calcConsultaTotal } from "@/components/solicitar/StepRevisaoConsulta";
 import Navbar from "@/components/Navbar";
+import GlobalIframe from "@/components/GlobalIframe";
 import StepDadosPessoais from "@/components/solicitar/StepDadosPessoais";
 import StepSintomasConsulta from "@/components/solicitar/StepSintomasConsulta";
 import StepPerguntasMedicas from "@/components/solicitar/StepPerguntasMedicas";
@@ -200,6 +201,7 @@ const SolicitarConsulta = () => {
   return (
     <div className="min-h-screen bg-gradient-to-b from-secondary/60 via-background to-background">
       <Navbar />
+      <GlobalIframe />
 
       <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12">
         {/* Header */}
