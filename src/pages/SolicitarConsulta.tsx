@@ -147,29 +147,26 @@ const SolicitarConsulta = () => {
     setCreatingOrder(true);
     try {
       const totalPrice = calcConsultaTotal(formData);
-      const newId = crypto.randomUUID();
-      const { error } = await supabase.from("pedidos").insert({
-        id: newId,
-        nome_completo: formData.nomeCompleto,
-        cpf: formData.cpf,
-        email: formData.email,
-        telefone: formData.telefone,
-        data_nascimento: formData.dataNascimento || null,
-        cidade: formData.cidade || null,
-        estado: formData.estado || null,
-        valor_total: totalPrice,
-        status: "pendente",
-        tipo: "consulta",
-        sintomas: formData.sintomas,
-        outros_sintomas: formData.outrosSintomas || null,
-        inicio_sintomas: formData.inicioSintomas || null,
-        observacoes: formData.observacoes || null,
-        addon_cid: formData.addonCid,
-        addon_qr_code: formData.addonQrCode,
+      const { data, error } = await supabase.rpc("upsert_pedido", {
+        p_cpf: formData.cpf,
+        p_tipo: "consulta",
+        p_nome_completo: formData.nomeCompleto,
+        p_email: formData.email,
+        p_telefone: formData.telefone,
+        p_data_nascimento: formData.dataNascimento || null,
+        p_cidade: formData.cidade || null,
+        p_estado: formData.estado || null,
+        p_valor_total: totalPrice,
+        p_sintomas: formData.sintomas,
+        p_outros_sintomas: formData.outrosSintomas || null,
+        p_inicio_sintomas: formData.inicioSintomas || null,
+        p_observacoes: formData.observacoes || null,
+        p_addon_cid: formData.addonCid,
+        p_addon_qr_code: formData.addonQrCode,
       } as any);
 
       if (error) throw error;
-      setPedidoId(newId);
+      setPedidoId(data as string);
       setCurrentStep(4);
     } catch (err) {
       console.error("Erro ao criar pedido:", err);

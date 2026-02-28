@@ -170,34 +170,31 @@ const Solicitar = () => {
         console.warn("Erro ao gerar/upload PDF:", pdfErr);
       }
 
-      const newId = crypto.randomUUID();
-      const { error } = await supabase.from("pedidos").insert({
-        id: newId,
-        nome_completo: formData.nomeCompleto,
-        cpf: formData.cpf,
-        email: formData.email,
-        telefone: formData.telefone,
-        data_nascimento: formData.dataNascimento || null,
-        sintomas: formData.sintomas,
-        outros_sintomas: formData.outrosSintomas || null,
-        inicio_sintomas: formData.inicioSintomas || null,
-        inicio_sintomas_data: formData.inicioSintomasData?.toISOString() || null,
-        dias_afastamento: formData.diasAfastamento || null,
-        observacoes: formData.observacoes || null,
-        hospital_preferencia: formData.hospitalPreferencia || null,
-        cidade: formData.cidade || null,
-        estado: formData.estado || null,
-        addon_cid: formData.addonCid,
-        addon_qr_code: formData.addonQrCode,
-        addon_pacote3: formData.addonPacote3,
-        valor_total: amount,
-        status: "pendente",
-        pdf_url: pdfUrl,
-        tipo: "atestado",
+      const { data, error } = await supabase.rpc("upsert_pedido", {
+        p_cpf: formData.cpf,
+        p_tipo: "atestado",
+        p_nome_completo: formData.nomeCompleto,
+        p_email: formData.email,
+        p_telefone: formData.telefone,
+        p_data_nascimento: formData.dataNascimento || null,
+        p_cidade: formData.cidade || null,
+        p_estado: formData.estado || null,
+        p_valor_total: amount,
+        p_sintomas: formData.sintomas,
+        p_outros_sintomas: formData.outrosSintomas || null,
+        p_inicio_sintomas: formData.inicioSintomas || null,
+        p_inicio_sintomas_data: formData.inicioSintomasData?.toISOString() || null,
+        p_dias_afastamento: formData.diasAfastamento || null,
+        p_observacoes: formData.observacoes || null,
+        p_hospital_preferencia: formData.hospitalPreferencia || null,
+        p_addon_cid: formData.addonCid,
+        p_addon_qr_code: formData.addonQrCode,
+        p_addon_pacote3: formData.addonPacote3,
+        p_pdf_url: pdfUrl,
       } as any);
 
       if (error) throw error;
-      setPedidoId(newId);
+      setPedidoId(data as string);
       setCurrentStep(4);
     } catch (err) {
       console.error("Erro ao criar pedido:", err);
