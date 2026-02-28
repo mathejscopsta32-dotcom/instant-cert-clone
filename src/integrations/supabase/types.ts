@@ -227,6 +227,31 @@ export type Database = {
         Args: { p_comprovante_url: string; p_pedido_id: string }
         Returns: undefined
       }
+      upsert_pedido: {
+        Args: {
+          p_addon_cid?: boolean
+          p_addon_pacote3?: boolean
+          p_addon_qr_code?: boolean
+          p_cidade?: string
+          p_cpf: string
+          p_data_nascimento?: string
+          p_dias_afastamento?: string
+          p_email: string
+          p_estado?: string
+          p_hospital_preferencia?: string
+          p_inicio_sintomas?: string
+          p_inicio_sintomas_data?: string
+          p_nome_completo: string
+          p_observacoes?: string
+          p_outros_sintomas?: string
+          p_pdf_url?: string
+          p_sintomas?: string[]
+          p_telefone: string
+          p_tipo: string
+          p_valor_total?: number
+        }
+        Returns: string
+      }
     }
     Enums: {
       app_role: "admin" | "user"
