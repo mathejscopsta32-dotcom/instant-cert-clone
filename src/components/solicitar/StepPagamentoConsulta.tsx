@@ -1,10 +1,18 @@
 import { useState, useEffect } from "react";
-import { Check, Clock, Copy, ShieldCheck, AlertCircle, RefreshCw, Loader2 } from "lucide-react";
+import { Check, Clock, Copy, AlertCircle, RefreshCw, Loader2 } from "lucide-react";
 import { QRCodeSVG } from "qrcode.react";
 import type { ConsultaFormData } from "@/pages/SolicitarConsulta";
 import { calcConsultaTotal } from "@/components/solicitar/StepRevisaoConsulta";
 import { supabase } from "@/integrations/supabase/client";
 import { usePaymentStatus } from "@/hooks/usePaymentStatus";
+import {
+  EntregaImediataBadge,
+  PaymentTrustBadges,
+  PaymentReviews,
+  PixPaymentHeader,
+  WhatsAppButton,
+  PixBrandFooter,
+} from "./PaymentSocialProof";
 
 interface Props {
   formData: ConsultaFormData;
@@ -28,25 +36,13 @@ const StepPagamentoConsulta = ({ formData, pedidoId, onPaymentConfirmed }: Props
     setPixError(null);
     try {
       const { data, error } = await supabase.functions.invoke("create-pix", {
-        body: {
-          amount: totalPrice,
-          pedidoId,
-          nomeCompleto: formData.nomeCompleto,
-          cpf: formData.cpf,
-          email: formData.email,
-        },
+        body: { amount: totalPrice, pedidoId, nomeCompleto: formData.nomeCompleto, cpf: formData.cpf, email: formData.email },
       });
-
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
-
       const code = data?.pixCode;
-      if (code) {
-        setPixCode(code);
-        setTimeLeft(30 * 60);
-      } else {
-        throw new Error("QR Code não retornado pela gateway");
-      }
+      if (code) { setPixCode(code); setTimeLeft(30 * 60); }
+      else throw new Error("QR Code não retornado pela gateway");
     } catch (err: any) {
       console.error("Erro ao criar PIX:", err);
       setPixError(err.message || "Erro ao gerar PIX. Tente novamente.");
@@ -55,62 +51,39 @@ const StepPagamentoConsulta = ({ formData, pedidoId, onPaymentConfirmed }: Props
     }
   };
 
-  useEffect(() => {
-    createPixTransaction();
-  }, []);
+  useEffect(() => { createPixTransaction(); }, []);
 
   useEffect(() => {
     const timer = setInterval(() => {
-      setTimeLeft((prev) => {
-        if (prev <= 1) { clearInterval(timer); return 0; }
-        return prev - 1;
-      });
+      setTimeLeft((prev) => { if (prev <= 1) { clearInterval(timer); return 0; } return prev - 1; });
     }, 1000);
     return () => clearInterval(timer);
   }, []);
 
-  // Auto-confirm when webhook triggers approval
-  useEffect(() => {
-    if (paymentApproved) {
-      onPaymentConfirmed(pedidoId);
-    }
-  }, [paymentApproved]);
-
-  const handleRegenerate = () => createPixTransaction();
+  useEffect(() => { if (paymentApproved) onPaymentConfirmed(pedidoId); }, [paymentApproved]);
 
   const handleCopy = async () => {
     if (!pixCode) return;
     try {
       await navigator.clipboard.writeText(pixCode);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 3000);
+      setCopied(true); setTimeout(() => setCopied(false), 3000);
     } catch {
-      const textarea = document.createElement("textarea");
-      textarea.value = pixCode;
-      document.body.appendChild(textarea);
-      textarea.select();
-      document.execCommand("copy");
-      document.body.removeChild(textarea);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 3000);
+      const ta = document.createElement("textarea"); ta.value = pixCode;
+      document.body.appendChild(ta); ta.select(); document.execCommand("copy"); document.body.removeChild(ta);
+      setCopied(true); setTimeout(() => setCopied(false), 3000);
     }
   };
 
   return (
-    <div className="space-y-6">
-      <div className="text-center">
-        <div className="w-14 h-14 mx-auto mb-4 rounded-full bg-primary/10 flex items-center justify-center">
-          <span className="text-2xl">₱</span>
-        </div>
-        <h2 className="text-xl font-bold text-foreground">Pagamento via PIX</h2>
-        <p className="text-sm text-muted-foreground mt-1">
-          Sua consulta será agendada após a confirmação do pagamento.
-        </p>
-      </div>
+    <div className="space-y-5">
+      <PixPaymentHeader label="Sua consulta será agendada automaticamente após o pagamento." />
 
-      <div className="bg-secondary/50 rounded-xl p-4 text-center">
+      <EntregaImediataBadge />
+
+      <div className="bg-gradient-to-br from-primary/5 to-primary/10 rounded-xl p-5 text-center border border-primary/15">
         <p className="text-xs text-muted-foreground font-medium mb-1">Valor da Consulta</p>
         <p className="text-3xl font-extrabold text-primary">{precoLabel}</p>
+        <p className="text-[10px] text-muted-foreground mt-1">Pagamento único · Sem taxas adicionais</p>
       </div>
 
       <div className="space-y-3">
@@ -145,7 +118,7 @@ const StepPagamentoConsulta = ({ formData, pedidoId, onPaymentConfirmed }: Props
           </div>
         )}
 
-        <button type="button" onClick={handleRegenerate} disabled={loadingPix}
+        <button type="button" onClick={() => createPixTransaction()} disabled={loadingPix}
           className="w-full inline-flex items-center justify-center gap-2 text-sm text-primary font-semibold hover:underline disabled:opacity-50">
           <RefreshCw className={`w-4 h-4 ${loadingPix ? "animate-spin" : ""}`} />
           Gerar novo código PIX
@@ -163,22 +136,15 @@ const StepPagamentoConsulta = ({ formData, pedidoId, onPaymentConfirmed }: Props
         </div>
       )}
 
-      {/* Aguardando pagamento */}
       <div className="bg-primary/5 border border-primary/20 rounded-xl p-4 flex items-center justify-center gap-3">
         <Loader2 className="w-5 h-5 animate-spin text-primary" />
         <p className="text-sm font-medium text-foreground">Aguardando confirmação do pagamento...</p>
       </div>
 
-      <div className="flex items-center justify-center gap-6 pt-2">
-        <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-          <ShieldCheck className="w-4 h-4 text-primary" />
-          Pagamento 100% Seguro
-        </div>
-        <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-          <Clock className="w-4 h-4 text-primary" />
-          Agendamento Imediato
-        </div>
-      </div>
+      <PaymentTrustBadges />
+      <PaymentReviews />
+      <WhatsAppButton />
+      <PixBrandFooter />
     </div>
   );
 };
