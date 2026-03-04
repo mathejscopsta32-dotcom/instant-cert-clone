@@ -90,7 +90,7 @@ const EscolherMedico = () => {
               }`}
             >
               {(m as any).destaque && (
-                <span className="absolute top-3 right-3 bg-primary text-primary-foreground text-[10px] font-bold px-3 py-1 rounded-full flex items-center gap-1">
+                <span className="absolute bottom-3 right-3 bg-primary text-primary-foreground text-[10px] font-bold px-3 py-1 rounded-full flex items-center gap-1">
                   <Star className="w-3 h-3 fill-current" />
                   RECOMENDADO
                 </span>

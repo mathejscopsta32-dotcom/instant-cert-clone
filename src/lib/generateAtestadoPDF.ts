@@ -40,8 +40,23 @@ const getCID10 = (sintomas: string[]): { code: string; description: string } => 
   return { code: "R69", description: "Causas desconhecidas de morbidade" };
 };
 
-const DOCTOR_NAME = "Dr. Rodrigo V. Vasconcelos";
-const DOCTOR_CRM = "CRM/SP 142857";
+// Doctor database with CRM info
+const doctorDatabase: Record<string, { fullName: string; crm: string }> = {
+  "Dr. Rodrigo V.": { fullName: "Dr. Rodrigo V. Vasconcelos", crm: "CRM/SP 158.743" },
+  "Dra. Ana Beatriz": { fullName: "Dra. Ana Beatriz de Souza", crm: "CRM/RJ 198.432" },
+  "Dr. Roberto Mendes": { fullName: "Dr. Roberto Mendes Silva", crm: "CRM/MG 165.291" },
+  "Dra. Juliana Costa": { fullName: "Dra. Juliana Costa Ferreira", crm: "CRM/SP 201.845" },
+};
+
+const DEFAULT_DOCTOR_NAME = "Dr. Rodrigo V. Vasconcelos";
+const DEFAULT_DOCTOR_CRM = "CRM/SP 158.743";
+
+const getDoctorInfo = (medicoSelecionado?: string) => {
+  if (medicoSelecionado && doctorDatabase[medicoSelecionado]) {
+    return doctorDatabase[medicoSelecionado];
+  }
+  return { fullName: DEFAULT_DOCTOR_NAME, crm: DEFAULT_DOCTOR_CRM };
+};
 
 const getInicioDate = (formData: FormData): Date => {
   const today = new Date();
@@ -212,6 +227,9 @@ export const generateAtestadoPDF = async (formData: FormData): Promise<jsPDF> =>
   const contentW = pageW - margin * 2;
   const verificationCode = generateVerificationCode();
   const now = new Date();
+  const doctorInfo = getDoctorInfo(formData.medicoSelecionado);
+  const DOCTOR_NAME = doctorInfo.fullName;
+  const DOCTOR_CRM = doctorInfo.crm;
 
   const inicioDate = getInicioDate(formData);
   const diasNum = getDiasNum(formData.diasAfastamento);

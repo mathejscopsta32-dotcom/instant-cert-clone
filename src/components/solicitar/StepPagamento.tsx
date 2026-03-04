@@ -92,6 +92,19 @@ const StepPagamento = ({ formData, pedidoId, onPaymentConfirmed }: Props) => {
       {/* Entrega Imediata */}
       <EntregaImediataBadge />
 
+      {/* Médico Responsável */}
+      {formData.medicoSelecionado && (
+        <div className="bg-muted rounded-xl p-4 flex items-center gap-3">
+          <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center">
+            <span className="text-primary text-sm font-bold">👨‍⚕️</span>
+          </div>
+          <div>
+            <p className="text-[10px] text-muted-foreground uppercase tracking-wide">Médico Responsável</p>
+            <p className="text-sm font-bold text-foreground">{formData.medicoSelecionado}</p>
+          </div>
+        </div>
+      )}
+
       {/* Valor Total */}
       <div className="bg-gradient-to-br from-primary/5 to-primary/10 rounded-xl p-5 text-center border border-primary/15">
         <p className="text-xs text-muted-foreground font-medium mb-1">Valor Total</p>
