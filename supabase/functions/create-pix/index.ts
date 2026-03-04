@@ -65,7 +65,10 @@ serve(async (req) => {
         customer: {
           name: nomeCompleto || "Cliente",
           email: email || "cliente@email.com",
-          document: cpf?.replace(/\D/g, "") || "00000000000",
+          document: {
+            type: "cpf",
+            number: cpf?.replace(/\D/g, "") || "00000000000",
+          },
         },
         pix: {
           expiresInMinutes: 30,
