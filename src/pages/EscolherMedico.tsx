@@ -11,13 +11,14 @@ import imgDraJuliana from "@/assets/doctors/dra-juliana.jpg";
 
 const medicos = [
   {
-    nome: "Dr. Carlos Eduardo",
-    crm: "CRM/SP 142.587",
+    nome: "Dr. Rodrigo V.",
+    crm: "CRM/SP 158.743",
     especialidade: "Clínico Geral",
-    experiencia: "12 anos de experiência",
-    avaliacao: 4.9,
-    avaliacoes: 1847,
+    experiencia: "14 anos de experiência",
+    avaliacao: 5.0,
+    avaliacoes: 2391,
     img: imgDrCarlos,
+    destaque: true,
   },
   {
     nome: "Dra. Ana Beatriz",
@@ -82,15 +83,29 @@ const EscolherMedico = () => {
             <button
               key={i}
               onClick={() => handleSelect(m.nome)}
-              className="group bg-card border border-border/60 rounded-2xl p-5 hover:shadow-xl hover:border-primary/40 transition-all duration-300 text-left flex gap-4 items-start"
+              className={`group bg-card border rounded-2xl p-5 hover:shadow-xl transition-all duration-300 text-left flex gap-4 items-start relative overflow-hidden ${
+                (m as any).destaque
+                  ? "border-primary/60 ring-2 ring-primary/20 shadow-lg sm:col-span-2"
+                  : "border-border/60 hover:border-primary/40"
+              }`}
             >
+              {(m as any).destaque && (
+                <span className="absolute top-3 right-3 bg-primary text-primary-foreground text-[10px] font-bold px-3 py-1 rounded-full flex items-center gap-1">
+                  <Star className="w-3 h-3 fill-current" />
+                  RECOMENDADO
+                </span>
+              )}
               <img
                 src={m.img}
                 alt={m.nome}
-                className="w-20 h-20 rounded-2xl object-cover flex-shrink-0 ring-2 ring-border group-hover:ring-primary/40 transition-all"
+                className={`rounded-2xl object-cover flex-shrink-0 ring-2 transition-all ${
+                  (m as any).destaque
+                    ? "w-24 h-24 ring-primary/40"
+                    : "w-20 h-20 ring-border group-hover:ring-primary/40"
+                }`}
               />
               <div className="flex-1 min-w-0">
-                <h2 className="text-base font-bold text-foreground truncate">{m.nome}</h2>
+                <h2 className={`font-bold text-foreground truncate ${(m as any).destaque ? "text-lg" : "text-base"}`}>{m.nome}</h2>
                 <p className="text-xs text-primary font-semibold mt-0.5">{m.crm}</p>
                 <p className="text-xs text-muted-foreground mt-1">{m.especialidade} • {m.experiencia}</p>
 
