@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ShieldCheck, MapPin, Sparkles, FileText, QrCode, Package, Hospital } from "lucide-react";
+import { ShieldCheck, MapPin, Sparkles, FileText, QrCode, Package, Hospital, UserCheck } from "lucide-react";
 import type { FormData } from "@/pages/Solicitar";
 import { diasOpcoes } from "./StepDetalhes";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -59,6 +59,19 @@ const StepRevisao = ({ formData, updateForm, onFinalize, errors }: Props) => {
           Estamos quase lá! Confira os detalhes do seu atestado antes de finalizar.
         </p>
       </div>
+
+      {/* Médico selecionado */}
+      {formData.medicoSelecionado && (
+        <div className="bg-primary/5 border border-primary/20 rounded-xl p-4 flex items-center gap-3">
+          <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+            <UserCheck className="w-5 h-5 text-primary" />
+          </div>
+          <div>
+            <p className="text-xs text-muted-foreground">Médico Responsável</p>
+            <p className="text-sm font-bold text-foreground">{formData.medicoSelecionado}</p>
+          </div>
+        </div>
+      )}
 
       {/* Addons */}
       <div className="space-y-3">

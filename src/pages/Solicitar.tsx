@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { ArrowLeft, ArrowRight, CheckCircle2, ShieldCheck, User, FileText, Stethoscope, CreditCard, Loader2 } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import GlobalIframe from "@/components/GlobalIframe";
@@ -32,6 +32,7 @@ export interface FormData {
   addonQrCode: boolean;
   addonPacote3: boolean;
   aceitaTermos: boolean;
+  medicoSelecionado: string;
 }
 
 const initialFormData: FormData = {
@@ -53,6 +54,7 @@ const initialFormData: FormData = {
   addonQrCode: false,
   addonPacote3: false,
   aceitaTermos: false,
+  medicoSelecionado: "",
 };
 
 const stepsMeta = [
@@ -68,6 +70,7 @@ const TOTAL_STEPS = 5;
 const STORAGE_KEY = "solicitar_atestado_state";
 
 const Solicitar = () => {
+  const [searchParams] = useSearchParams();
   const [currentStep, setCurrentStep] = useState(() => {
     try { const s = sessionStorage.getItem(STORAGE_KEY); return s ? JSON.parse(s).currentStep ?? 0 : 0; } catch { return 0; }
   });
@@ -87,6 +90,14 @@ const Solicitar = () => {
     try { const s = sessionStorage.getItem(STORAGE_KEY); return s ? JSON.parse(s).pedidoId ?? null : null; } catch { return null; }
   });
   const navigate = useNavigate();
+
+  // Read medico from URL on mount
+  useEffect(() => {
+    const medico = searchParams.get("medico");
+    if (medico && !formData.medicoSelecionado) {
+      setFormData(prev => ({ ...prev, medicoSelecionado: medico }));
+    }
+  }, [searchParams]);
 
   // Persist state to sessionStorage
   useEffect(() => {

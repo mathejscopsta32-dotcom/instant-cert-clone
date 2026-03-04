@@ -159,6 +159,7 @@ const SolicitarPiscina = () => {
     addonCid: false,
     addonQrCode: false,
     addonPacote3: false,
+    medicoSelecionado: "",
   };
 
   return (
