@@ -32,6 +32,15 @@ const services = [
     color: "bg-cyan-500",
     features: ["Aptidão dermatológica", "Válido para academias e clubes", "Entrega imediata"],
   },
+  {
+    icon: Stethoscope,
+    title: "Consulta Médica Online",
+    desc: "Teleconsulta com médico licenciado para avaliação, diagnóstico e orientações.",
+    price: "R$ 29,90",
+    to: "/escolher-medico?destino=/consulta",
+    color: "bg-violet-500",
+    features: ["Avaliação clínica completa", "Prescrição médica digital", "Atendimento 24h"],
+  },
 ];
 
 const SelecionarServico = () => {
@@ -54,7 +63,7 @@ const SelecionarServico = () => {
           </p>
         </div>
 
-        <div className="grid md:grid-cols-3 gap-6">
+        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
           {services.map((s, i) => (
             <Link
               key={i}

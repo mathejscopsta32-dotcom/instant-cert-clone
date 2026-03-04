@@ -1,4 +1,4 @@
-import { User, ArrowRight } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import { Link } from "react-router-dom";
 import logoDr from "@/assets/logo-dr.png";
 
@@ -14,10 +14,6 @@ const Navbar = () => {
         </Link>
 
         <div className="hidden md:flex items-center gap-6">
-          <Link to="/consulta" className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors">
-            <User className="w-4 h-4" />
-            Consulta Online
-          </Link>
           <Link
             to="/selecionar-servico"
             className="inline-flex items-center gap-2 bg-primary text-primary-foreground px-5 py-2.5 rounded-lg text-sm font-semibold hover:opacity-90 transition-opacity"
