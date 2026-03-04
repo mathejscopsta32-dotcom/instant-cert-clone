@@ -1,4 +1,4 @@
-import { Gift, User, ArrowRight } from "lucide-react";
+import { User, ArrowRight } from "lucide-react";
 import { Link } from "react-router-dom";
 import logoDr from "@/assets/logo-dr.png";
 
@@ -19,7 +19,7 @@ const Navbar = () => {
             Consulta Online
           </Link>
           <Link
-            to="/solicitar"
+            to="/selecionar-servico"
             className="inline-flex items-center gap-2 bg-primary text-primary-foreground px-5 py-2.5 rounded-lg text-sm font-semibold hover:opacity-90 transition-opacity"
           >
             Solicitar Agora

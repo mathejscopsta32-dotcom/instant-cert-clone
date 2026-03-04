@@ -6,6 +6,8 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Index from "./pages/Index";
 import Solicitar from "./pages/Solicitar";
 import SolicitarConsulta from "./pages/SolicitarConsulta";
+import SolicitarPiscina from "./pages/SolicitarPiscina";
+import SelecionarServico from "./pages/SelecionarServico";
 import MeuPedido from "./pages/MeuPedido";
 import Admin from "./pages/Admin";
 import AdminLogin from "./pages/AdminLogin";
@@ -32,7 +34,9 @@ const App = () => (
         <ClickTracker />
         <Routes>
           <Route path="/" element={<Index />} />
+          <Route path="/selecionar-servico" element={<SelecionarServico />} />
           <Route path="/solicitar" element={<Solicitar />} />
+          <Route path="/solicitar-piscina" element={<SolicitarPiscina />} />
           <Route path="/consulta" element={<SolicitarConsulta />} />
           <Route path="/meu-pedido" element={<MeuPedido />} />
           <Route path="/termos-de-uso" element={<TermosDeUso />} />
