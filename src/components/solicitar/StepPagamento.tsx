@@ -1,10 +1,18 @@
 import { useState, useEffect } from "react";
-import { Check, Clock, Copy, ShieldCheck, AlertCircle, RefreshCw, Loader2 } from "lucide-react";
+import { Check, Clock, Copy, AlertCircle, RefreshCw, Loader2 } from "lucide-react";
 import { QRCodeSVG } from "qrcode.react";
 import type { FormData } from "@/pages/Solicitar";
 import { diasOpcoes } from "./StepDetalhes";
 import { supabase } from "@/integrations/supabase/client";
 import { usePaymentStatus } from "@/hooks/usePaymentStatus";
+import {
+  EntregaImediataBadge,
+  PaymentTrustBadges,
+  PaymentReviews,
+  PixPaymentHeader,
+  WhatsAppButton,
+  PixBrandFooter,
+} from "./PaymentSocialProof";
 
 const ADDON_CID_PRICE = 9.9;
 const ADDON_QR_PRICE = 9.9;
@@ -39,25 +47,13 @@ const StepPagamento = ({ formData, pedidoId, onPaymentConfirmed }: Props) => {
     setPixError(null);
     try {
       const { data, error } = await supabase.functions.invoke("create-pix", {
-        body: {
-          amount,
-          pedidoId,
-          nomeCompleto: formData.nomeCompleto,
-          cpf: formData.cpf,
-          email: formData.email,
-        },
+        body: { amount, pedidoId, nomeCompleto: formData.nomeCompleto, cpf: formData.cpf, email: formData.email },
       });
-
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
-
       const code = data?.pixCode;
-      if (code) {
-        setPixCode(code);
-        setTimeLeft(30 * 60);
-      } else {
-        throw new Error("QR Code não retornado pela gateway");
-      }
+      if (code) { setPixCode(code); setTimeLeft(30 * 60); }
+      else throw new Error("QR Code não retornado pela gateway");
     } catch (err: any) {
       console.error("Erro ao criar PIX:", err);
       setPixError(err.message || "Erro ao gerar PIX. Tente novamente.");
@@ -66,73 +62,46 @@ const StepPagamento = ({ formData, pedidoId, onPaymentConfirmed }: Props) => {
     }
   };
 
-  useEffect(() => {
-    createPixTransaction();
-  }, []);
+  useEffect(() => { createPixTransaction(); }, []);
 
   useEffect(() => {
     const timer = setInterval(() => {
-      setTimeLeft((prev) => {
-        if (prev <= 1) { clearInterval(timer); return 0; }
-        return prev - 1;
-      });
+      setTimeLeft((prev) => { if (prev <= 1) { clearInterval(timer); return 0; } return prev - 1; });
     }, 1000);
     return () => clearInterval(timer);
   }, []);
 
-  // Auto-confirm when webhook triggers approval
-  useEffect(() => {
-    if (paymentApproved) {
-      onPaymentConfirmed(pedidoId);
-    }
-  }, [paymentApproved]);
-
-  const handleRegenerate = () => {
-    createPixTransaction();
-  };
+  useEffect(() => { if (paymentApproved) onPaymentConfirmed(pedidoId); }, [paymentApproved]);
 
   const handleCopy = async () => {
     if (!pixCode) return;
     try {
       await navigator.clipboard.writeText(pixCode);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 3000);
+      setCopied(true); setTimeout(() => setCopied(false), 3000);
     } catch {
-      const textarea = document.createElement("textarea");
-      textarea.value = pixCode;
-      document.body.appendChild(textarea);
-      textarea.select();
-      document.execCommand("copy");
-      document.body.removeChild(textarea);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 3000);
+      const ta = document.createElement("textarea"); ta.value = pixCode;
+      document.body.appendChild(ta); ta.select(); document.execCommand("copy"); document.body.removeChild(ta);
+      setCopied(true); setTimeout(() => setCopied(false), 3000);
     }
   };
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="text-center">
-        <div className="w-14 h-14 mx-auto mb-4 rounded-full bg-primary/10 flex items-center justify-center">
-          <span className="text-2xl">₱</span>
-        </div>
-        <h2 className="text-xl font-bold text-foreground">Pagamento via PIX</h2>
-        <p className="text-sm text-muted-foreground mt-1">
-          Seu atestado será liberado após a confirmação do pagamento.
-        </p>
-      </div>
+    <div className="space-y-5">
+      <PixPaymentHeader label="Seu atestado será liberado automaticamente após o pagamento." />
+
+      {/* Entrega Imediata */}
+      <EntregaImediataBadge />
 
       {/* Valor Total */}
-      <div className="bg-secondary/50 rounded-xl p-4 text-center">
+      <div className="bg-gradient-to-br from-primary/5 to-primary/10 rounded-xl p-5 text-center border border-primary/15">
         <p className="text-xs text-muted-foreground font-medium mb-1">Valor Total</p>
         <p className="text-3xl font-extrabold text-primary">{precoLabel}</p>
+        <p className="text-[10px] text-muted-foreground mt-1">Pagamento único · Sem taxas adicionais</p>
       </div>
 
       {/* QR Code */}
       <div className="space-y-3">
-        <p className="text-sm font-semibold text-foreground text-center">
-          Escaneie o QR Code abaixo:
-        </p>
+        <p className="text-sm font-semibold text-foreground text-center">Escaneie o QR Code abaixo:</p>
         <div className="flex justify-center">
           <div className="bg-white p-5 rounded-2xl shadow-sm border min-h-[260px] flex items-center justify-center">
             {loadingPix ? (
@@ -151,7 +120,6 @@ const StepPagamento = ({ formData, pedidoId, onPaymentConfirmed }: Props) => {
           </div>
         </div>
 
-        {/* Timer */}
         {timeLeft > 0 ? (
           <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground">
             <Clock className="w-3.5 h-3.5" />
@@ -164,13 +132,8 @@ const StepPagamento = ({ formData, pedidoId, onPaymentConfirmed }: Props) => {
           </div>
         )}
 
-        {/* Regenerate */}
-        <button
-          type="button"
-          onClick={handleRegenerate}
-          disabled={loadingPix}
-          className="w-full inline-flex items-center justify-center gap-2 text-sm text-primary font-semibold hover:underline disabled:opacity-50"
-        >
+        <button type="button" onClick={() => createPixTransaction()} disabled={loadingPix}
+          className="w-full inline-flex items-center justify-center gap-2 text-sm text-primary font-semibold hover:underline disabled:opacity-50">
           <RefreshCw className={`w-4 h-4 ${loadingPix ? "animate-spin" : ""}`} />
           Gerar novo código PIX
         </button>
@@ -180,24 +143,10 @@ const StepPagamento = ({ formData, pedidoId, onPaymentConfirmed }: Props) => {
       {pixCode && (
         <div className="space-y-3">
           <p className="text-sm font-semibold text-foreground">Ou copie e cole o código:</p>
-          <div className="bg-muted rounded-xl p-3 text-xs text-muted-foreground break-all font-mono max-h-20 overflow-y-auto">
-            {pixCode}
-          </div>
-          <button
-            type="button"
-            onClick={handleCopy}
-            disabled={timeLeft === 0}
-            className={`w-full inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl font-semibold text-sm transition-all ${
-              copied
-                ? "bg-primary text-primary-foreground"
-                : "border border-primary text-primary hover:bg-secondary"
-            } disabled:opacity-50`}
-          >
-            {copied ? (
-              <><Check className="w-4 h-4" />Código copiado!</>
-            ) : (
-              <><Copy className="w-4 h-4" />Copiar</>
-            )}
+          <div className="bg-muted rounded-xl p-3 text-xs text-muted-foreground break-all font-mono max-h-20 overflow-y-auto">{pixCode}</div>
+          <button type="button" onClick={handleCopy} disabled={timeLeft === 0}
+            className={`w-full inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl font-semibold text-sm transition-all ${copied ? "bg-primary text-primary-foreground" : "border border-primary text-primary hover:bg-secondary"} disabled:opacity-50`}>
+            {copied ? (<><Check className="w-4 h-4" />Código copiado!</>) : (<><Copy className="w-4 h-4" />Copiar</>)}
           </button>
         </div>
       )}
@@ -208,17 +157,17 @@ const StepPagamento = ({ formData, pedidoId, onPaymentConfirmed }: Props) => {
         <p className="text-sm font-medium text-foreground">Aguardando confirmação do pagamento...</p>
       </div>
 
-      {/* Footer badges */}
-      <div className="flex items-center justify-center gap-6 pt-2">
-        <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-          <ShieldCheck className="w-4 h-4 text-primary" />
-          Pagamento 100% Seguro
-        </div>
-        <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-          <Clock className="w-4 h-4 text-primary" />
-          Liberação em Minutos
-        </div>
-      </div>
+      {/* Trust badges */}
+      <PaymentTrustBadges />
+
+      {/* Reviews */}
+      <PaymentReviews />
+
+      {/* WhatsApp */}
+      <WhatsAppButton />
+
+      {/* Footer */}
+      <PixBrandFooter />
     </div>
   );
 };
