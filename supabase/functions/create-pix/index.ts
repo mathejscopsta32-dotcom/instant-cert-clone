@@ -98,7 +98,7 @@ serve(async (req) => {
         .eq("id", pedidoId);
     }
 
-    const pixCode = data.pix?.qrCode || data.pix?.qr_code || data.pix?.payload ||
+    const pixCode = data.pix?.qrcode || data.pix?.qrCode || data.pix?.qr_code || data.pix?.payload ||
                     data.pixQrCode || data.qrCode || data.qr_code || data.payload;
 
     return new Response(
