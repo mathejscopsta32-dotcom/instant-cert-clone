@@ -11,7 +11,6 @@ import Admin from "./pages/Admin";
 import AdminLogin from "./pages/AdminLogin";
 import NotFound from "./pages/NotFound";
 import { useClickTracker } from "./hooks/useClickTracker";
-import FacebookPixel from "./components/FacebookPixel";
 
 const queryClient = new QueryClient();
 
@@ -27,7 +26,6 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <ClickTracker />
-        <FacebookPixel />
         <Routes>
           <Route path="/" element={<Index />} />
           <Route path="/solicitar" element={<Solicitar />} />
