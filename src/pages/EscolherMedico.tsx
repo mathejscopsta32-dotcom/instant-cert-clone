@@ -83,14 +83,14 @@ const EscolherMedico = () => {
             <button
               key={i}
               onClick={() => handleSelect(m.nome)}
-              className={`group bg-card border rounded-2xl p-5 hover:shadow-xl transition-all duration-300 text-left flex gap-4 items-start relative overflow-hidden ${
+              className={`group bg-card border rounded-2xl p-5 hover:shadow-xl transition-all duration-300 text-left flex gap-4 items-start ${
                 (m as any).destaque
                   ? "border-primary/60 ring-2 ring-primary/20 shadow-lg sm:col-span-2"
                   : "border-border/60 hover:border-primary/40"
               }`}
             >
               {(m as any).destaque && (
-                <span className="absolute bottom-3 right-3 bg-primary text-primary-foreground text-[10px] font-bold px-3 py-1 rounded-full flex items-center gap-1">
+                <span className="absolute -top-3 left-1/2 -translate-x-1/2 bg-primary text-primary-foreground text-[10px] font-bold px-3 py-1 rounded-full flex items-center gap-1 z-10">
                   <Star className="w-3 h-3 fill-current" />
                   RECOMENDADO
                 </span>
