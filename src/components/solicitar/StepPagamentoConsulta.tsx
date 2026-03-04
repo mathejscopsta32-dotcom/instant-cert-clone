@@ -4,6 +4,7 @@ import { QRCodeSVG } from "qrcode.react";
 import type { ConsultaFormData } from "@/pages/SolicitarConsulta";
 import { calcConsultaTotal } from "@/components/solicitar/StepRevisaoConsulta";
 import { supabase } from "@/integrations/supabase/client";
+import { usePaymentStatus } from "@/hooks/usePaymentStatus";
 
 interface Props {
   formData: ConsultaFormData;
@@ -22,6 +23,7 @@ const StepPagamentoConsulta = ({ formData, pedidoId, onPaymentConfirmed }: Props
   const [loadingPix, setLoadingPix] = useState(true);
   const [pixError, setPixError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const paymentApproved = usePaymentStatus(pedidoId);
 
   const precoLabel = `R$ ${totalPrice.toFixed(2).replace(".", ",")}`;
 
@@ -70,6 +72,13 @@ const StepPagamentoConsulta = ({ formData, pedidoId, onPaymentConfirmed }: Props
     }, 1000);
     return () => clearInterval(timer);
   }, []);
+
+  // Auto-confirm when webhook triggers approval
+  useEffect(() => {
+    if (paymentApproved) {
+      onPaymentConfirmed(pedidoId);
+    }
+  }, [paymentApproved]);
 
   const handleRegenerate = () => createPixTransaction();
 

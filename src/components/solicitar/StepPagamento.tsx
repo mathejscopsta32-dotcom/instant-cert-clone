@@ -1,9 +1,10 @@
 import { useState, useEffect, useRef } from "react";
-import { Check, Clock, Copy, ShieldCheck, AlertCircle, RefreshCw, Upload, Loader2 } from "lucide-react";
+import { Check, Clock, Copy, ShieldCheck, AlertCircle, RefreshCw, Upload, Loader2, PartyPopper } from "lucide-react";
 import { QRCodeSVG } from "qrcode.react";
 import type { FormData } from "@/pages/Solicitar";
 import { diasOpcoes } from "./StepDetalhes";
 import { supabase } from "@/integrations/supabase/client";
+import { usePaymentStatus } from "@/hooks/usePaymentStatus";
 
 const ADDON_CID_PRICE = 9.9;
 const ADDON_QR_PRICE = 9.9;
@@ -25,6 +26,7 @@ const StepPagamento = ({ formData, pedidoId, onPaymentConfirmed }: Props) => {
   const [loadingPix, setLoadingPix] = useState(true);
   const [pixError, setPixError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const paymentApproved = usePaymentStatus(pedidoId);
 
   const selected = diasOpcoes.find((d) => d.label === formData.diasAfastamento);
   const basePrice = selected?.valor || 39.9;
@@ -81,6 +83,13 @@ const StepPagamento = ({ formData, pedidoId, onPaymentConfirmed }: Props) => {
     }, 1000);
     return () => clearInterval(timer);
   }, []);
+
+  // Auto-confirm when webhook triggers approval
+  useEffect(() => {
+    if (paymentApproved) {
+      onPaymentConfirmed(pedidoId);
+    }
+  }, [paymentApproved]);
 
   const handleRegenerate = () => {
     createPixTransaction();

@@ -1,4 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -28,10 +29,12 @@ serve(async (req) => {
       );
     }
 
-    // amount comes in BRL (e.g. 39.90), SuperPay expects cents
     const amountInCents = Math.round(amount * 100);
-
     const auth = "Basic " + btoa(`${publicKey}:${secretKey}`);
+
+    // Build webhook URL for automatic confirmation
+    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+    const webhookUrl = `${supabaseUrl}/functions/v1/superpay-webhook`;
 
     const payload = {
       amount: amountInCents,
@@ -47,6 +50,7 @@ serve(async (req) => {
       metadata: {
         pedidoId,
       },
+      postbackUrl: webhookUrl,
     };
 
     const response = await fetch("https://api.superpaybr.com/v1/transactions", {
@@ -68,10 +72,21 @@ serve(async (req) => {
       );
     }
 
-    // Return relevant PIX data to the frontend
+    // Save transaction ID to pedido using service role
+    const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    const supabase = createClient(supabaseUrl, supabaseServiceKey);
+
+    const transactionId = data.id || data.transactionId;
+    if (transactionId) {
+      await supabase
+        .from("pedidos")
+        .update({ superpay_transaction_id: transactionId })
+        .eq("id", pedidoId);
+    }
+
     return new Response(
       JSON.stringify({
-        transactionId: data.id,
+        transactionId,
         pixCode: data.pix?.qrCode || data.pix?.qr_code || data.pixQrCode || data.qrCode,
         pixKey: data.pix?.key || data.pix?.pixKey,
         expiresAt: data.pix?.expiresAt || data.expiresAt,
