@@ -16,11 +16,22 @@ serve(async (req) => {
     const body = await req.json();
     console.log("SuperPay webhook received:", JSON.stringify(body));
 
-    // Extract transaction info from SuperPay webhook payload
-    // Adjust field names based on actual SuperPay webhook format
-    const transactionId = body.id || body.transactionId || body.transaction_id;
-    const status = body.status || body.paymentStatus || body.payment_status;
-    const pedidoId = body.metadata?.pedidoId || body.metadata?.pedido_id;
+    // SuperPay wraps transaction data inside body.data
+    const txData = body.data || body;
+    const transactionId = txData.id || body.id || body.objectId;
+    const status = txData.status || body.status;
+    
+    // metadata comes as a JSON string from SuperPay
+    let pedidoId: string | null = null;
+    try {
+      const metadata = typeof txData.metadata === "string" ? JSON.parse(txData.metadata) : txData.metadata;
+      pedidoId = metadata?.pedidoId || metadata?.pedido_id || null;
+    } catch {
+      pedidoId = null;
+    }
+    if (!pedidoId) {
+      pedidoId = txData.externalRef || body.externalRef || null;
+    }
 
     if (!transactionId && !pedidoId) {
       console.error("No transaction ID or pedido ID in webhook payload");
@@ -31,7 +42,7 @@ serve(async (req) => {
     }
 
     // Check if payment was approved
-    const approvedStatuses = ["paid", "approved", "completed", "confirmed", "PAID", "APPROVED", "COMPLETED", "CONFIRMED"];
+    const approvedStatuses = ["paid", "approved", "completed", "confirmed", "PAID", "APPROVED", "COMPLETED", "CONFIRMED", "captured"];
     const isPaid = approvedStatuses.includes(status);
 
     if (!isPaid) {
