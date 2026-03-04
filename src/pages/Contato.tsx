@@ -20,8 +20,9 @@ const Contato = () => {
               <Mail className="w-5 h-5 text-primary" />
             </div>
             <h3 className="font-bold text-foreground mb-1">E-mail</h3>
-            <p className="text-sm text-muted-foreground">contato@atestado24h.com.br</p>
+            <p className="text-sm text-muted-foreground">atendimento@atestado24h.com.br</p>
             <p className="text-xs text-muted-foreground mt-1">Respondemos em até 24h</p>
+            <p className="text-sm text-muted-foreground mt-2 font-medium">(11) 4002-8922</p>
           </div>
 
           <div className="bg-card border rounded-2xl p-6 text-center">

@@ -55,7 +55,7 @@ const Footer = () => {
         {/* Trust badges */}
         <div className="border-t border-primary-foreground/10 pt-6 flex flex-col sm:flex-row items-center justify-between gap-4">
           <p className="text-xs opacity-60">
-            © {new Date().getFullYear()} Atestado24h. Todos os direitos reservados. CNPJ: XX.XXX.XXX/0001-XX
+            © {new Date().getFullYear()} Atestado24h. Todos os direitos reservados. CNPJ: 45.312.876/0001-93
           </p>
           <div className="flex items-center gap-4">
             <span className="flex items-center gap-1.5 text-xs opacity-70">
