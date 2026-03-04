@@ -14,14 +14,10 @@ const Navbar = () => {
         </Link>
 
         <div className="hidden md:flex items-center gap-6">
-          <a href="#" className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors">
-            <Gift className="w-4 h-4 text-destructive" />
-            Indique e Ganhe
-          </a>
-          <a href="#" className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors">
+          <Link to="/consulta" className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors">
             <User className="w-4 h-4" />
-            Minha Conta
-          </a>
+            Consulta Online
+          </Link>
           <Link
             to="/solicitar"
             className="inline-flex items-center gap-2 bg-primary text-primary-foreground px-5 py-2.5 rounded-lg text-sm font-semibold hover:opacity-90 transition-opacity"

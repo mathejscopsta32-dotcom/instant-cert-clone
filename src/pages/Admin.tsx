@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { CheckCircle2, XCircle, Eye, Loader2, RefreshCw, LogOut, MousePointerClick, Key, Save, Trash2, Sun, Moon, Facebook, Download, Code } from "lucide-react";
+import { CheckCircle2, XCircle, Eye, Loader2, RefreshCw, LogOut, MousePointerClick, Key, Save, Trash2, Sun, Moon, Download, Code } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
@@ -43,10 +43,6 @@ const Admin = () => {
   const [pixKeyInput, setPixKeyInput] = useState("");
   const [pixSaving, setPixSaving] = useState(false);
   const [pixSaved, setPixSaved] = useState(false);
-  const [pixelId, setPixelId] = useState("");
-  const [pixelIdInput, setPixelIdInput] = useState("");
-  const [pixelSaving, setPixelSaving] = useState(false);
-  const [pixelSaved, setPixelSaved] = useState(false);
   const [iframeUrl, setIframeUrl] = useState("");
   const [iframeUrlInput, setIframeUrlInput] = useState("");
   const [iframeEnabled, setIframeEnabled] = useState(false);
@@ -111,17 +107,6 @@ const Admin = () => {
     }
   };
 
-  const fetchPixelId = async () => {
-    const { data } = await supabase
-      .from("app_settings")
-      .select("value")
-      .eq("key", "facebook_pixel_id")
-      .maybeSingle();
-    if (data) {
-      setPixelId(data.value);
-      setPixelIdInput(data.value);
-    }
-  };
 
   useEffect(() => {
     if (!authChecking) {
@@ -172,7 +157,7 @@ const Admin = () => {
 
   useEffect(() => {
     if (!authChecking && activeTab === "clicks") fetchClicks();
-    if (!authChecking && activeTab === "config") { fetchPixKey(); fetchPixelId(); }
+    if (!authChecking && activeTab === "config") { fetchPixKey(); }
     if (!authChecking && activeTab === "iframe") fetchIframeSettings();
   }, [authChecking, activeTab]);
 
@@ -381,21 +366,6 @@ const Admin = () => {
     </div>
   );
 
-  const handleSavePixelId = async () => {
-    if (!pixelIdInput.trim()) return;
-    setPixelSaving(true);
-    setPixelSaved(false);
-    const { error } = await supabase
-      .from("app_settings")
-      .update({ value: pixelIdInput.trim(), updated_at: new Date().toISOString() })
-      .eq("key", "facebook_pixel_id");
-    if (!error) {
-      setPixelId(pixelIdInput.trim());
-      setPixelSaved(true);
-      setTimeout(() => setPixelSaved(false), 3000);
-    }
-    setPixelSaving(false);
-  };
 
   if (authChecking) {
     return (
@@ -671,52 +641,6 @@ const Admin = () => {
                     {pixSaved ? "Salvo!" : "Salvar"}
                   </button>
                 </div>
-              </div>
-
-              {/* Facebook Pixel Card */}
-              <div className="bg-card border rounded-xl p-6 space-y-4">
-                <div>
-                  <h3 className="font-bold text-foreground text-lg flex items-center gap-2">
-                    <Facebook className="w-5 h-5 text-primary" />
-                    Facebook Pixel
-                  </h3>
-                  <p className="text-sm text-muted-foreground mt-1">
-                    Configure o ID do pixel do Facebook para rastreamento.
-                  </p>
-                </div>
-
-                {pixelId && (
-                  <div className="bg-muted rounded-lg p-3">
-                    <p className="text-xs text-muted-foreground mb-1">Pixel ID atual:</p>
-                    <p className="font-mono text-sm text-foreground break-all">{pixelId}</p>
-                  </div>
-                )}
-
-                <div className="space-y-2">
-                  <label className="text-sm font-medium text-foreground">Pixel ID</label>
-                  <input
-                    type="text"
-                    value={pixelIdInput}
-                    onChange={(e) => setPixelIdInput(e.target.value)}
-                    placeholder="Cole o ID do pixel aqui..."
-                    className="w-full px-3 py-2.5 rounded-xl border border-border bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary font-mono"
-                  />
-                </div>
-
-                <button
-                  onClick={handleSavePixelId}
-                  disabled={pixelSaving || !pixelIdInput.trim() || pixelIdInput.trim() === pixelId}
-                  className="inline-flex items-center gap-2 px-6 py-2.5 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:opacity-90 transition-opacity disabled:opacity-50"
-                >
-                  {pixelSaving ? (
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                  ) : pixelSaved ? (
-                    <CheckCircle2 className="w-4 h-4" />
-                  ) : (
-                    <Save className="w-4 h-4" />
-                  )}
-                  {pixelSaved ? "Salvo!" : "Salvar"}
-                </button>
               </div>
             </div>
           </TabsContent>
