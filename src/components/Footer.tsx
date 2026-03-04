@@ -26,7 +26,8 @@ const Footer = () => {
           <div>
             <h3 className="font-bold text-sm mb-3 opacity-90">Serviços</h3>
             <ul className="space-y-2 text-sm opacity-70">
-              <li><Link to="/solicitar" className="hover:opacity-100 transition-opacity">Solicitar Atestado</Link></li>
+              <li><Link to="/selecionar-servico" className="hover:opacity-100 transition-opacity">Solicitar Atestado</Link></li>
+              <li><Link to="/solicitar-piscina" className="hover:opacity-100 transition-opacity">Atestado para Piscina</Link></li>
               <li><Link to="/consulta" className="hover:opacity-100 transition-opacity">Consulta Online</Link></li>
               <li><Link to="/meu-pedido" className="hover:opacity-100 transition-opacity">Acompanhar Pedido</Link></li>
             </ul>
