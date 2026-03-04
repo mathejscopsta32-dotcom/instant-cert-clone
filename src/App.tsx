@@ -10,6 +10,10 @@ import MeuPedido from "./pages/MeuPedido";
 import Admin from "./pages/Admin";
 import AdminLogin from "./pages/AdminLogin";
 import NotFound from "./pages/NotFound";
+import TermosDeUso from "./pages/TermosDeUso";
+import PoliticaPrivacidade from "./pages/PoliticaPrivacidade";
+import QuemSomos from "./pages/QuemSomos";
+import Contato from "./pages/Contato";
 import { useClickTracker } from "./hooks/useClickTracker";
 
 const queryClient = new QueryClient();
@@ -31,9 +35,12 @@ const App = () => (
           <Route path="/solicitar" element={<Solicitar />} />
           <Route path="/consulta" element={<SolicitarConsulta />} />
           <Route path="/meu-pedido" element={<MeuPedido />} />
+          <Route path="/termos-de-uso" element={<TermosDeUso />} />
+          <Route path="/politica-de-privacidade" element={<PoliticaPrivacidade />} />
+          <Route path="/quem-somos" element={<QuemSomos />} />
+          <Route path="/contato" element={<Contato />} />
           <Route path="/admin" element={<Admin />} />
           <Route path="/admin/login" element={<AdminLogin />} />
-          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
