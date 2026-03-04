@@ -4,7 +4,7 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import GlobalIframe from "@/components/GlobalIframe";
 
-import imgDrCarlos from "@/assets/doctors/dr-carlos.jpg";
+import imgDrRodrigo from "@/assets/doctor.jpg";
 import imgDraAna from "@/assets/doctors/dra-ana.jpg";
 import imgDrRoberto from "@/assets/doctors/dr-roberto.jpg";
 import imgDraJuliana from "@/assets/doctors/dra-juliana.jpg";
@@ -17,7 +17,7 @@ const medicos = [
     experiencia: "14 anos de experiência",
     avaliacao: 5.0,
     avaliacoes: 2391,
-    img: imgDrCarlos,
+    img: imgDrRodrigo,
     destaque: true,
   },
   {
