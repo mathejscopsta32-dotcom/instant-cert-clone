@@ -1,5 +1,5 @@
-import { useState, useEffect, useRef } from "react";
-import { Check, Clock, Copy, ShieldCheck, AlertCircle, RefreshCw, Upload, Loader2 } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Check, Clock, Copy, ShieldCheck, AlertCircle, RefreshCw, Loader2 } from "lucide-react";
 import { QRCodeSVG } from "qrcode.react";
 import type { ConsultaFormData } from "@/pages/SolicitarConsulta";
 import { calcConsultaTotal } from "@/components/solicitar/StepRevisaoConsulta";
@@ -16,13 +16,9 @@ const StepPagamentoConsulta = ({ formData, pedidoId, onPaymentConfirmed }: Props
   const totalPrice = calcConsultaTotal(formData);
   const [timeLeft, setTimeLeft] = useState(30 * 60);
   const [copied, setCopied] = useState(false);
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [submitting, setSubmitting] = useState(false);
-  const [validationError, setValidationError] = useState<string | null>(null);
   const [pixCode, setPixCode] = useState<string | null>(null);
   const [loadingPix, setLoadingPix] = useState(true);
   const [pixError, setPixError] = useState<string | null>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
   const paymentApproved = usePaymentStatus(pedidoId);
 
   const precoLabel = `R$ ${totalPrice.toFixed(2).replace(".", ",")}`;
@@ -100,45 +96,6 @@ const StepPagamentoConsulta = ({ formData, pedidoId, onPaymentConfirmed }: Props
     }
   };
 
-  const handleFileSelect = () => fileInputRef.current?.click();
-
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    setSelectedFile(file);
-    setValidationError(null);
-  };
-
-  const handleSubmitPayment = async () => {
-    setSubmitting(true);
-    try {
-      let comprovanteUrl: string | null = null;
-
-      if (selectedFile) {
-        const fileExt = selectedFile.name.split(".").pop();
-        const filePath = `${Date.now()}-${Math.random().toString(36).slice(2)}.${fileExt}`;
-        const { error: uploadError } = await supabase.storage
-          .from("comprovantes")
-          .upload(filePath, selectedFile);
-        if (!uploadError) comprovanteUrl = filePath;
-      }
-
-      if (comprovanteUrl) {
-        await supabase.rpc("submit_comprovante", {
-          p_pedido_id: pedidoId,
-          p_comprovante_url: comprovanteUrl,
-        });
-      }
-
-      onPaymentConfirmed(pedidoId);
-    } catch (err) {
-      console.error("Erro ao enviar comprovante:", err);
-      alert("Erro ao enviar comprovante. Tente novamente.");
-    } finally {
-      setSubmitting(false);
-    }
-  };
-
   return (
     <div className="space-y-6">
       <div className="text-center">
@@ -206,37 +163,11 @@ const StepPagamentoConsulta = ({ formData, pedidoId, onPaymentConfirmed }: Props
         </div>
       )}
 
-      <div className="bg-muted rounded-xl p-4 space-y-3">
-        <div>
-          <p className="text-sm font-bold text-foreground">Enviar Comprovante de Pagamento</p>
-          <p className="text-xs text-muted-foreground mt-1">Após realizar o PIX, envie o comprovante para confirmar.</p>
-        </div>
-        <input ref={fileInputRef} type="file" accept="image/*,.pdf" onChange={handleFileChange} className="hidden" />
-        <button type="button" onClick={handleFileSelect}
-          className="w-full inline-flex items-center justify-center gap-2 border border-border text-foreground px-4 py-3 rounded-xl font-semibold text-sm hover:bg-secondary transition-colors">
-          <Upload className="w-4 h-4" />{selectedFile ? selectedFile.name : "Selecionar Arquivo"}
-        </button>
+      {/* Aguardando pagamento */}
+      <div className="bg-primary/5 border border-primary/20 rounded-xl p-4 flex items-center justify-center gap-3">
+        <Loader2 className="w-5 h-5 animate-spin text-primary" />
+        <p className="text-sm font-medium text-foreground">Aguardando confirmação do pagamento...</p>
       </div>
-
-      {validationError && (
-        <div className="bg-red-50 border border-red-300 rounded-xl p-4 flex items-start gap-3">
-          <AlertCircle className="w-5 h-5 text-red-600 shrink-0 mt-0.5" />
-          <p className="text-sm text-red-800 font-medium">{validationError}</p>
-        </div>
-      )}
-
-      {!selectedFile && !validationError && (
-        <div className="bg-red-50 border border-red-300 rounded-xl p-4 flex items-start gap-3">
-          <AlertCircle className="w-5 h-5 text-red-600 shrink-0 mt-0.5" />
-          <p className="text-sm text-red-800 font-medium">Para confirmar o pagamento, é obrigatório enviar o comprovante.</p>
-        </div>
-      )}
-
-      <button type="button" onClick={handleSubmitPayment}
-        disabled={timeLeft === 0 || submitting || !selectedFile || !!validationError}
-        className="w-full inline-flex items-center justify-center gap-2 bg-primary text-primary-foreground px-6 py-3.5 rounded-xl font-semibold hover:opacity-90 transition-opacity disabled:opacity-50 text-sm">
-        {submitting ? (<><Loader2 className="w-4 h-4 animate-spin" />Enviando pedido...</>) : (<><Check className="w-4 h-4" />Já fiz o pagamento</>)}
-      </button>
 
       <div className="flex items-center justify-center gap-6 pt-2">
         <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
