@@ -1,8 +1,14 @@
 User-agent: Googlebot
 Allow: /
+Disallow: /admin
+Disallow: /admin/login
+Disallow: /meu-pedido
 
 User-agent: Bingbot
 Allow: /
+Disallow: /admin
+Disallow: /admin/login
+Disallow: /meu-pedido
 
 User-agent: Twitterbot
 Allow: /
@@ -12,3 +18,8 @@ Allow: /
 
 User-agent: *
 Allow: /
+Disallow: /admin
+Disallow: /admin/login
+Disallow: /meu-pedido
+
+Sitemap: https://instant-cert-clone.lovable.app/sitemap.xml
