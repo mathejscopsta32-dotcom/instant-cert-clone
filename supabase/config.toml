@@ -2,3 +2,6 @@ project_id = "slyxcazekfhvgxfbvvgn"
 
 [functions.validate-comprovante]
 verify_jwt = false
+
+[functions.create-pix]
+verify_jwt = false

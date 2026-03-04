@@ -3,10 +3,7 @@ import { Check, Clock, Copy, ShieldCheck, AlertCircle, RefreshCw, Upload, Loader
 import { QRCodeSVG } from "qrcode.react";
 import type { ConsultaFormData } from "@/pages/SolicitarConsulta";
 import { calcConsultaTotal } from "@/components/solicitar/StepRevisaoConsulta";
-import { generatePixPayload } from "@/lib/pix";
 import { supabase } from "@/integrations/supabase/client";
-
-const FALLBACK_PIX_KEY = "566a023b-14b4-4306-aed5-a05f4ec92d26";
 
 interface Props {
   formData: ConsultaFormData;
@@ -21,29 +18,48 @@ const StepPagamentoConsulta = ({ formData, pedidoId, onPaymentConfirmed }: Props
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [validationError, setValidationError] = useState<string | null>(null);
-  const [pixKey, setPixKey] = useState(FALLBACK_PIX_KEY);
+  const [pixCode, setPixCode] = useState<string | null>(null);
+  const [loadingPix, setLoadingPix] = useState(true);
+  const [pixError, setPixError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
-
-  useEffect(() => {
-    supabase
-      .from("app_settings")
-      .select("value")
-      .eq("key", "pix_key")
-      .maybeSingle()
-      .then(({ data }) => {
-        if (data?.value) setPixKey(data.value);
-      });
-  }, []);
 
   const precoLabel = `R$ ${totalPrice.toFixed(2).replace(".", ",")}`;
 
-  const pixPayload = generatePixPayload({
-    pixKey,
-    merchantName: "CONSULTA24H",
-    merchantCity: "SAO PAULO",
-    amount: totalPrice,
-    description: "Consulta Medica Online",
-  });
+  const createPixTransaction = async () => {
+    setLoadingPix(true);
+    setPixError(null);
+    try {
+      const { data, error } = await supabase.functions.invoke("create-pix", {
+        body: {
+          amount: totalPrice,
+          pedidoId,
+          nomeCompleto: formData.nomeCompleto,
+          cpf: formData.cpf,
+          email: formData.email,
+        },
+      });
+
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+
+      const code = data?.pixCode;
+      if (code) {
+        setPixCode(code);
+        setTimeLeft(30 * 60);
+      } else {
+        throw new Error("QR Code não retornado pela gateway");
+      }
+    } catch (err: any) {
+      console.error("Erro ao criar PIX:", err);
+      setPixError(err.message || "Erro ao gerar PIX. Tente novamente.");
+    } finally {
+      setLoadingPix(false);
+    }
+  };
+
+  useEffect(() => {
+    createPixTransaction();
+  }, []);
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -55,16 +71,17 @@ const StepPagamentoConsulta = ({ formData, pedidoId, onPaymentConfirmed }: Props
     return () => clearInterval(timer);
   }, []);
 
-  const handleRegenerate = () => setTimeLeft(30 * 60);
+  const handleRegenerate = () => createPixTransaction();
 
   const handleCopy = async () => {
+    if (!pixCode) return;
     try {
-      await navigator.clipboard.writeText(pixPayload);
+      await navigator.clipboard.writeText(pixCode);
       setCopied(true);
       setTimeout(() => setCopied(false), 3000);
     } catch {
       const textarea = document.createElement("textarea");
-      textarea.value = pixPayload;
+      textarea.value = pixCode;
       document.body.appendChild(textarea);
       textarea.select();
       document.execCommand("copy");
@@ -104,7 +121,6 @@ const StepPagamentoConsulta = ({ formData, pedidoId, onPaymentConfirmed }: Props
         });
       }
 
-
       onPaymentConfirmed(pedidoId);
     } catch (err) {
       console.error("Erro ao enviar comprovante:", err);
@@ -134,10 +150,23 @@ const StepPagamentoConsulta = ({ formData, pedidoId, onPaymentConfirmed }: Props
       <div className="space-y-3">
         <p className="text-sm font-semibold text-foreground text-center">Escaneie o QR Code abaixo:</p>
         <div className="flex justify-center">
-          <div className="bg-white p-5 rounded-2xl shadow-sm border">
-            <QRCodeSVG value={pixPayload} size={220} level="M" />
+          <div className="bg-white p-5 rounded-2xl shadow-sm border min-h-[260px] flex items-center justify-center">
+            {loadingPix ? (
+              <div className="flex flex-col items-center gap-2 text-muted-foreground">
+                <Loader2 className="w-8 h-8 animate-spin text-primary" />
+                <p className="text-sm">Gerando PIX...</p>
+              </div>
+            ) : pixError ? (
+              <div className="flex flex-col items-center gap-2 text-destructive text-center px-4">
+                <AlertCircle className="w-8 h-8" />
+                <p className="text-sm font-medium">{pixError}</p>
+              </div>
+            ) : pixCode ? (
+              <QRCodeSVG value={pixCode} size={220} level="M" />
+            ) : null}
           </div>
         </div>
+
         {timeLeft > 0 ? (
           <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground">
             <Clock className="w-3.5 h-3.5" />
@@ -149,21 +178,24 @@ const StepPagamentoConsulta = ({ formData, pedidoId, onPaymentConfirmed }: Props
             PIX expirado
           </div>
         )}
-        <button type="button" onClick={handleRegenerate} className="w-full inline-flex items-center justify-center gap-2 text-sm text-primary font-semibold hover:underline">
-          <RefreshCw className="w-4 h-4" />
+
+        <button type="button" onClick={handleRegenerate} disabled={loadingPix}
+          className="w-full inline-flex items-center justify-center gap-2 text-sm text-primary font-semibold hover:underline disabled:opacity-50">
+          <RefreshCw className={`w-4 h-4 ${loadingPix ? "animate-spin" : ""}`} />
           Gerar novo código PIX
         </button>
       </div>
 
-      <div className="space-y-3">
-        <p className="text-sm font-semibold text-foreground">Ou copie e cole o código:</p>
-        <div className="bg-muted rounded-xl p-3 text-xs text-muted-foreground break-all font-mono max-h-20 overflow-y-auto">{pixPayload}</div>
-        <button type="button" onClick={handleCopy} disabled={timeLeft === 0}
-          className={`w-full inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl font-semibold text-sm transition-all ${copied ? "bg-primary text-primary-foreground" : "border border-primary text-primary hover:bg-secondary"} disabled:opacity-50`}>
-          {copied ? (<><Check className="w-4 h-4" />Código copiado!</>) : (<><Copy className="w-4 h-4" />Copiar</>)}
-        </button>
-      </div>
-
+      {pixCode && (
+        <div className="space-y-3">
+          <p className="text-sm font-semibold text-foreground">Ou copie e cole o código:</p>
+          <div className="bg-muted rounded-xl p-3 text-xs text-muted-foreground break-all font-mono max-h-20 overflow-y-auto">{pixCode}</div>
+          <button type="button" onClick={handleCopy} disabled={timeLeft === 0}
+            className={`w-full inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl font-semibold text-sm transition-all ${copied ? "bg-primary text-primary-foreground" : "border border-primary text-primary hover:bg-secondary"} disabled:opacity-50`}>
+            {copied ? (<><Check className="w-4 h-4" />Código copiado!</>) : (<><Copy className="w-4 h-4" />Copiar</>)}
+          </button>
+        </div>
+      )}
 
       <div className="bg-muted rounded-xl p-4 space-y-3">
         <div>
