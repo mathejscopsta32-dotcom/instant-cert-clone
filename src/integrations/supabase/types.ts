@@ -106,6 +106,7 @@ export type Database = {
           pdf_url: string | null
           sintomas: string[] | null
           status: string
+          superpay_transaction_id: string | null
           telefone: string
           tipo: string
           updated_at: string
@@ -133,6 +134,7 @@ export type Database = {
           pdf_url?: string | null
           sintomas?: string[] | null
           status?: string
+          superpay_transaction_id?: string | null
           telefone: string
           tipo?: string
           updated_at?: string
@@ -160,6 +162,7 @@ export type Database = {
           pdf_url?: string | null
           sintomas?: string[] | null
           status?: string
+          superpay_transaction_id?: string | null
           telefone?: string
           tipo?: string
           updated_at?: string

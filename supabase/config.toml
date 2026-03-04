@@ -5,3 +5,6 @@ verify_jwt = false
 
 [functions.create-pix]
 verify_jwt = false
+
+[functions.superpay-webhook]
+verify_jwt = false
