@@ -54,22 +54,37 @@ serve(async (req) => {
       const payload = {
         amount: amountInCents,
         paymentMethod: "pix",
+        items: [
+          {
+            title: "Serviço Médico Online",
+            unitPrice: amountInCents,
+            quantity: 1,
+            tangible: false,
+          },
+        ],
         customer: {
           name: nomeCompleto || "Cliente",
           email: email || "cliente@email.com",
           document: cpf?.replace(/\D/g, "") || "00000000000",
         },
-        pix: { expiresInMinutes: 30 },
-        metadata: { pedidoId },
+        pix: {
+          expiresInMinutes: 30,
+        },
+        metadata: JSON.stringify({ pedidoId }),
+        externalRef: pedidoId,
         postbackUrl: webhookUrl,
       };
 
-      console.log("Sending to SuperPay...");
+      console.log("Sending to SuperPay:", JSON.stringify({ ...payload, customer: { ...payload.customer, document: "***" } }));
 
       try {
         const response = await fetch("https://api.superpaybr.com/v1/transactions", {
           method: "POST",
-          headers: { Authorization: auth, "Content-Type": "application/json" },
+          headers: {
+            Authorization: auth,
+            "Content-Type": "application/json",
+            Accept: "application/json",
+          },
           body: JSON.stringify(payload),
         });
 
@@ -98,13 +113,18 @@ serve(async (req) => {
           .eq("id", pedidoId);
       }
 
+      // Extract PIX code from response - check multiple possible field paths
+      const pixCode = data.pix?.qrCode || data.pix?.qr_code || data.pix?.payload || 
+                      data.pixQrCode || data.qrCode || data.qr_code || data.payload;
+
       return new Response(
         JSON.stringify({
           transactionId,
-          pixCode: data.pix?.qrCode || data.pix?.qr_code || data.pixQrCode || data.qrCode,
+          pixCode,
           pixKey: data.pix?.key || data.pix?.pixKey,
           expiresAt: data.pix?.expiresAt || data.expiresAt,
           status: data.status,
+          raw: data,
         }),
         { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
