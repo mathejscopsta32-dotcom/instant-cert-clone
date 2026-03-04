@@ -85,7 +85,7 @@ export const PixPaymentHeader = ({ label }: { label: string }) => (
 
 export const WhatsAppButton = () => (
   <a
-    href="https://wa.me/5500000000000?text=Olá,%20preciso%20de%20ajuda%20com%20meu%20pedido"
+    href="https://wa.me/5511968586856?text=Olá,%20preciso%20de%20ajuda%20com%20meu%20pedido"
     target="_blank"
     rel="noopener noreferrer"
     className="w-full inline-flex items-center justify-center gap-2 bg-[#25D366] hover:bg-[#20BD5A] text-white px-4 py-3 rounded-xl font-semibold text-sm transition-colors"
