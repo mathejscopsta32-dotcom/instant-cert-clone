@@ -263,6 +263,23 @@ const Admin = () => {
     setLoading(false);
   };
 
+  const handleDownloadEmails = () => {
+    const uniqueEmails = [...new Set(pedidos.map(p => p.email).filter(Boolean))];
+    if (uniqueEmails.length === 0) {
+      toast({ title: "Nenhum email encontrado", variant: "destructive" });
+      return;
+    }
+    const content = uniqueEmails.join("\n");
+    const blob = new Blob([content], { type: "text/plain" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `emails-clientes-${format(new Date(), "dd-MM-yyyy")}.txt`;
+    a.click();
+    URL.revokeObjectURL(url);
+    toast({ title: `${uniqueEmails.length} emails exportados com sucesso!` });
+  };
+
   const handleDeleteAllPendentes = async () => {
     if (!confirm("Tem certeza que deseja apagar TODOS os pedidos pendentes?")) return;
     setLoading(true);
