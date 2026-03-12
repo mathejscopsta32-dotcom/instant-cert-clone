@@ -420,7 +420,7 @@ const Admin = () => {
         </div>
 
         {/* Stats */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
           <div className="bg-card border rounded-xl p-4 text-center">
             <p className="text-2xl font-bold text-yellow-600">{pedidosGerados.length}</p>
             <p className="text-xs text-muted-foreground">Pendentes</p>
@@ -437,6 +437,14 @@ const Admin = () => {
             <p className="text-2xl font-bold text-primary">{pedidos.length}</p>
             <p className="text-xs text-muted-foreground">Total</p>
           </div>
+          <button
+            onClick={handleDownloadEmails}
+            className="bg-card border rounded-xl p-4 text-center hover:bg-muted transition-colors cursor-pointer"
+          >
+            <Download className="w-6 h-6 mx-auto text-primary mb-1" />
+            <p className="text-xs font-semibold text-foreground">Baixar Emails</p>
+            <p className="text-[10px] text-muted-foreground">{[...new Set(pedidos.map(p => p.email).filter(Boolean))].length} únicos</p>
+          </button>
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab}>
