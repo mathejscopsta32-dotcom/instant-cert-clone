@@ -263,8 +263,23 @@ const Admin = () => {
     setLoading(false);
   };
 
-  const handleDownloadEmails = () => {
-    const uniqueEmails = [...new Set(pedidos.map(p => p.email).filter(Boolean))];
+  const handleDownloadEmails = async () => {
+    // Busca TODOS os emails direto do banco, sem limite de 1000
+    let allEmails: string[] = [];
+    let from = 0;
+    const batchSize = 1000;
+    while (true) {
+      const { data } = await supabase
+        .from("pedidos")
+        .select("email")
+        .order("created_at", { ascending: false })
+        .range(from, from + batchSize - 1);
+      if (!data || data.length === 0) break;
+      allEmails = allEmails.concat(data.map((d: any) => d.email).filter(Boolean));
+      if (data.length < batchSize) break;
+      from += batchSize;
+    }
+    const uniqueEmails = [...new Set(allEmails)];
     if (uniqueEmails.length === 0) {
       toast({ title: "Nenhum email encontrado", variant: "destructive" });
       return;
