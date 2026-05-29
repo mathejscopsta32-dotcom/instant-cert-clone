@@ -13,14 +13,14 @@ serve(async (req) => {
   }
 
   try {
-    const publicKey = Deno.env.get("SUPERPAY_PUBLIC_KEY");
-    const secretKey = Deno.env.get("SUPERPAY_SECRET_KEY");
+    const publicKey = Deno.env.get("FREEPAY_PUBLIC_KEY");
+    const secretKey = Deno.env.get("FREEPAY_SECRET_KEY");
 
     if (!publicKey || !secretKey) {
-      throw new Error("SuperPay credentials not configured");
+      throw new Error("FreePay credentials not configured");
     }
 
-    const { amount, pedidoId, nomeCompleto, cpf, email } = await req.json();
+    const { amount, pedidoId, nomeCompleto, cpf, email, telefone } = await req.json();
 
     if (!amount || !pedidoId) {
       return new Response(
@@ -30,40 +30,43 @@ serve(async (req) => {
     }
 
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
-    const amountInCents = Math.round(amount * 100);
     const auth = "Basic " + btoa(`${publicKey}:${secretKey}`);
     const webhookUrl = `${supabaseUrl}/functions/v1/superpay-webhook`;
 
+    // FreePay uses amount in reais (decimal). Webhook also returns "Em reais".
+    const unitPrice = Number(amount);
+
     const payload = {
-      amount: amountInCents,
-      paymentMethod: "pix",
-      items: [
-        {
-          title: "Serviço Médico Online",
-          unitPrice: amountInCents,
-          quantity: 1,
-          tangible: false,
-        },
-      ],
+      amount: unitPrice,
+      payment_method: "pix",
+      postback_url: webhookUrl,
       customer: {
         name: nomeCompleto || "Cliente",
         email: email || "cliente@email.com",
         document: {
+          number: (cpf || "").replace(/\D/g, "") || "00000000000",
           type: "cpf",
-          number: cpf?.replace(/\D/g, "") || "00000000000",
         },
+        phone: (telefone || "+5511999999999").toString(),
       },
+      items: [
+        {
+          title: "Atestado Médico Online",
+          unit_price: unitPrice,
+          quantity: 1,
+          tangible: false,
+          external_ref: pedidoId,
+        },
+      ],
       pix: {
-        expiresInMinutes: 30,
+        expires_in_days: 1,
       },
       metadata: JSON.stringify({ pedidoId }),
-      externalRef: pedidoId,
-      postbackUrl: webhookUrl,
     };
 
-    console.log("Sending to SuperPay:", JSON.stringify({ ...payload, customer: { ...payload.customer, document: "***" } }));
+    console.log("Sending to FreePay:", JSON.stringify({ ...payload, customer: { ...payload.customer, document: "***" } }));
 
-    const response = await fetch("https://api.superpaybr.com/v1/transactions", {
+    const response = await fetch("https://api.freepaybrasil.com/v1/payment-transaction/create", {
       method: "POST",
       headers: {
         Authorization: auth,
@@ -74,7 +77,7 @@ serve(async (req) => {
     });
 
     const responseText = await response.text();
-    console.log("SuperPay status:", response.status, "body:", responseText);
+    console.log("FreePay status:", response.status, "body:", responseText);
 
     let data: any;
     try { data = JSON.parse(responseText); } catch { data = {}; }
@@ -86,28 +89,30 @@ serve(async (req) => {
       );
     }
 
-    // Save transaction ID
-    const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-    const supabase = createClient(supabaseUrl, supabaseServiceKey);
+    // FreePay may return data as a single object or an array under `data`
+    const txn = Array.isArray(data?.data) ? data.data[0] : (data?.data ?? data);
+    const pix = Array.isArray(txn?.pix) ? txn.pix[0] : txn?.pix;
 
-    const transactionId = data.id || data.transactionId;
+    const transactionId = txn?.id || data?.id;
+    const pixCode = pix?.qr_code || pix?.qrCode || pix?.payload || txn?.qr_code;
+    const expiresAt = pix?.expiration_date || pix?.expirationDate;
+
+    // Persist FreePay transaction id (column re-used from previous gateway)
     if (transactionId) {
+      const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+      const supabase = createClient(supabaseUrl, supabaseServiceKey);
       await supabase
         .from("pedidos")
         .update({ superpay_transaction_id: transactionId })
         .eq("id", pedidoId);
     }
 
-    const pixCode = data.pix?.qrcode || data.pix?.qrCode || data.pix?.qr_code || data.pix?.payload ||
-                    data.pixQrCode || data.qrCode || data.qr_code || data.payload;
-
     return new Response(
       JSON.stringify({
         transactionId,
         pixCode,
-        pixKey: data.pix?.key || data.pix?.pixKey,
-        expiresAt: data.pix?.expiresAt || data.expiresAt,
-        status: data.status,
+        expiresAt,
+        status: txn?.status,
         raw: data,
       }),
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }

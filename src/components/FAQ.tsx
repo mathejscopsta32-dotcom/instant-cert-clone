@@ -4,75 +4,49 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
+import { Link } from "react-router-dom";
+import { ArrowRight } from "lucide-react";
 
 const faqs = [
   {
-    q: "O atestado médico online é válido legalmente?",
-    a: "Sim, o atestado médico digital é válido legalmente em todo o território nacional, conforme a Resolução CFM nº 2.299/21. Ele possui assinatura digital com certificado ICP-Brasil, garantindo sua autenticidade e validade jurídica para fins trabalhistas e estudantis.",
+    q: "Esse tipo de atestado tem validade jurídica?",
+    a: "Sim. O documento é emitido por profissional médico com CRM ativo, em conformidade com a Resolução CFM nº 2.314/2022 que regulamenta a telemedicina no Brasil e a Lei 13.989/2020. O atestado possui a mesma validade legal de um emitido presencialmente.",
   },
   {
-    q: "Quanto tempo leva para receber o atestado médico online?",
-    a: "O processo é extremamente rápido. Após o preenchimento do questionário e confirmação do pagamento via PIX, o atestado é gerado e disponibilizado em poucos minutos.",
+    q: "O atestado para trabalho é aceito pelo empregador?",
+    a: "Sim. O atestado para trabalho emitido pela JustMed tem a mesma validade legal de um presencial, sendo aceito por empregadores em todo o Brasil conforme a legislação de telemedicina. Nosso serviço abrange condições de baixa complexidade.",
   },
   {
-    q: "Por quanto tempo posso me afastar com o atestado médico online?",
-    a: "O tempo de afastamento depende da avaliação dos seus sintomas e do protocolo médico adequado para a sua condição de saúde.",
+    q: "Quanto tempo leva para receber o documento?",
+    a: "Após a confirmação do pagamento via Pix (que acontece em segundos), o documento é processado e encaminhado automaticamente para o e-mail informado. Em condições normais, o recebimento ocorre em poucos minutos.",
   },
   {
-    q: "E se meu empregador não aceitar o atestado médico online?",
-    a: "Por lei (Lei nº 605/49 e Resolução CFM nº 1.658/2002), o atestado médico digital com assinatura válida (ICP-Brasil) deve ser aceito da mesma forma que o atestado em papel.",
+    q: "Qual o valor do atestado?",
+    a: "O valor inicia em R$ 34,99. O preço varia conforme a quantidade de dias de afastamento solicitados: quanto maior o período, maior o valor. O preço final é exibido antes da confirmação do pagamento, sem cobranças adicionais.",
   },
   {
-    q: "Preciso fazer uma consulta por vídeo para conseguir um atestado online?",
-    a: "Geralmente não. A triagem é realizada através de um questionário detalhado de saúde (anamnese), que é avaliado por nossos médicos. Se necessário, uma interação adicional pode ser solicitada.",
+    q: "Que dados são necessários para o pedido?",
+    a: "São solicitados dados de identificação (nome completo, CPF, data de nascimento) além de informações sobre o motivo do atendimento. Todos os dados são tratados com sigilo médico e protegidos por criptografia conforme a LGPD.",
   },
   {
-    q: "Como funciona o pagamento para atestado médico online?",
-    a: "O pagamento é realizado de forma segura e prática através do PIX, garantindo a liberação imediata do seu documento após a aprovação.",
+    q: "Como funciona a avaliação médica à distância?",
+    a: "A avaliação é baseada em uma anamnese digital (questionário médico) elaborada por profissionais de saúde. As respostas permitem ao médico avaliar a condição relatada e emitir o documento quando pertinente. Se for identificada necessidade de exame presencial, o paciente será orientado adequadamente.",
   },
   {
-    q: "Posso pagar o atestado médico online com boleto bancário?",
-    a: "Para garantir a agilidade e entrega em minutos, atualmente trabalhamos exclusivamente com PIX e Cartão de Crédito.",
+    q: "Qual o período máximo de afastamento coberto?",
+    a: "O serviço contempla afastamentos de curta duração, com base na avaliação das informações fornecidas. Períodos mais extensos podem demandar acompanhamento presencial e avaliações complementares.",
   },
   {
-    q: "Como funciona a política de reembolso para atestado médico online?",
-    a: "Caso seu atestado não seja emitido por qualquer critério médico, devolvemos 100% do seu dinheiro.",
+    q: "O atestado escolar é aceito pela faculdade?",
+    a: "Sim. O atestado escolar emitido por telemedicina possui validade legal e é aceito por escolas, faculdades e universidades em todo o Brasil. O documento é assinado por médico com CRM ativo e pode ser verificado online.",
   },
   {
-    q: "Quem são os médicos que emitem os atestados online?",
-    a: "Trabalhamos com uma rede de médicos parceiros, todos devidamente registrados no Conselho Regional de Medicina (CRM) e habilitados para telemedicina.",
+    q: "Como solicitar atestado de piscina online?",
+    a: "O atestado de piscina (atestado de aptidão física para atividades aquáticas) pode ser solicitado online pela plataforma. Basta preencher o formulário, selecionar a opção \"Piscina\" e realizar o pagamento via Pix. Após avaliação médica por telemedicina, o documento é enviado por e-mail em poucos minutos.",
   },
   {
-    q: "Os médicos que emitem atestados online são licenciados?",
-    a: "Sim, todos os médicos emissores possuem CRM ativo e certificado digital para assinatura válida em todo território nacional.",
-  },
-  {
-    q: "O atestado médico online serve para justificar faltas em qualquer situação?",
-    a: "Serve para justificar faltas no trabalho, escola ou faculdade por motivos de doença, conforme a legislação trabalhista e educacional.",
-  },
-  {
-    q: "Como funciona o processo de emissão do atestado médico online?",
-    a: "1. Você responde um questionário sobre sua saúde. 2. Realiza o pagamento. 3. O médico avalia. 4. Se aprovado, você baixa o PDF assinado.",
-  },
-  {
-    q: "Meus dados estão seguros ao solicitar um atestado médico online?",
-    a: "Absolutamente. Utilizamos criptografia de ponta e seguimos rigorosamente a Lei Geral de Proteção de Dados (LGPD) e o sigilo médico.",
-  },
-  {
-    q: "Posso solicitar atestado médico online para outra pessoa?",
-    a: "Sim, desde que você forneça os dados corretos do paciente (nome, CPF, sintomas) durante o preenchimento.",
-  },
-  {
-    q: "O serviço de atestado médico online está disponível 24 horas por dia?",
-    a: "Sim! Nossa plataforma funciona 24 horas por dia, 7 dias por semana, inclusive feriados.",
-  },
-  {
-    q: "Como conseguir um atestado médico no Brasil?",
-    a: "Você pode ir a uma consulta presencial ou utilizar serviços de telemedicina regulamentados como o nosso, que é mais rápido e prático.",
-  },
-  {
-    q: "O que diz a lei sobre o atestado médico no Brasil?",
-    a: "A lei valida o uso da telemedicina e a emissão de documentos médicos digitais, desde que assinados com certificado digital ICP-Brasil.",
+    q: "Como funciona o atestado de comparecimento?",
+    a: "O atestado de comparecimento comprova que o paciente esteve em atendimento médico em determinada data e horário. É aceito por empresas e instituições de ensino. Basta preencher o formulário com os dados do atendimento e o documento é emitido digitalmente.",
   },
 ];
 
@@ -81,7 +55,7 @@ const FAQ = () => {
     <section className="py-20 bg-hero">
       <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
         <p className="section-label mb-3">DÚVIDAS</p>
-        <h2 className="section-title mb-4">Perguntas Frequentes</h2>
+        <h2 className="section-title mb-4">Perguntas frequentes</h2>
         <p className="section-subtitle mb-10">
           Tire suas dúvidas sobre nosso serviço de emissão de atestados.
         </p>
@@ -102,6 +76,17 @@ const FAQ = () => {
             </AccordionItem>
           ))}
         </Accordion>
+
+        <div className="mt-12">
+          <p className="text-foreground font-semibold mb-4">Pronto para solicitar?</p>
+          <Link
+            to="/selecionar-servico"
+            className="inline-flex items-center gap-2 bg-primary text-primary-foreground px-6 py-3 rounded-lg font-semibold hover:opacity-90 transition-opacity"
+          >
+            Solicitar atestado
+            <ArrowRight className="w-4 h-4" />
+          </Link>
+        </div>
       </div>
     </section>
   );
