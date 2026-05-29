@@ -7,6 +7,7 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
+// FreePay webhook handler (kept under previous route name to avoid breaking config)
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -14,23 +15,26 @@ serve(async (req) => {
 
   try {
     const body = await req.json();
-    console.log("SuperPay webhook received:", JSON.stringify(body));
+    console.log("FreePay webhook received:", JSON.stringify(body));
 
-    // SuperPay wraps transaction data inside body.data
+    // FreePay sends fields in PascalCase. Be tolerant to lowercase as well.
     const txData = body.data || body;
-    const transactionId = txData.id || body.id || body.objectId;
-    const status = txData.status || body.status;
-    
-    // metadata comes as a JSON string from SuperPay
+    const transactionId =
+      txData.Id || txData.id || body.Id || body.id || null;
+    const status: string =
+      (txData.Status || txData.status || body.Status || body.status || "").toString();
+
+    // pedidoId can be encoded in metadata or ExternalId
     let pedidoId: string | null = null;
+    const rawMeta = txData.Metadata ?? txData.metadata ?? body.Metadata ?? body.metadata;
     try {
-      const metadata = typeof txData.metadata === "string" ? JSON.parse(txData.metadata) : txData.metadata;
-      pedidoId = metadata?.pedidoId || metadata?.pedido_id || null;
+      const meta = typeof rawMeta === "string" ? JSON.parse(rawMeta) : rawMeta;
+      pedidoId = meta?.pedidoId || meta?.pedido_id || null;
     } catch {
       pedidoId = null;
     }
     if (!pedidoId) {
-      pedidoId = txData.externalRef || body.externalRef || null;
+      pedidoId = txData.ExternalId || txData.externalId || body.ExternalId || body.externalId || null;
     }
 
     if (!transactionId && !pedidoId) {
@@ -41,10 +45,7 @@ serve(async (req) => {
       );
     }
 
-    // Check if payment was approved
-    const approvedStatuses = ["paid", "approved", "completed", "confirmed", "PAID", "APPROVED", "COMPLETED", "CONFIRMED", "captured"];
-    const isPaid = approvedStatuses.includes(status);
-
+    const isPaid = status.toUpperCase() === "PAID";
     if (!isPaid) {
       console.log(`Payment status "${status}" is not approved yet. Ignoring.`);
       return new Response(
@@ -53,12 +54,10 @@ serve(async (req) => {
       );
     }
 
-    // Connect to Supabase with service role to bypass RLS
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    // Find and update the pedido
     let query = supabase.from("pedidos").update({
       status: "aprovado",
       updated_at: new Date().toISOString(),
