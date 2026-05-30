@@ -43,11 +43,11 @@ const PRICE = 29.9;
 
 const SolicitarPiscina = () => {
   const [currentStep, setCurrentStep] = useState(() => {
-    try { const s = sessionStorage.getItem(STORAGE_KEY); return s ? JSON.parse(s).currentStep ?? 0 : 0; } catch { return 0; }
+    try { const s = localStorage.getItem(STORAGE_KEY); return s ? JSON.parse(s).currentStep ?? 0 : 0; } catch { return 0; }
   });
   const [formData, setFormData] = useState<PiscinaFormData>(() => {
     try {
-      const s = sessionStorage.getItem(STORAGE_KEY);
+      const s = localStorage.getItem(STORAGE_KEY);
       if (s) return { ...initialFormData, ...JSON.parse(s).formData };
       return initialFormData;
     } catch { return initialFormData; }
@@ -55,12 +55,12 @@ const SolicitarPiscina = () => {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [creatingOrder, setCreatingOrder] = useState(false);
   const [pedidoId, setPedidoId] = useState<string | null>(() => {
-    try { const s = sessionStorage.getItem(STORAGE_KEY); return s ? JSON.parse(s).pedidoId ?? null : null; } catch { return null; }
+    try { const s = localStorage.getItem(STORAGE_KEY); return s ? JSON.parse(s).pedidoId ?? null : null; } catch { return null; }
   });
   const navigate = useNavigate();
 
   useEffect(() => {
-    sessionStorage.setItem(STORAGE_KEY, JSON.stringify({ currentStep, formData, pedidoId }));
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({ currentStep, formData, pedidoId }));
   }, [currentStep, formData, pedidoId]);
 
   const updateForm = (updates: Partial<PiscinaFormData>) => {
@@ -144,7 +144,7 @@ const SolicitarPiscina = () => {
   const handlePrev = () => setCurrentStep((prev) => Math.max(prev - 1, 0));
 
   const handlePaymentConfirmed = (id: string) => {
-    sessionStorage.removeItem(STORAGE_KEY);
+    localStorage.removeItem(STORAGE_KEY);
     window.location.href = `/meu-pedido?id=${id}`;
   };
 
