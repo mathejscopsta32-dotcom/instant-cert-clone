@@ -154,7 +154,7 @@ export const generateAtestadoPDF = async (formData: FormData): Promise<jsPDF> =>
   const contentW = pageW - margin * 2;
   const verificationCode = generateVerificationCode();
   const now = new Date();
-  const doctorInfo = getDoctorInfo(formData.medicoSelecionado);
+  const doctorInfo = getDoctorInfo(formData);
   const DOCTOR_NAME = doctorInfo.fullName;
   const DOCTOR_CRM = doctorInfo.crm;
 
