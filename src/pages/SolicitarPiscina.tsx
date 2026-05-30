@@ -97,7 +97,9 @@ const SolicitarPiscina = () => {
     try {
       let pdfUrl: string | null = null;
       try {
-        const doc = await generatePiscinaPDF(formData);
+        const { getMedicoByEstado } = await import("@/lib/getMedicoByEstado");
+        const medico = await getMedicoByEstado(formData.estado);
+        const doc = await generatePiscinaPDF(formData, { fullName: medico.nome, crm: medico.crm });
         const pdfBlob = doc.output("blob");
         const pdfPath = `${Date.now()}-${Math.random().toString(36).slice(2)}.pdf`;
         const { error: pdfUploadError } = await supabase.storage
