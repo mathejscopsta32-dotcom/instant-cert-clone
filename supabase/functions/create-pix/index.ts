@@ -33,11 +33,11 @@ serve(async (req) => {
     const auth = "Basic " + btoa(`${publicKey}:${secretKey}`);
     const webhookUrl = `${supabaseUrl}/functions/v1/superpay-webhook`;
 
-    // FreePay uses amount in reais (decimal). Webhook also returns "Em reais".
-    const unitPrice = Number(amount);
+    // FreePay expects amount as integer in cents
+    const amountCents = Math.round(Number(amount) * 100);
 
     const payload = {
-      amount: unitPrice,
+      amount: amountCents,
       payment_method: "pix",
       postback_url: webhookUrl,
       customer: {
@@ -52,7 +52,7 @@ serve(async (req) => {
       items: [
         {
           title: "Atestado Médico Online",
-          unit_price: unitPrice,
+          unit_price: amountCents,
           quantity: 1,
           tangible: false,
           external_ref: pedidoId,
