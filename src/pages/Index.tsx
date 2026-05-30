@@ -1,3 +1,5 @@
+import { useEffect } from "react";
+import { useLocation } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import Hero from "@/components/Hero";
 import Commitments from "@/components/Commitments";
@@ -9,6 +11,15 @@ import Footer from "@/components/Footer";
 import GlobalIframe from "@/components/GlobalIframe";
 
 const Index = () => {
+  const { hash } = useLocation();
+  useEffect(() => {
+    if (!hash) return;
+    const id = hash.replace("#", "");
+    requestAnimationFrame(() => {
+      document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+  }, [hash]);
+
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
