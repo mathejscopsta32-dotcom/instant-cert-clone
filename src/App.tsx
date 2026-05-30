@@ -19,7 +19,7 @@ import QuemSomos from "./pages/QuemSomos";
 import Contato from "./pages/Contato";
 import { useClickTracker } from "./hooks/useClickTracker";
 import { useDevToolsGuard } from "./hooks/useDevToolsGuard";
-import FloatingWhatsApp from "./components/FloatingWhatsApp";
+
 
 const queryClient = new QueryClient();
 
@@ -36,7 +36,7 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <ClickTracker />
-        <FloatingWhatsApp />
+        
         <Routes>
           <Route path="/" element={<Index />} />
           <Route path="/selecionar-servico" element={<SelecionarServico />} />
