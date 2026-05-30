@@ -40,7 +40,7 @@ const Navbar = () => {
               <Link
                 key={l.label}
                 to={l.target}
-                className="text-sm font-medium text-foreground/80 hover:text-primary transition-colors"
+                className="text-sm font-medium text-white/85 hover:text-white transition-colors"
               >
                 {l.label}
               </Link>
@@ -49,7 +49,7 @@ const Navbar = () => {
                 key={l.label}
                 href={`/#${l.target}`}
                 onClick={handleClick(l.target)}
-                className="text-sm font-medium text-foreground/80 hover:text-primary transition-colors"
+                className="text-sm font-medium text-white/85 hover:text-white transition-colors"
               >
                 {l.label}
               </a>
@@ -67,7 +67,7 @@ const Navbar = () => {
         <button
           type="button"
           aria-label="Abrir menu"
-          className="lg:hidden inline-flex items-center justify-center w-10 h-10 rounded-md hover:bg-muted"
+          className="lg:hidden inline-flex items-center justify-center w-10 h-10 rounded-md text-white hover:bg-white/10"
           onClick={() => setOpen((v) => !v)}
         >
           {open ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
