@@ -2,13 +2,13 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import Index from "./pages/Index";
 import Solicitar from "./pages/Solicitar";
 import SolicitarConsulta from "./pages/SolicitarConsulta";
 import SolicitarPiscina from "./pages/SolicitarPiscina";
 import SelecionarServico from "./pages/SelecionarServico";
-import EscolherMedico from "./pages/EscolherMedico";
+
 import MeuPedido from "./pages/MeuPedido";
 import Admin from "./pages/Admin";
 import AdminLogin from "./pages/AdminLogin";
@@ -40,7 +40,7 @@ const App = () => (
         <Routes>
           <Route path="/" element={<Index />} />
           <Route path="/selecionar-servico" element={<SelecionarServico />} />
-          <Route path="/escolher-medico" element={<EscolherMedico />} />
+          <Route path="/escolher-medico" element={<Navigate to="/selecionar-servico" replace />} />
           <Route path="/solicitar" element={<Solicitar />} />
           <Route path="/solicitar-piscina" element={<SolicitarPiscina />} />
           <Route path="/consulta" element={<SolicitarConsulta />} />

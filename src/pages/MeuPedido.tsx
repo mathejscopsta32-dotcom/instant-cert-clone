@@ -75,7 +75,12 @@ const MeuPedido = () => {
       return;
     }
     const formData: FormData = JSON.parse(stored);
-    const doc = await generateAtestadoPDF(formData);
+    const { getMedicoByEstado } = await import("@/lib/getMedicoByEstado");
+    const medico = await getMedicoByEstado(formData.estado);
+    const doc = await generateAtestadoPDF({
+      ...formData,
+      medicoOverride: { fullName: medico.nome, crm: medico.crm },
+    });
     doc.save(`atestado-${pedido.nome_completo.replace(/\s+/g, "_").toLowerCase()}.pdf`);
   };
 

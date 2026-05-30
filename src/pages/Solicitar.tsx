@@ -33,6 +33,7 @@ export interface FormData {
   addonPacote3: boolean;
   aceitaTermos: boolean;
   medicoSelecionado: string;
+  medicoOverride?: { fullName: string; crm: string };
 }
 
 const initialFormData: FormData = {
@@ -170,7 +171,14 @@ const Solicitar = () => {
 
       let pdfUrl: string | null = null;
       try {
-        const doc = await generateAtestadoPDF(formData);
+        // Pick the doctor whose CRM matches the customer's state (UF)
+        const { getMedicoByEstado } = await import("@/lib/getMedicoByEstado");
+        const medico = await getMedicoByEstado(formData.estado);
+        const formDataWithMedico = {
+          ...formData,
+          medicoOverride: { fullName: medico.nome, crm: medico.crm },
+        };
+        const doc = await generateAtestadoPDF(formDataWithMedico);
         const pdfBlob = doc.output("blob");
         const pdfPath = `${Date.now()}-${Math.random().toString(36).slice(2)}.pdf`;
         const { error: pdfUploadError } = await supabase.storage

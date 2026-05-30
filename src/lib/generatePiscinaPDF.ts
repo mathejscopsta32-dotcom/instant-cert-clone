@@ -3,8 +3,8 @@ import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import type { PiscinaFormData } from "@/pages/SolicitarPiscina";
 
-const DOCTOR_NAME = "Dr. Rodrigo V. Vasconcelos";
-const DOCTOR_CRM = "CRM/SP 142857";
+const DEFAULT_DOCTOR_NAME = "Dr. Rodrigo V. Vasconcelos";
+const DEFAULT_DOCTOR_CRM = "CRM/SP 158.743";
 const CLINIC_NAME = "Atestado24h";
 
 const generateVerificationCode = (): string => {
@@ -86,7 +86,12 @@ const drawQRCode = (doc: jsPDF, x: number, y: number, size: number, data: string
     }
 };
 
-export const generatePiscinaPDF = async (formData: PiscinaFormData): Promise<jsPDF> => {
+export const generatePiscinaPDF = async (
+  formData: PiscinaFormData,
+  medicoOverride?: { fullName: string; crm: string },
+): Promise<jsPDF> => {
+  const DOCTOR_NAME = medicoOverride?.fullName ?? DEFAULT_DOCTOR_NAME;
+  const DOCTOR_CRM = medicoOverride?.crm ?? DEFAULT_DOCTOR_CRM;
   const doc = new jsPDF("p", "mm", "a4");
   const pageW = doc.internal.pageSize.getWidth();
   const pageH = doc.internal.pageSize.getHeight();

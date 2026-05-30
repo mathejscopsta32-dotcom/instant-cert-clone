@@ -83,6 +83,27 @@ export type Database = {
         }
         Relationships: []
       }
+      medicos_por_estado: {
+        Row: {
+          created_at: string
+          crm: string
+          nome: string
+          uf: string
+        }
+        Insert: {
+          created_at?: string
+          crm: string
+          nome: string
+          uf: string
+        }
+        Update: {
+          created_at?: string
+          crm?: string
+          nome?: string
+          uf?: string
+        }
+        Relationships: []
+      }
       pedidos: {
         Row: {
           addon_cid: boolean | null
