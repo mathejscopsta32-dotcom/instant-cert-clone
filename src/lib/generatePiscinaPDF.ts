@@ -3,8 +3,8 @@ import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import type { PiscinaFormData } from "@/pages/SolicitarPiscina";
 
-const DOCTOR_NAME = "Dr. Rodrigo V. Vasconcelos";
-const DOCTOR_CRM = "CRM/SP 142857";
+const DEFAULT_DOCTOR_NAME = "Dr. Rodrigo V. Vasconcelos";
+const DEFAULT_DOCTOR_CRM = "CRM/SP 158.743";
 const CLINIC_NAME = "Atestado24h";
 
 const generateVerificationCode = (): string => {
