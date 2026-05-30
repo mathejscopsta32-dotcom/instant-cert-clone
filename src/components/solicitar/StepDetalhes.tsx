@@ -24,13 +24,13 @@ interface Props {
 }
 
 export const diasOpcoes = [
-  { label: "1 dia", preco: "R$ 29,90", valor: 29.90 },
-  { label: "2 dias", preco: "R$ 43,90", valor: 43.90 },
-  { label: "3 dias", preco: "R$ 49,90", valor: 49.90 },
-  { label: "5 dias", preco: "R$ 59,90", valor: 59.90 },
-  { label: "7 dias", preco: "R$ 69,90", valor: 69.90 },
-  { label: "10 dias", preco: "R$ 79,90", valor: 79.90 },
-  { label: "15 dias", preco: "R$ 89,90", valor: 89.90 },
+  { label: "1 dia", preco: "R$ 39,90", valor: 39.90 },
+  { label: "2 dias", preco: "R$ 49,90", valor: 49.90 },
+  { label: "3 dias", preco: "R$ 59,90", valor: 59.90 },
+  { label: "5 dias", preco: "R$ 69,90", valor: 69.90 },
+  { label: "7 dias", preco: "R$ 79,90", valor: 79.90 },
+  { label: "10 dias", preco: "R$ 89,90", valor: 89.90 },
+  { label: "15 dias", preco: "R$ 99,90", valor: 99.90 },
 ];
 
 const inicioOpcoes = [
