@@ -1,6 +1,8 @@
 import { ArrowRight, Star } from "lucide-react";
 import { Link } from "react-router-dom";
 import doctorImg from "@/assets/doctor-main.jpg";
+import doctorSmall1 from "@/assets/doctor-small-1.jpg";
+import doctorSmall2 from "@/assets/doctor-small-2.jpg";
 import avatar1 from "@/assets/avatar-br-1.jpg";
 import avatar2 from "@/assets/avatar-br-2.jpg";
 import avatar3 from "@/assets/avatar-br-3.jpg";
@@ -82,24 +84,26 @@ const Hero = () => {
                 loading="lazy"
               />
 
-              <div className="absolute -top-3 right-4 bg-emerald-950/90 backdrop-blur border border-emerald-500/30 text-white rounded-full pl-3 pr-4 py-1.5 flex items-center gap-2 shadow-lg">
-                <span className="w-7 h-7 rounded-full bg-emerald-400/20 flex items-center justify-center">
-                  <CustomIcon name="stethoscope" size={14} className="text-emerald-300" />
+              <div className="absolute -top-3 right-4 bg-emerald-950/90 backdrop-blur border border-emerald-500/30 text-white rounded-full pl-3 pr-4 py-1.5 flex items-center gap-2 shadow-lg badge-float">
+                <span className="w-7 h-7 rounded-full bg-emerald-400/20 flex items-center justify-center relative">
+                  <span className="absolute inset-0 rounded-full bg-emerald-400/40 animate-ping" />
+                  <CustomIcon name="stethoscope" size={14} className="text-emerald-300 relative" />
                 </span>
                 <span className="text-xs font-semibold">CRM ativo</span>
               </div>
 
-              <div className="absolute top-10 -right-4 w-14 h-14 rounded-full border-4 border-emerald-400 overflow-hidden shadow-xl bg-emerald-950">
-                <img src={doctorImg} alt="" className="w-full h-full object-cover" aria-hidden />
+              <div className="absolute top-10 -right-4 w-14 h-14 rounded-full border-4 border-emerald-400 overflow-hidden shadow-xl bg-emerald-950 badge-float-delay">
+                <img src={doctorSmall1} alt="Médico atendendo por tablet" className="w-full h-full object-cover" loading="lazy" />
               </div>
 
-              <div className="absolute bottom-16 -left-4 w-14 h-14 rounded-full border-4 border-emerald-400 overflow-hidden shadow-xl bg-emerald-950">
-                <img src={doctorImg} alt="" className="w-full h-full object-cover" aria-hidden />
+              <div className="absolute bottom-16 -left-4 w-14 h-14 rounded-full border-4 border-emerald-400 overflow-hidden shadow-xl bg-emerald-950 badge-float">
+                <img src={doctorSmall2} alt="Médica sorridente com estetoscópio" className="w-full h-full object-cover" loading="lazy" />
               </div>
 
-              <div className="absolute -bottom-3 right-4 bg-emerald-950/90 backdrop-blur border border-emerald-500/30 text-white rounded-full pl-3 pr-4 py-1.5 flex items-center gap-2 shadow-lg">
-                <span className="w-7 h-7 rounded-full bg-emerald-400/20 flex items-center justify-center">
-                  <CustomIcon name="shield" size={14} className="text-emerald-300" />
+              <div className="absolute -bottom-3 right-4 bg-emerald-950/90 backdrop-blur border border-emerald-500/30 text-white rounded-full pl-3 pr-4 py-1.5 flex items-center gap-2 shadow-lg badge-float-delay">
+                <span className="w-7 h-7 rounded-full bg-emerald-400/20 flex items-center justify-center relative">
+                  <span className="absolute inset-0 rounded-full bg-emerald-400/40 animate-ping" />
+                  <CustomIcon name="shield" size={14} className="text-emerald-300 relative" />
                 </span>
                 <span className="text-xs font-semibold">CFM 2.314/2022</span>
               </div>
