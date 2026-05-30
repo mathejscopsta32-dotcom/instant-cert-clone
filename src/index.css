@@ -125,4 +125,36 @@
   .section-subtitle {
     @apply text-muted-foreground text-base md:text-lg max-w-2xl mx-auto;
   }
+
+  .hero-dark {
+    background: radial-gradient(
+      ellipse at 70% 40%,
+      hsl(150 55% 12%) 0%,
+      hsl(155 60% 8%) 55%,
+      hsl(158 65% 5%) 100%
+    );
+  }
+
+  .gold-shimmer {
+    background: linear-gradient(
+      100deg,
+      #d4a84a 0%,
+      #f5d97a 20%,
+      #fff3b8 40%,
+      #f5d97a 60%,
+      #d4a84a 80%,
+      #f5d97a 100%
+    );
+    background-size: 250% 100%;
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    color: transparent;
+    animation: gold-shimmer 4s linear infinite;
+  }
+}
+
+@keyframes gold-shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
 }
