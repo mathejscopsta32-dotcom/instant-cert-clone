@@ -36,7 +36,7 @@ const StepPagamentoConsulta = ({ formData, pedidoId, onPaymentConfirmed }: Props
     setPixError(null);
     try {
       const { data, error } = await supabase.functions.invoke("create-pix", {
-        body: { amount: totalPrice, pedidoId, nomeCompleto: formData.nomeCompleto, cpf: formData.cpf, email: formData.email },
+        body: { amount: totalPrice, pedidoId, nomeCompleto: formData.nomeCompleto, cpf: formData.cpf, email: formData.email, telefone: formData.telefone },
       });
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
