@@ -40,7 +40,7 @@ const App = () => (
         <Routes>
           <Route path="/" element={<Index />} />
           <Route path="/selecionar-servico" element={<SelecionarServico />} />
-          <Route path="/escolher-medico" element={<EscolherMedico />} />
+          <Route path="/escolher-medico" element={<Navigate to="/selecionar-servico" replace />} />
           <Route path="/solicitar" element={<Solicitar />} />
           <Route path="/solicitar-piscina" element={<SolicitarPiscina />} />
           <Route path="/consulta" element={<SolicitarConsulta />} />
