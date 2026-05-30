@@ -33,6 +33,7 @@ export interface FormData {
   addonPacote3: boolean;
   aceitaTermos: boolean;
   medicoSelecionado: string;
+  medicoOverride?: { fullName: string; crm: string };
 }
 
 const initialFormData: FormData = {
