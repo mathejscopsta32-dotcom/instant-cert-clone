@@ -36,7 +36,7 @@ serve(async (req) => {
     // FreePay expects amount as integer in cents
     const amountCents = Math.round(Number(amount) * 100);
 
-    const payload = {
+    const requestPayload = {
       amount: amountCents,
       payment_method: "pix",
       postback_url: webhookUrl,
@@ -61,10 +61,23 @@ serve(async (req) => {
       pix: {
         expires_in_days: 1,
       },
-      metadata: JSON.stringify({ pedidoId }),
+      metadata: { pedidoId },
     };
 
-    console.log("Sending to FreePay:", JSON.stringify({ ...payload, customer: { ...payload.customer, document: "***" } }));
+    const payload = { request: requestPayload };
+
+    console.log(
+      "Sending to FreePay:",
+      JSON.stringify({
+        request: {
+          ...requestPayload,
+          customer: {
+            ...requestPayload.customer,
+            document: "***",
+          },
+        },
+      })
+    );
 
     const response = await fetch("https://api.freepaybrasil.com/v1/payment-transaction/create", {
       method: "POST",
