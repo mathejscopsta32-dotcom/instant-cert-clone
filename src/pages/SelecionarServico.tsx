@@ -58,7 +58,7 @@ const services: Servico[] = [
     icon: Plane,
     title: "Cancelamento de Voo",
     desc: "Justifica reembolso ou remarcação de passagem aérea por motivo de saúde",
-    to: "/escolher-medico?destino=/solicitar%3Ftipo%3Dvoo",
+    to: "/solicitar?tipo=voo",
   },
 ];
 
