@@ -1,21 +1,23 @@
+import { CustomIcon } from "@/components/icons/CustomIcon";
+
 const items = [
   {
-    emoji: "⚖️",
+    icon: "scale" as const,
     title: "Validade legal completa",
     desc: "Atestado emitido por médico com CRM ativo, em conformidade com a Resolução CFM nº 2.314/2022. Válido para trabalho, escola, piscina e comparecimento em todo o Brasil.",
   },
   {
-    emoji: "🔐",
+    icon: "lock" as const,
     title: "Privacidade garantida",
     desc: "Seus dados de saúde são tratados com criptografia e sigilo médico, conforme exigido pela LGPD (Lei 13.709/2018).",
   },
   {
-    emoji: "💰",
+    icon: "money" as const,
     title: "Sem custos ocultos",
     desc: "Valor único e transparente: cobre teleconsulta, emissão e entrega do documento. O preço final aparece antes do pagamento.",
   },
   {
-    emoji: "✅",
+    icon: "check" as const,
     title: "Validação após a entrega",
     desc: "Cada atestado passa por validação antes do envio. Suporte 24h disponível para qualquer questionamento posterior.",
   },
@@ -36,8 +38,8 @@ const Commitments = () => {
         <div className="grid sm:grid-cols-2 gap-6">
           {items.map((it, i) => (
             <div key={i} className="bg-card border rounded-2xl p-6 flex gap-4">
-              <div className="w-12 h-12 shrink-0 rounded-xl bg-secondary flex items-center justify-center text-2xl">
-                <span aria-hidden>{it.emoji}</span>
+              <div className="w-12 h-12 shrink-0 rounded-xl bg-secondary flex items-center justify-center">
+                <CustomIcon name={it.icon} size={26} />
               </div>
               <div>
                 <h3 className="font-bold text-foreground mb-1">{it.title}</h3>

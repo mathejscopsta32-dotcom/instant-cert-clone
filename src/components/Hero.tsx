@@ -1,6 +1,7 @@
-import { ArrowRight, ShieldCheck, Star } from "lucide-react";
+import { ArrowRight, Star } from "lucide-react";
 import { Link } from "react-router-dom";
-import doctorImg from "@/assets/doctor.jpg";
+import doctorImg from "@/assets/doctor-main.jpg";
+import { CustomIcon } from "@/components/icons/CustomIcon";
 
 const Hero = () => {
   return (
@@ -10,7 +11,7 @@ const Hero = () => {
           {/* Left */}
           <div className="space-y-6">
             <span className="inline-flex items-center gap-1.5 bg-badge text-badge-foreground text-xs font-semibold px-3 py-1.5 rounded-full">
-              <span aria-hidden>🟢</span>
+              <CustomIcon name="clock" size={14} className="text-badge-foreground" />
               Atendimento 24h, todos os dias
             </span>
 
@@ -33,8 +34,8 @@ const Hero = () => {
                 Solicitar atestado
                 <ArrowRight className="w-4 h-4" />
               </Link>
-              <span className="inline-flex items-center text-sm text-muted-foreground px-2">
-                <span className="mr-1.5" aria-hidden>📧</span>
+              <span className="inline-flex items-center gap-1.5 text-sm text-muted-foreground px-2">
+                <CustomIcon name="mail" size={16} />
                 Entrega por e-mail ou WhatsApp
               </span>
             </div>
@@ -56,13 +57,13 @@ const Hero = () => {
           <div className="relative flex justify-center">
             <img
               src={doctorImg}
-              alt="Médica profissional com estetoscópio"
+              alt="Médica profissional com estetoscópio em atendimento de telemedicina"
               className="rounded-2xl w-full max-w-md object-cover shadow-xl"
               loading="lazy"
             />
 
             <div className="absolute bottom-6 left-2 bg-background rounded-xl shadow-lg px-4 py-3 flex items-center gap-2">
-              <ShieldCheck className="w-5 h-5 text-primary" />
+              <CustomIcon name="shield" size={22} />
               <div>
                 <p className="text-sm font-bold text-foreground">CRM ativo</p>
                 <p className="text-xs text-muted-foreground">CFM 2.314/2022</p>
@@ -70,7 +71,7 @@ const Hero = () => {
             </div>
 
             <div className="absolute top-6 right-2 bg-background rounded-xl shadow-lg px-4 py-3 flex items-center gap-2">
-              <span className="text-lg" aria-hidden>⚡</span>
+              <CustomIcon name="bolt" size={20} />
               <div>
                 <p className="text-sm font-bold text-foreground">Em 5 min</p>
                 <p className="text-xs text-muted-foreground">Entrega média</p>

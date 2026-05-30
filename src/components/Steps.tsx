@@ -1,21 +1,22 @@
 import { Link } from "react-router-dom";
 import { ArrowRight } from "lucide-react";
+import { CustomIcon } from "@/components/icons/CustomIcon";
 
 const steps = [
   {
-    emoji: "📝",
+    icon: "pencil" as const,
     title: "Preencha o formulário",
     description:
       "Informe seus dados pessoais e responda à anamnese digital. Todas as informações são protegidas por criptografia.",
   },
   {
-    emoji: "💸",
+    icon: "pix" as const,
     title: "Pague via Pix",
     description:
       "Pagamento seguro, instantâneo e sem cobranças adicionais.",
   },
   {
-    emoji: "📧",
+    icon: "mail" as const,
     title: "Receba por e-mail",
     description:
       "O atestado é assinado digitalmente por médico com CRM ativo e enviado em PDF para o e-mail informado.",
@@ -38,8 +39,8 @@ const Steps = () => {
               key={i}
               className="relative bg-card rounded-2xl border p-8 text-center hover:shadow-lg transition-shadow"
             >
-              <div className="w-14 h-14 mx-auto mb-4 rounded-xl bg-secondary flex items-center justify-center text-2xl">
-                <span aria-hidden>{step.emoji}</span>
+              <div className="w-14 h-14 mx-auto mb-4 rounded-xl bg-secondary flex items-center justify-center">
+                <CustomIcon name={step.icon} size={28} />
               </div>
 
               <span className="absolute top-4 right-4 w-8 h-8 rounded-full bg-primary text-primary-foreground text-sm font-bold flex items-center justify-center">

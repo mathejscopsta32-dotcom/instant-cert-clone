@@ -1,10 +1,12 @@
+import { CustomIcon } from "@/components/icons/CustomIcon";
+
 const benefits = [
-  { emoji: "💻", title: "100% digital", desc: "O processo inteiro acontece pelo computador ou celular, sem deslocamento." },
-  { emoji: "👨‍⚕️", title: "Médicos com CRM", desc: "Profissionais registrados nos conselhos regionais de medicina, verificáveis publicamente." },
-  { emoji: "📧", title: "Entrega por e-mail", desc: "Documento em PDF enviado automaticamente após confirmação do pagamento." },
-  { emoji: "🔒", title: "Dados protegidos", desc: "Informações tratadas com criptografia e sigilo médico, conforme exigido pela LGPD." },
-  { emoji: "🇧🇷", title: "Validade nacional", desc: "Aceito por empresas, escolas e instituições em todo o território brasileiro." },
-  { emoji: "⚡", title: "Processo objetivo", desc: "Anamnese estruturada e fluxo simplificado. Sem burocracia desnecessária." },
+  { icon: "monitor" as const, title: "100% digital", desc: "O processo inteiro acontece pelo computador ou celular, sem deslocamento." },
+  { icon: "stethoscope" as const, title: "Médicos com CRM", desc: "Profissionais registrados nos conselhos regionais de medicina, verificáveis publicamente." },
+  { icon: "mail" as const, title: "Entrega por e-mail", desc: "Documento em PDF enviado automaticamente após confirmação do pagamento." },
+  { icon: "lock" as const, title: "Dados protegidos", desc: "Informações tratadas com criptografia e sigilo médico, conforme exigido pela LGPD." },
+  { icon: "flagBR" as const, title: "Validade nacional", desc: "Aceito por empresas, escolas e instituições em todo o território brasileiro." },
+  { icon: "bolt" as const, title: "Processo objetivo", desc: "Anamnese estruturada e fluxo simplificado. Sem burocracia desnecessária." },
 ];
 
 const stats = [
@@ -31,8 +33,8 @@ const Benefits = () => {
               key={i}
               className="bg-card rounded-2xl border p-6 text-left hover:shadow-lg transition-shadow"
             >
-              <div className="w-12 h-12 rounded-xl bg-secondary flex items-center justify-center mb-4 text-2xl">
-                <span aria-hidden>{b.emoji}</span>
+              <div className="w-12 h-12 rounded-xl bg-secondary flex items-center justify-center mb-4">
+                <CustomIcon name={b.icon} size={26} />
               </div>
               <h3 className="font-bold text-foreground mb-1">{b.title}</h3>
               <p className="text-sm text-muted-foreground">{b.desc}</p>
@@ -40,7 +42,6 @@ const Benefits = () => {
           ))}
         </div>
 
-        {/* Stats */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 mt-16">
           {stats.map((s, i) => (
             <div key={i} className="bg-card border rounded-2xl p-6">
