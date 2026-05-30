@@ -27,10 +27,18 @@ export const diasOpcoes = [
   { label: "1 dia", preco: "R$ 39,90", valor: 39.90 },
   { label: "2 dias", preco: "R$ 49,90", valor: 49.90 },
   { label: "3 dias", preco: "R$ 59,90", valor: 59.90 },
-  { label: "5 dias", preco: "R$ 69,90", valor: 69.90 },
-  { label: "7 dias", preco: "R$ 79,90", valor: 79.90 },
-  { label: "10 dias", preco: "R$ 89,90", valor: 89.90 },
-  { label: "15 dias", preco: "R$ 99,90", valor: 99.90 },
+  { label: "4 dias", preco: "R$ 69,90", valor: 69.90 },
+  { label: "5 dias", preco: "R$ 79,90", valor: 79.90 },
+  { label: "6 dias", preco: "R$ 89,90", valor: 89.90 },
+  { label: "7 dias", preco: "R$ 99,90", valor: 99.90 },
+  { label: "8 dias", preco: "R$ 109,90", valor: 109.90 },
+  { label: "9 dias", preco: "R$ 119,90", valor: 119.90 },
+  { label: "10 dias", preco: "R$ 129,90", valor: 129.90 },
+  { label: "11 dias", preco: "R$ 139,90", valor: 139.90 },
+  { label: "12 dias", preco: "R$ 149,90", valor: 149.90 },
+  { label: "13 dias", preco: "R$ 159,90", valor: 159.90 },
+  { label: "14 dias", preco: "R$ 159,90", valor: 159.90 },
+  { label: "15 dias", preco: "R$ 159,90", valor: 159.90 },
 ];
 
 const inicioOpcoes = [
