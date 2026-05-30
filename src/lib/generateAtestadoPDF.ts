@@ -1,7 +1,6 @@
 import { jsPDF } from "jspdf";
 import type { FormData } from "@/pages/Solicitar";
 import { format, addDays } from "date-fns";
-import { ptBR } from "date-fns/locale";
 
 // Hospital logo imports
 import imgUbs from "@/assets/hospitals/ubs.png";
@@ -10,6 +9,7 @@ import imgSus from "@/assets/hospitals/sus.png";
 import imgUnimed from "@/assets/hospitals/unimed.png";
 import imgHapvida from "@/assets/hospitals/hapvida.png";
 import imgSocorromed from "@/assets/hospitals/socorromed.png";
+import imgIcpBrasil from "@/assets/icp-brasil.png";
 
 const hospitalLogos: Record<string, string> = {
   UBS: imgUbs,
@@ -20,27 +20,24 @@ const hospitalLogos: Record<string, string> = {
   Socorromed: imgSocorromed,
 };
 
-// Hospitals that use the "UPA style" (simple layout with SUS logo alongside)
-const upaStyleHospitals = ["UPA 24h", "UBS", "SUS", "Socorromed"];
-
 // CID-10 mapping
 const getCID10 = (sintomas: string[]): { code: string; description: string } => {
-  const s = sintomas.map(x => x.toLowerCase().replace(/^[^\w\s]+\s*/, ""));
-  if (s.some(x => x.includes("febre"))) return { code: "R50.9", description: "Febre não especificada" };
-  if (s.some(x => x.includes("dor de cabeça") || x.includes("cefaleia"))) return { code: "R51", description: "Cefaleia" };
-  if (s.some(x => x.includes("náusea") || x.includes("vômito"))) return { code: "R11", description: "Náusea e vômito" };
-  if (s.some(x => x.includes("diarreia"))) return { code: "K59.1", description: "Diarreia funcional" };
-  if (s.some(x => x.includes("tosse"))) return { code: "R05", description: "Tosse" };
-  if (s.some(x => x.includes("gripe") || x.includes("resfriado"))) return { code: "J11", description: "Influenza (gripe)" };
-  if (s.some(x => x.includes("dor abdominal") || x.includes("estômago"))) return { code: "R10.4", description: "Dor abdominal" };
-  if (s.some(x => x.includes("tontura"))) return { code: "R42", description: "Tontura e instabilidade" };
-  if (s.some(x => x.includes("ansiedade"))) return { code: "F41.9", description: "Transtorno ansioso" };
-  if (s.some(x => x.includes("lombar") || x.includes("costas"))) return { code: "M54.5", description: "Dor lombar baixa" };
-  if (s.some(x => x.includes("dengue"))) return { code: "A90", description: "Dengue" };
+  const s = sintomas.map((x) => x.toLowerCase().replace(/^[^\w\s]+\s*/, ""));
+  if (s.some((x) => x.includes("febre"))) return { code: "R50.9", description: "Febre não especificada" };
+  if (s.some((x) => x.includes("dor de cabeça") || x.includes("cefaleia"))) return { code: "R51", description: "Cefaleia" };
+  if (s.some((x) => x.includes("náusea") || x.includes("vômito"))) return { code: "R11", description: "Náusea e vômito" };
+  if (s.some((x) => x.includes("diarreia"))) return { code: "K59.1", description: "Diarreia funcional" };
+  if (s.some((x) => x.includes("tosse"))) return { code: "R05", description: "Tosse" };
+  if (s.some((x) => x.includes("gripe") || x.includes("resfriado"))) return { code: "J11", description: "Influenza (gripe)" };
+  if (s.some((x) => x.includes("dor abdominal") || x.includes("estômago"))) return { code: "R10.4", description: "Dor abdominal" };
+  if (s.some((x) => x.includes("tontura"))) return { code: "R42", description: "Tontura e instabilidade" };
+  if (s.some((x) => x.includes("ansiedade"))) return { code: "F41.9", description: "Transtorno ansioso" };
+  if (s.some((x) => x.includes("lombar") || x.includes("costas"))) return { code: "M54.5", description: "Dor lombar baixa" };
+  if (s.some((x) => x.includes("dengue"))) return { code: "A90", description: "Dengue" };
   return { code: "R69", description: "Causas desconhecidas de morbidade" };
 };
 
-// Doctor database with CRM info
+// Doctor database
 const doctorDatabase: Record<string, { fullName: string; crm: string }> = {
   "Dr. Rodrigo V.": { fullName: "Dr. Rodrigo V. Vasconcelos", crm: "CRM/SP 158.743" },
   "Dra. Ana Beatriz": { fullName: "Dra. Ana Beatriz de Souza", crm: "CRM/RJ 198.432" },
@@ -75,8 +72,8 @@ const getDiasNum = (label: string): number => {
   return match ? parseInt(match[1]) : 1;
 };
 
-const loadImageAsBase64 = (src: string): Promise<string | null> => {
-  return new Promise((resolve) => {
+const loadImageAsBase64 = (src: string): Promise<string | null> =>
+  new Promise((resolve) => {
     const img = new Image();
     img.crossOrigin = "anonymous";
     img.onload = () => {
@@ -84,94 +81,16 @@ const loadImageAsBase64 = (src: string): Promise<string | null> => {
       canvas.width = img.width;
       canvas.height = img.height;
       const ctx = canvas.getContext("2d");
-      if (ctx) { ctx.drawImage(img, 0, 0); resolve(canvas.toDataURL("image/png")); }
-      else resolve(null);
+      if (ctx) {
+        ctx.drawImage(img, 0, 0);
+        resolve(canvas.toDataURL("image/png"));
+      } else resolve(null);
     };
     img.onerror = () => resolve(null);
     img.src = src;
   });
-};
 
-// Bezier curve helper
-const bezier = (
-  doc: jsPDF, x0: number, y0: number,
-  cx1: number, cy1: number, cx2: number, cy2: number,
-  x1: number, y1: number, segments = 20
-) => {
-  let px = x0, py = y0;
-  for (let i = 1; i <= segments; i++) {
-    const t = i / segments;
-    const mt = 1 - t;
-    const nx = mt*mt*mt*x0 + 3*mt*mt*t*cx1 + 3*mt*t*t*cx2 + t*t*t*x1;
-    const ny = mt*mt*mt*y0 + 3*mt*mt*t*cy1 + 3*mt*t*t*cy2 + t*t*t*y1;
-    doc.line(px, py, nx, ny);
-    px = nx; py = ny;
-  }
-};
-
-// Realistic handwritten doctor signature — "R. Vasconcelos"
-const drawSignature = (doc: jsPDF, centerX: number, baseY: number) => {
-  const ox = centerX - 30;
-  const oy = baseY;
-
-  doc.setDrawColor(15, 15, 60);
-  doc.setLineWidth(0.5);
-  // "R" stem
-  bezier(doc, ox, oy, ox+0.3, oy-4, ox+0.2, oy-8, ox+0.8, oy-11, 14);
-  // "R" top loop
-  doc.setLineWidth(0.45);
-  bezier(doc, ox+0.8, oy-11, ox+4, oy-12.5, ox+8, oy-10.5, ox+6, oy-7.5, 14);
-  bezier(doc, ox+6, oy-7.5, ox+4, oy-5, ox+1.5, oy-4.5, ox+1.5, oy-4.5, 10);
-  // "R" leg
-  doc.setLineWidth(0.4);
-  bezier(doc, ox+1.5, oy-4.5, ox+4, oy-3.5, ox+7, oy-0.5, ox+10, oy+1, 12);
-
-  // dot
-  doc.setLineWidth(0.35);
-  doc.line(ox+12, oy-0.5, ox+12.6, oy-1);
-
-  // "V"
-  doc.setLineWidth(0.4);
-  const vx = ox + 15;
-  bezier(doc, vx, oy-9, vx+1.5, oy-4, vx+3, oy, vx+4.5, oy+1, 12);
-  doc.setLineWidth(0.35);
-  bezier(doc, vx+4.5, oy+1, vx+5.5, oy-2.5, vx+7, oy-7, vx+9, oy-10, 12);
-
-  // "asc" flowing
-  doc.setLineWidth(0.3);
-  const ax = ox + 25;
-  bezier(doc, ax, oy-3.5, ax-1.2, oy-5.5, ax-1.2, oy-0.5, ax+1, oy-0.5, 10);
-  bezier(doc, ax+1, oy-0.5, ax+1.8, oy-3.5, ax+2.2, oy-5.5, ax+2.8, oy-2.5, 10);
-  bezier(doc, ax+2.8, oy-2.5, ax+3.5, oy-5, ax+4.5, oy-5.5, ax+5, oy-3.5, 8);
-  bezier(doc, ax+5, oy-3.5, ax+4, oy-1.5, ax+5, oy, ax+6.5, oy-1.5, 8);
-  bezier(doc, ax+6.5, oy-1.5, ax+7.5, oy-5, ax+7, oy-6, ax+8.5, oy-4.5, 8);
-
-  // "onc"
-  doc.setLineWidth(0.28);
-  const bx = ox + 34;
-  bezier(doc, bx, oy-1.5, bx-0.5, oy-4.5, bx+1.8, oy-5.5, bx+2.2, oy-2.5, 10);
-  bezier(doc, bx+2.2, oy-2.5, bx+2.8, oy-0.5, bx+0.8, oy+0.5, bx+3.2, oy-1.5, 8);
-  bezier(doc, bx+3.2, oy-1.5, bx+3.8, oy-4.5, bx+4.8, oy-5.5, bx+5.2, oy-2.5, 8);
-  bezier(doc, bx+5.2, oy-2.5, bx+5.8, oy-0.5, bx+6.8, oy-4.5, bx+7.2, oy-1.5, 8);
-  bezier(doc, bx+7.2, oy-1.5, bx+8, oy-4.5, bx+7.5, oy-5.5, bx+9, oy-3.5, 8);
-
-  // "elos" tail
-  doc.setLineWidth(0.25);
-  const cx = ox + 44;
-  bezier(doc, cx, oy-2.5, cx+0.5, oy-5, cx+1.8, oy-4.5, cx+1.3, oy-3, 8);
-  bezier(doc, cx+1.3, oy-3, cx+0.8, oy-0.5, cx+1.8, oy+0.5, cx+2.8, oy-1.5, 8);
-  bezier(doc, cx+2.8, oy-1.5, cx+3.2, oy-6.5, cx+3.8, oy-8, cx+4.2, oy-1.5, 12);
-  bezier(doc, cx+4.2, oy-1.5, cx+4.8, oy-4.5, cx+6, oy-5, cx+6.5, oy-2.5, 8);
-  bezier(doc, cx+6.5, oy-2.5, cx+5.5, oy, cx+7, oy+0.5, cx+8.5, oy-1.5, 8);
-  bezier(doc, cx+8.5, oy-1.5, cx+9.5, oy-4.5, cx+9, oy-5.5, cx+10.5, oy-3.5, 8);
-  bezier(doc, cx+10.5, oy-3.5, cx+11, oy-0.5, cx+12.5, oy+0.5, cx+15, oy-0.5, 10);
-
-  // Underline flourish
-  doc.setLineWidth(0.2);
-  bezier(doc, ox-2, oy+4, ox+18, oy+3, ox+42, oy+2, ox+62, oy+3.5, 30);
-};
-
-// Generate QR code pattern
+// QR code pattern generator (visual representation)
 const drawQRCode = (doc: jsPDF, x: number, y: number, size: number, data: string) => {
   const modules = 25;
   const cellSize = size / modules;
@@ -223,7 +142,7 @@ export const generateAtestadoPDF = async (formData: FormData): Promise<jsPDF> =>
   const doc = new jsPDF("p", "mm", "a4");
   const pageW = doc.internal.pageSize.getWidth();
   const pageH = doc.internal.pageSize.getHeight();
-  const margin = 25;
+  const margin = 18;
   const contentW = pageW - margin * 2;
   const verificationCode = generateVerificationCode();
   const now = new Date();
@@ -233,316 +152,222 @@ export const generateAtestadoPDF = async (formData: FormData): Promise<jsPDF> =>
 
   const inicioDate = getInicioDate(formData);
   const diasNum = getDiasNum(formData.diasAfastamento);
-  const fimDate = addDays(inicioDate, diasNum);
   const hospitalName = formData.hospitalPreferencia;
-  const isUpaStyle = upaStyleHospitals.includes(hospitalName);
 
-  let y = 20;
+  // ============== HEADER ==============
+  const headerTop = 15;
 
-  // ===== LOAD HOSPITAL LOGO =====
+  // Hospital logo (small, top-left) — kept compact so it never overlaps the QR box
   const logoSrc = hospitalName ? hospitalLogos[hospitalName] : null;
   let logoBase64: string | null = null;
   if (logoSrc) {
     try { logoBase64 = await loadImageAsBase64(logoSrc); } catch { /* skip */ }
   }
+  if (logoBase64) {
+    doc.addImage(logoBase64, "PNG", margin, headerTop, 38, 18);
+  }
 
-  if (isUpaStyle) {
-    // ========== UPA / SUS STYLE LAYOUT ==========
-    // Logos side by side at top
-    let logoEndX = margin;
-    if (logoBase64) {
-      doc.addImage(logoBase64, "PNG", margin, y - 5, 28, 22);
-      logoEndX = margin + 32;
-    }
-    // Also add SUS logo if hospital is UPA 24h
-    if (hospitalName === "UPA 24h") {
-      try {
-        const susLogo = await loadImageAsBase64(imgSus);
-        if (susLogo) {
-          doc.addImage(susLogo, "PNG", logoEndX, y - 3, 22, 18);
-        }
-      } catch { /* skip */ }
-    }
+  // ============== QR VALIDATION BOX (only when add-on selected) ==============
+  if (formData.addonQrCode) {
+    const boxW = 78;
+    const boxH = 50;
+    const boxX = pageW - margin - boxW;
+    const boxY = headerTop - 3;
 
-    // Subtitle under logos
-    y += 22;
-    doc.setFont("helvetica", "normal");
-    doc.setFontSize(9);
-    doc.setTextColor(100, 100, 100);
-    doc.text("UNIDADE DE PRONTO ATENDIMENTO", margin, y);
-
-    y += 14;
-
-    // ===== TITLE =====
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(18);
-    doc.setTextColor(20, 20, 20);
-    doc.text("Atestado Médico", margin, y);
-
-    y += 14;
-
-    // ===== PARA: =====
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(11);
-    doc.setTextColor(20, 20, 20);
-    doc.text("PARA:", margin, y);
-    doc.setFont("helvetica", "normal");
-    doc.text(formData.nomeCompleto.toUpperCase(), margin + 16, y);
-
-    y += 12;
-
-    // ===== BODY TEXT =====
-    doc.setFont("helvetica", "normal");
-    doc.setFontSize(11);
-    doc.setTextColor(30, 30, 30);
-
-    const bodyText = `Atesto para os devidos fins, que a Sra./Sr. ${formData.nomeCompleto}, CPF: ${formData.cpf}, compareceu a pronto atendimento na data ${format(inicioDate, "dd/MM/yyyy")} às ${format(now, "HH:mm")}, necessitando afastar-se de suas funções laborais diárias pelo período de ${formData.diasAfastamento} por motivo de doença.`;
-
-    const lines = doc.splitTextToSize(bodyText, contentW);
-    doc.text(lines, margin, y);
-    y += lines.length * 6 + 5;
-
-    // ===== CID =====
-    if (formData.addonCid) {
-      const cid = getCID10(formData.sintomas);
-      y += 4;
-      doc.setFont("helvetica", "bold");
-      doc.setFontSize(11);
-      doc.text(`CID ${cid.code}`, margin, y);
-      y += 8;
-    }
-
-    y += 10;
-
-    // ===== DATE LINE =====
-    doc.setFont("helvetica", "normal");
-    doc.setFontSize(11);
-    doc.setTextColor(30, 30, 30);
-    const dateStr = `Pronto Atendimento, ${format(inicioDate, "dd 'de' MMMM 'de' yyyy", { locale: ptBR })}`;
-    doc.text(dateStr, margin, y);
-
-    y += 25;
-
-    // ===== SIGNATURE =====
-    drawSignature(doc, margin + 35, y - 8);
-
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(11);
-    doc.setTextColor(20, 20, 20);
-    doc.text(DOCTOR_NAME, margin, y + 5);
-    y += 11;
-    doc.setFont("helvetica", "normal");
-    doc.setFontSize(10);
-    doc.text("Médico", margin, y + 1);
-    y += 7;
-    doc.setFont("helvetica", "normal");
-    doc.text(DOCTOR_CRM, margin, y + 1);
-
-    // ===== QR CODE (optional) =====
-    if (formData.addonQrCode) {
-      const qrSize = 22;
-      drawQRCode(doc, pageW - margin - qrSize, pageH - 70, qrSize, verificationCode);
-      doc.setFontSize(6.5);
-      doc.setTextColor(100, 100, 100);
-      doc.text(`Código: ${verificationCode}`, pageW - margin - qrSize, pageH - 45);
-    }
-
-    // ===== FOOTER =====
-    const address = hospitalAddresses[hospitalName] || "";
-    doc.setFont("helvetica", "normal");
-    doc.setFontSize(8);
-    doc.setTextColor(120, 120, 120);
-    doc.text(
-      `${address}${formData.cidade ? `, ${formData.cidade}` : ""}${formData.estado ? ` - ${formData.estado}` : ""}`,
-      margin, pageH - 15
-    );
-
-  } else {
-    // ========== UNIMED / HAPVIDA STYLE LAYOUT ==========
-    // Logo top-left
-    if (logoBase64) {
-      doc.addImage(logoBase64, "PNG", margin, y - 5, 35, 20);
-    }
-
-    // Hospital name + subtitle (right of logo or at top)
-    const textX = logoBase64 ? margin + 40 : margin;
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(9);
-    doc.setTextColor(80, 80, 80);
-    doc.text(`TELESSAÚDE - ${hospitalName?.toUpperCase()}`, textX, y + 2);
-    doc.setFont("helvetica", "normal");
-    doc.setFontSize(7.5);
-    doc.setTextColor(120, 120, 120);
-    const addr = hospitalAddresses[hospitalName] || "";
-    doc.text(`${addr}${formData.cidade ? `, ${formData.cidade}` : ""}${formData.estado ? ` - ${formData.estado}` : ""}`.toUpperCase(), textX, y + 7);
-
-    y += 25;
-
-    // ===== PATIENT DATA GRID =====
-    doc.setDrawColor(180, 180, 180);
+    // Light green/gray box
+    doc.setFillColor(244, 249, 246);
+    doc.setDrawColor(220, 230, 224);
     doc.setLineWidth(0.3);
+    doc.roundedRect(boxX, boxY, boxW, boxH, 2.5, 2.5, "FD");
 
-    // Row 1 - Name
+    // Heading text
     doc.setFont("helvetica", "normal");
     doc.setFontSize(8);
-    doc.setTextColor(100, 100, 100);
-    doc.text("Nome do paciente:", margin, y);
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(9);
-    doc.setTextColor(20, 20, 20);
-    doc.text(formData.nomeCompleto.toUpperCase(), margin + 38, y);
-    y += 6;
-    doc.line(margin, y, pageW - margin, y);
-    y += 5;
+    doc.setTextColor(40, 60, 50);
+    doc.text("Você sabia que pode", boxX + 4, boxY + 5);
+    doc.text("validar esse mesmo", boxX + 4, boxY + 9);
+    doc.text("Atestado no seu celular?", boxX + 4, boxY + 13);
 
-    // Row 2 - CPF and Date of Birth
-    doc.setFont("helvetica", "normal");
-    doc.setFontSize(8);
-    doc.setTextColor(100, 100, 100);
-    doc.text("CPF:", margin, y);
-    doc.setFont("helvetica", "normal");
-    doc.setFontSize(9);
-    doc.setTextColor(20, 20, 20);
-    doc.text(formData.cpf, margin + 10, y);
+    // QR code (left side of box)
+    drawQRCode(doc, boxX + 4, boxY + 17, 28, verificationCode);
 
-    doc.setFont("helvetica", "normal");
-    doc.setFontSize(8);
-    doc.setTextColor(100, 100, 100);
-    doc.text("Data de Nascimento:", pageW / 2, y);
-    doc.setFont("helvetica", "normal");
-    doc.setFontSize(9);
-    doc.setTextColor(20, 20, 20);
-    doc.text(formData.dataNascimento || "", pageW / 2 + 40, y);
-    y += 6;
-    doc.line(margin, y, pageW - margin, y);
-    y += 5;
+    // Numbered steps (right side of box)
+    const stepsX = boxX + 38;
+    let stepY = boxY + 19;
+    const steps = [
+      "Escaneie o QR Code ou\nacesse: docmedonline.lovable.app",
+      'Se solicitado, clique em\n"Validar Documento"',
+      "Confira se as informações\nbatem com o atestado",
+    ];
+    steps.forEach((stepText, idx) => {
+      // numbered green circle
+      doc.setFillColor(34, 139, 90);
+      doc.circle(stepsX + 1.8, stepY, 1.8, "F");
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(6);
+      doc.setTextColor(255, 255, 255);
+      doc.text(String(idx + 1), stepsX + 1.8, stepY + 0.7, { align: "center" });
 
-    // Row 3 - Convênio and Cidade
-    doc.setFont("helvetica", "normal");
-    doc.setFontSize(8);
-    doc.setTextColor(100, 100, 100);
-    doc.text("Convênio:", margin, y);
-    doc.setFontSize(9);
-    doc.setTextColor(20, 20, 20);
-    doc.text(hospitalName || "", margin + 20, y);
-
-    doc.setFontSize(8);
-    doc.setTextColor(100, 100, 100);
-    doc.text("Cidade/Estado:", pageW / 2, y);
-    doc.setFontSize(9);
-    doc.setTextColor(20, 20, 20);
-    doc.text(`${formData.cidade} - ${formData.estado}`, pageW / 2 + 30, y);
-    y += 6;
-    doc.line(margin, y, pageW - margin, y);
-    y += 5;
-
-    // Row 4 - Professional and Date
-    doc.setFontSize(8);
-    doc.setTextColor(100, 100, 100);
-    doc.text("Profissional:", margin, y);
-    doc.setFontSize(9);
-    doc.setTextColor(20, 20, 20);
-    doc.text(DOCTOR_NAME.toUpperCase(), margin + 25, y);
-
-    doc.setFontSize(8);
-    doc.setTextColor(100, 100, 100);
-    doc.text("Data Assinatura:", pageW / 2, y);
-    doc.setFontSize(9);
-    doc.setTextColor(20, 20, 20);
-    doc.text(format(now, "dd/MM/yyyy HH:mm:ss"), pageW / 2 + 33, y);
-    y += 6;
-    doc.line(margin, y, pageW - margin, y);
-
-    y += 16;
-
-    // ===== TITLE =====
-    doc.setFont("helvetica", "bold");
-    doc.setFontSize(16);
-    doc.setTextColor(20, 20, 20);
-    doc.text("ATESTADO MÉDICO", pageW / 2, y, { align: "center" });
-
-    y += 14;
-
-    // ===== BODY TEXT =====
-    doc.setFont("helvetica", "normal");
-    doc.setFontSize(10.5);
-    doc.setTextColor(30, 30, 30);
-
-    const bodyText = `Atesto para os devidos fins, a pedido que o(a) Sr(a). ${formData.nomeCompleto.toUpperCase()}, inscrito(a) no CPF sob o nº ${formData.cpf}, paciente sob meus cuidados, foi atendido(a) no dia ${format(inicioDate, "dd/MM/yy")} às ${format(now, "HH:mm")} apresentando quadro clínico compatível com os sintomas relatados, necessitando afastar-se de suas atividades pelo período de ${formData.diasAfastamento}.`;
-
-    const lines = doc.splitTextToSize(bodyText, contentW);
-    doc.text(lines, margin, y);
-    y += lines.length * 5.5 + 5;
-
-    // Validity note
-    doc.setFontSize(9);
-    doc.setTextColor(60, 60, 60);
-    const validityNote = `(Este atestado é válido para as finalidades previstas nos artigos 71 e 72, parágrafo 1º do Decreto 3048/99, e será expedido para justificar o afastamento do trabalho por ${formData.diasAfastamento}).`;
-    const validLines = doc.splitTextToSize(validityNote, contentW);
-    doc.text(validLines, margin, y);
-    y += validLines.length * 5 + 5;
-
-    // ===== CID =====
-    if (formData.addonCid) {
-      const cid = getCID10(formData.sintomas);
-      y += 3;
+      // step text
       doc.setFont("helvetica", "normal");
-      doc.setFontSize(10);
-      doc.setTextColor(30, 30, 30);
-      doc.text(`Eu, ${formData.nomeCompleto.toUpperCase()}, autorizo a inclusão da CID ${cid.code} no atestado médico.`, margin, y);
-      y += 10;
+      doc.setFontSize(6.5);
+      doc.setTextColor(60, 70, 65);
+      doc.text(stepText, stepsX + 5, stepY - 0.5);
 
-      // Patient "signature" line
-      doc.setFontSize(9);
-      doc.setTextColor(20, 20, 20);
-      doc.text(formData.nomeCompleto.toUpperCase(), margin, y);
-      y += 8;
-    }
+      stepY += 9;
+    });
+  }
 
-    y += 15;
+  // ============== PATIENT BLOCK ==============
+  let y = 55;
 
-    // ===== SIGNATURE =====
-    drawSignature(doc, pageW / 2, y - 8);
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(10);
+  doc.setTextColor(40, 40, 40);
+  doc.text("Paciente:", margin, y);
 
-    // Signature line
-    doc.setDrawColor(40, 40, 40);
-    doc.setLineWidth(0.4);
-    doc.line(pageW / 2 - 35, y + 2, pageW / 2 + 35, y + 2);
-    y += 7;
+  y += 6;
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(14);
+  doc.setTextColor(20, 20, 20);
+  doc.text(formData.nomeCompleto.toUpperCase(), margin, y);
 
-    doc.setFont("helvetica", "normal");
-    doc.setFontSize(9);
-    doc.setTextColor(60, 60, 60);
-    doc.text("Assinatura e Carimbo", pageW / 2, y, { align: "center" });
+  y += 8;
 
-    // ===== QR CODE =====
-    if (formData.addonQrCode) {
-      const qrSize = 22;
-      const qrX = margin;
-      const qrY = pageH - 70;
+  // 3-column row: CPF | Nascimento | Emissão
+  const colW = contentW / 3;
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(8);
+  doc.setTextColor(110, 110, 110);
+  doc.text("CPF do Paciente:", margin, y);
+  doc.text("Nascimento:", margin + colW, y);
+  doc.text("Emissão:", margin + colW * 2, y);
 
-      doc.setFont("helvetica", "normal");
-      doc.setFontSize(7.5);
-      doc.setTextColor(80, 80, 80);
-      doc.text("A validação do documento poderá ser realizada através do QRCode ou do link abaixo.", margin, qrY - 8);
+  y += 4.5;
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(9.5);
+  doc.setTextColor(30, 30, 30);
+  doc.text(formData.cpf || "—", margin, y);
+  doc.text(formData.dataNascimento || "—", margin + colW, y);
+  doc.text(format(now, "dd/MM/yyyy - HH:mm:ss"), margin + colW * 2, y);
 
-      drawQRCode(doc, qrX, qrY, qrSize, verificationCode);
+  y += 8;
 
-      doc.setFontSize(7);
-      doc.setTextColor(100, 100, 100);
-      doc.text(`CÓDIGO: ${verificationCode}`, qrX + qrSize + 5, qrY + 10);
-    }
+  // Endereço row
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(8);
+  doc.setTextColor(110, 110, 110);
+  doc.text("Endereço:", margin, y);
 
-    // ===== FOOTER =====
-    doc.setFont("helvetica", "normal");
-    doc.setFontSize(7);
-    doc.setTextColor(100, 100, 100);
+  y += 4.5;
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(9.5);
+  doc.setTextColor(30, 30, 30);
+  const enderecoFmt = [formData.cidade, formData.estado].filter(Boolean).join(" - ") || "—";
+  doc.text(enderecoFmt, margin, y);
+
+  // Divider
+  y += 6;
+  doc.setDrawColor(210, 210, 210);
+  doc.setLineWidth(0.3);
+  doc.line(margin, y, pageW - margin, y);
+
+  // ============== TITLE ==============
+  y += 14;
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(18);
+  doc.setTextColor(20, 20, 20);
+  doc.text("Atestado Médico", pageW / 2, y, { align: "center" });
+
+  // ============== CID (optional) ==============
+  y += 14;
+  if (formData.addonCid) {
+    const cid = getCID10(formData.sintomas);
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(11);
+    doc.setTextColor(20, 20, 20);
+    doc.text(`CID: ${cid.code}`, margin, y);
+    y += 9;
+  }
+
+  // ============== BODY ==============
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(10.5);
+  doc.setTextColor(40, 40, 40);
+  const bodyText = `Esteve sob cuidados profissionais no dia ${format(
+    inicioDate,
+    "dd/MM/yyyy"
+  )} e deverá permanecer em repouso a partir de hoje (${format(
+    now,
+    "dd/MM/yyyy"
+  )}) por ${diasNum} dia(s).`;
+  const lines = doc.splitTextToSize(bodyText, contentW);
+  doc.text(lines, margin, y);
+
+  // ============== FOOTER ==============
+  // Top divider above footer
+  const footerTop = pageH - 38;
+  doc.setDrawColor(210, 210, 210);
+  doc.setLineWidth(0.3);
+  doc.line(margin, footerTop, pageW - margin, footerTop);
+
+  // ICP Brasil logo (left) + digital signature notice (center)
+  let icpBase64: string | null = null;
+  try { icpBase64 = await loadImageAsBase64(imgIcpBrasil); } catch { /* skip */ }
+
+  const footerY = footerTop + 6;
+  if (icpBase64) {
+    doc.addImage(icpBase64, "PNG", margin + 18, footerY, 10, 10);
+  }
+
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(8);
+  doc.setTextColor(60, 60, 60);
+  doc.text(
+    "ESTE DOCUMENTO FOI ASSINADO DIGITALMENTE COM CERTIFICADO DIGITAL PADRÃO",
+    pageW / 2,
+    footerY + 3,
+    { align: "center" }
+  );
+  doc.text(
+    "ICP-BRASIL AMPARADO PELA MEDIDA PROVISÓRIA 2200-2/2001",
+    pageW / 2,
+    footerY + 7,
+    { align: "center" }
+  );
+
+  // Doctor signature line (digital, no handwritten signature)
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(9);
+  doc.setTextColor(30, 30, 30);
+  doc.text(
+    `Dr(a). ${DOCTOR_NAME.toUpperCase()}  |  ${DOCTOR_CRM}`,
+    pageW / 2,
+    footerY + 14,
+    { align: "center" }
+  );
+
+  // Hospital footer
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(7.5);
+  doc.setTextColor(110, 110, 110);
+  const hospitalLine = `${hospitalName || ""}${
+    hospitalAddresses[hospitalName] ? " - " + hospitalAddresses[hospitalName] : ""
+  }${formData.cidade ? ", " + formData.cidade : ""}${
+    formData.estado ? " - " + formData.estado : ""
+  }`;
+  doc.text(hospitalLine, pageW / 2, footerY + 19, { align: "center" });
+
+  // Disclaimer (CID disclosure note) — only if CID add-on
+  if (formData.addonCid) {
+    doc.setFontSize(6.5);
+    doc.setTextColor(140, 140, 140);
     doc.text(
-      `Impresso em: ${format(now, "dd/MM/yyyy HH:mm")}`,
-      margin, pageH - 20
+      "A exibição do CID no atestado médico foi solicitada pelo paciente (ou representante legal), conforme Art. 5º CFM 1658/02.",
+      pageW / 2,
+      footerY + 24,
+      { align: "center" }
     );
-    doc.text(`Criado por: ${DOCTOR_NAME.toUpperCase()}`, margin, pageH - 15);
-    doc.text(DOCTOR_CRM, margin, pageH - 10);
   }
 
   return doc;
