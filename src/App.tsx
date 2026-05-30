@@ -8,7 +8,7 @@ import Solicitar from "./pages/Solicitar";
 import SolicitarConsulta from "./pages/SolicitarConsulta";
 import SolicitarPiscina from "./pages/SolicitarPiscina";
 import SelecionarServico from "./pages/SelecionarServico";
-import EscolherMedico from "./pages/EscolherMedico";
+
 import MeuPedido from "./pages/MeuPedido";
 import Admin from "./pages/Admin";
 import AdminLogin from "./pages/AdminLogin";
