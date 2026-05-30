@@ -1,6 +1,10 @@
 import { ArrowRight, Star } from "lucide-react";
 import { Link } from "react-router-dom";
 import doctorImg from "@/assets/doctor-main.jpg";
+import avatar1 from "@/assets/avatar-br-1.jpg";
+import avatar2 from "@/assets/avatar-br-2.jpg";
+import avatar3 from "@/assets/avatar-br-3.jpg";
+import avatar4 from "@/assets/avatar-br-4.jpg";
 import { CustomIcon } from "@/components/icons/CustomIcon";
 
 const Hero = () => {
@@ -39,15 +43,16 @@ const Hero = () => {
 
               <div className="flex items-center gap-2">
                 <div className="flex -space-x-2">
-                  {[
-                    "bg-orange-300",
-                    "bg-amber-200",
-                    "bg-rose-200",
-                    "bg-sky-200",
-                  ].map((c, i) => (
-                    <span
+                  {[avatar1, avatar2, avatar3, avatar4].map((src, i) => (
+                    <img
                       key={i}
-                      className={`w-7 h-7 rounded-full border-2 border-emerald-950 ${c}`}
+                      src={src}
+                      alt=""
+                      aria-hidden
+                      width={28}
+                      height={28}
+                      loading="lazy"
+                      className="w-7 h-7 rounded-full border-2 border-emerald-950 object-cover"
                     />
                   ))}
                 </div>
