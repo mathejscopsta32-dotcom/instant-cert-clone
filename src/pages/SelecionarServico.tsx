@@ -1,111 +1,137 @@
 import { Link } from "react-router-dom";
-import { FileText, Stethoscope, Waves, ArrowRight, ShieldCheck, CheckCircle2 } from "lucide-react";
-import Navbar from "@/components/Navbar";
+import { Briefcase, CalendarCheck, Users, Building2, GraduationCap, Waves, Dumbbell, Plane } from "lucide-react";
 import Footer from "@/components/Footer";
 import GlobalIframe from "@/components/GlobalIframe";
+import logo from "@/assets/logo-justmed.png";
 
-const services = [
+type Servico = {
+  icon: typeof Briefcase;
+  title: string;
+  desc: string;
+  to: string;
+};
+
+const services: Servico[] = [
   {
-    icon: FileText,
-    title: "Atestado Médico",
-    desc: "Atestado para afastamento do trabalho ou escola por motivo de saúde.",
-    price: "A partir de R$ 39,90",
-    to: "/escolher-medico?destino=/solicitar",
-    color: "bg-emerald-500",
-    features: ["1 a 15 dias de afastamento", "CID-10 opcional", "QR Code de verificação"],
+    icon: Briefcase,
+    title: "Trabalho",
+    desc: "Justifica ausência e abona faltas no emprego",
+    to: "/escolher-medico?destino=/solicitar%3Ftipo%3Dtrabalho",
   },
   {
-    icon: Stethoscope,
-    title: "Laudo Médico",
-    desc: "Laudo médico detalhado com diagnóstico e orientações clínicas.",
-    price: "A partir de R$ 39,90",
-    to: "/escolher-medico?destino=/solicitar%3Ftipo%3Dlaudo",
-    color: "bg-blue-500",
-    features: ["Diagnóstico detalhado", "Orientações clínicas", "Assinatura digital"],
+    icon: CalendarCheck,
+    title: "Comparecimento",
+    desc: "Comprova consulta médica em parte do expediente",
+    to: "/escolher-medico?destino=/solicitar%3Ftipo%3Dcomparecimento",
+  },
+  {
+    icon: Users,
+    title: "Acompanhamento",
+    desc: "Para quem levou familiar à consulta ou cirurgia",
+    to: "/escolher-medico?destino=/solicitar%3Ftipo%3Dacompanhamento",
+  },
+  {
+    icon: Building2,
+    title: "Internação Hospitalar",
+    desc: "Comprova período de internação em hospital",
+    to: "/escolher-medico?destino=/solicitar%3Ftipo%3Dinternacao",
+  },
+  {
+    icon: GraduationCap,
+    title: "Escola/Faculdade/Estágio",
+    desc: "Justifica falta em aulas, provas ou estágio",
+    to: "/escolher-medico?destino=/solicitar%3Ftipo%3Descola",
   },
   {
     icon: Waves,
-    title: "Atestado para Piscina",
-    desc: "Atestado dermatológico atestando aptidão para atividades aquáticas.",
-    price: "R$ 39,90",
+    title: "Piscina",
+    desc: "Libera o uso de piscinas em clubes e academias",
     to: "/escolher-medico?destino=/solicitar-piscina",
-    color: "bg-cyan-500",
-    features: ["Aptidão dermatológica", "Válido para academias e clubes", "Entrega imediata"],
   },
   {
-    icon: Stethoscope,
-    title: "Consulta Médica Online",
-    desc: "Teleconsulta com médico licenciado para avaliação, diagnóstico e orientações.",
-    price: "R$ 39,90",
-    to: "/escolher-medico?destino=/consulta",
-    color: "bg-violet-500",
-    features: ["Avaliação clínica completa", "Prescrição médica digital", "Atendimento 24h"],
+    icon: Dumbbell,
+    title: "Aptidão Física",
+    desc: "Libera academia, corridas e esportes em geral",
+    to: "/escolher-medico?destino=/solicitar%3Ftipo%3Daptidao",
+  },
+  {
+    icon: Plane,
+    title: "Cancelamento de Voo",
+    desc: "Justifica reembolso ou remarcação de passagem aérea por motivo de saúde",
+    to: "/escolher-medico?destino=/solicitar%3Ftipo%3Dvoo",
   },
 ];
 
+const TOTAL_STEPS = 8;
+const CURRENT_STEP = 1;
+
 const SelecionarServico = () => {
   return (
-    <div className="min-h-screen bg-background">
-      <Navbar />
+    <div className="min-h-screen bg-[#f7f8f5]">
       <GlobalIframe />
 
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-12 md:py-20">
-        <div className="text-center mb-12">
-          <span className="inline-flex items-center gap-1.5 bg-primary/10 text-primary text-xs font-semibold px-4 py-2 rounded-full mb-5">
-            <ShieldCheck className="w-3.5 h-3.5" />
-            100% Seguro e Confidencial
-          </span>
-          <h1 className="text-2xl md:text-3xl font-extrabold text-foreground tracking-tight">
-            Selecione o Serviço Desejado
-          </h1>
-          <p className="text-muted-foreground mt-2 text-sm md:text-base">
-            Escolha o tipo de documento médico que você precisa.
+      <div className="max-w-2xl mx-auto px-4 sm:px-6 py-8 md:py-12">
+        {/* Logo */}
+        <div className="flex justify-center mb-6">
+          <Link to="/" aria-label="JustMed Atestados">
+            <img src={logo} alt="JustMed Atestados" className="h-14 w-14 object-contain" />
+          </Link>
+        </div>
+
+        {/* Price banner */}
+        <div className="bg-emerald-50 border border-emerald-100 rounded-xl px-5 py-3.5 text-center mb-5">
+          <p className="text-sm md:text-base">
+            <span className="font-extrabold text-emerald-700">R$ 34,99</span>
+            <span className="text-emerald-700/70"> · </span>
+            <span className="text-emerald-800/80 font-medium">Receba em minutos por e-mail</span>
           </p>
         </div>
 
-        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        {/* Progress */}
+        <div className="mb-8">
+          <div className="h-1.5 w-full bg-emerald-100 rounded-full overflow-hidden">
+            <div
+              className="h-full bg-emerald-600 rounded-full transition-all"
+              style={{ width: `${(CURRENT_STEP / TOTAL_STEPS) * 100}%` }}
+            />
+          </div>
+          <div className="flex justify-between mt-3">
+            {Array.from({ length: TOTAL_STEPS }).map((_, i) => (
+              <span
+                key={i}
+                className={`w-2.5 h-2.5 rounded-full ${
+                  i < CURRENT_STEP ? "bg-emerald-600" : "bg-emerald-100"
+                }`}
+              />
+            ))}
+          </div>
+        </div>
+
+        {/* Title */}
+        <h1 className="text-2xl md:text-3xl font-extrabold text-foreground tracking-tight mb-2">
+          Tipo de Atestado
+        </h1>
+        <p className="text-muted-foreground mb-6 text-sm md:text-base">
+          Selecione o tipo de atestado que você precisa:
+        </p>
+
+        {/* Options */}
+        <div className="space-y-3">
           {services.map((s, i) => (
             <Link
               key={i}
               to={s.to}
-              className="group bg-card border border-border/60 rounded-2xl p-6 hover:shadow-xl hover:border-primary/30 transition-all duration-300 flex flex-col"
+              className="group flex items-center gap-4 bg-white border border-border rounded-xl px-4 py-4 hover:border-emerald-400 hover:shadow-sm transition-all"
             >
-              <div className={`w-14 h-14 rounded-2xl ${s.color} flex items-center justify-center mb-5 group-hover:scale-110 transition-transform`}>
-                <s.icon className="w-7 h-7 text-white" />
+              <div className="w-11 h-11 rounded-lg bg-muted flex items-center justify-center flex-shrink-0 group-hover:bg-emerald-50 transition-colors">
+                <s.icon className="w-5 h-5 text-foreground/80 group-hover:text-emerald-600 transition-colors" />
               </div>
-
-              <h2 className="text-lg font-bold text-foreground mb-2">{s.title}</h2>
-              <p className="text-sm text-muted-foreground mb-4 flex-1">{s.desc}</p>
-
-              <ul className="space-y-2 mb-5">
-                {s.features.map((f, j) => (
-                  <li key={j} className="flex items-center gap-2 text-xs text-muted-foreground">
-                    <CheckCircle2 className="w-3.5 h-3.5 text-primary flex-shrink-0" />
-                    {f}
-                  </li>
-                ))}
-              </ul>
-
-              <div className="mt-auto">
-                <p className="text-primary font-bold text-lg mb-3">{s.price}</p>
-                <span className="inline-flex items-center gap-2 bg-primary text-primary-foreground px-5 py-2.5 rounded-xl text-sm font-semibold group-hover:opacity-90 transition-opacity w-full justify-center">
-                  Solicitar
-                  <ArrowRight className="w-4 h-4" />
-                </span>
+              <div className="flex-1 min-w-0">
+                <h2 className="text-base font-bold text-foreground leading-tight">{s.title}</h2>
+                <p className="text-sm text-muted-foreground mt-0.5">{s.desc}</p>
               </div>
             </Link>
           ))}
-        </div>
-
-        <div className="flex items-center justify-center gap-6 mt-10 text-[11px] text-muted-foreground">
-          <span className="flex items-center gap-1">
-            <ShieldCheck className="w-3.5 h-3.5 text-primary" />
-            Dados protegidos (LGPD)
-          </span>
-          <span className="flex items-center gap-1">
-            <CheckCircle2 className="w-3.5 h-3.5 text-primary" />
-            Médicos com CRM ativo
-          </span>
         </div>
       </div>
 
