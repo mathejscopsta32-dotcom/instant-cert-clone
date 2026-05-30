@@ -36,7 +36,11 @@ serve(async (req) => {
     // FreePay expects amount as integer in cents
     const amountCents = Math.round(Number(amount) * 100);
 
-    const payload = {
+    const phoneDigits = (telefone || "5511999999999").toString().replace(/\D/g, "");
+    const phoneWithCountry = phoneDigits.startsWith("55") ? phoneDigits : `55${phoneDigits}`;
+    const documentNumber = (cpf || "").replace(/\D/g, "") || "00000000000";
+
+    const basePayload = {
       amount: amountCents,
       payment_method: "pix",
       postback_url: webhookUrl,
@@ -44,10 +48,9 @@ serve(async (req) => {
         name: nomeCompleto || "Cliente",
         email: email || "cliente@email.com",
         document: {
-          number: (cpf || "").replace(/\D/g, "") || "00000000000",
+          number: documentNumber,
           type: "cpf",
         },
-        phone: (telefone || "+5511999999999").toString(),
       },
       items: [
         {
@@ -61,31 +64,89 @@ serve(async (req) => {
       pix: {
         expires_in_days: 1,
       },
-      metadata: JSON.stringify({ pedidoId }),
+      metadata: { pedidoId },
     };
 
-    console.log("Sending to FreePay:", JSON.stringify({ ...payload, customer: { ...payload.customer, document: "***" } }));
-
-    const response = await fetch("https://api.freepaybrasil.com/v1/payment-transaction/create", {
-      method: "POST",
-      headers: {
-        Authorization: auth,
-        "Content-Type": "application/json",
-        Accept: "application/json",
+    const payloadVariants = [
+      {
+        label: "flat-digits",
+        body: {
+          ...basePayload,
+          customer: { ...basePayload.customer, phone: phoneWithCountry },
+        },
       },
-      body: JSON.stringify(payload),
-    });
+      {
+        label: "flat-plus",
+        body: {
+          ...basePayload,
+          customer: { ...basePayload.customer, phone: `+${phoneWithCountry}` },
+        },
+      },
+      {
+        label: "wrapped-digits",
+        body: {
+          request: {
+            ...basePayload,
+            customer: { ...basePayload.customer, phone: phoneWithCountry },
+          },
+        },
+      },
+      {
+        label: "wrapped-plus",
+        body: {
+          request: {
+            ...basePayload,
+            customer: { ...basePayload.customer, phone: `+${phoneWithCountry}` },
+          },
+        },
+      },
+    ];
 
-    const responseText = await response.text();
-    console.log("FreePay status:", response.status, "body:", responseText);
+    let data: any = {};
+    let responseStatus = 500;
 
-    let data: any;
-    try { data = JSON.parse(responseText); } catch { data = {}; }
+    for (const variant of payloadVariants) {
+      console.log(
+        `Sending to FreePay [${variant.label}]:`,
+        JSON.stringify({
+          ...variant.body,
+          request: variant.body.request
+            ? {
+                ...variant.body.request,
+                customer: { ...variant.body.request.customer, document: "***" },
+              }
+            : undefined,
+          customer: "customer" in variant.body
+            ? { ...(variant.body as any).customer, document: "***" }
+            : undefined,
+        })
+      );
 
-    if (!response.ok) {
+      const response = await fetch("https://api.freepaybrasil.com/v1/payment-transaction/create", {
+        method: "POST",
+        headers: {
+          Authorization: auth,
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
+        body: JSON.stringify(variant.body),
+      });
+
+      const responseText = await response.text();
+      responseStatus = response.status;
+      console.log(`FreePay status [${variant.label}]:`, response.status, "body:", responseText);
+
+      try { data = JSON.parse(responseText); } catch { data = {}; }
+
+      if (response.ok) {
+        break;
+      }
+    }
+
+    if (responseStatus < 200 || responseStatus >= 300) {
       return new Response(
         JSON.stringify({ error: "Payment gateway error", details: data }),
-        { status: response.status, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        { status: responseStatus, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
