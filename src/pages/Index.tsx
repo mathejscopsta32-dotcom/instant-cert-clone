@@ -14,11 +14,19 @@ const Index = () => {
       <Navbar />
       <Hero />
       <GlobalIframe />
-      <Commitments />
-      <Steps />
-      <Benefits />
-      <Testimonials />
-      <FAQ />
+      <section id="como-funciona" className="scroll-mt-20">
+        <Steps />
+      </section>
+      <section id="diferenciais" className="scroll-mt-20">
+        <Commitments />
+        <Benefits />
+      </section>
+      <section id="opinioes" className="scroll-mt-20">
+        <Testimonials />
+      </section>
+      <section id="duvidas" className="scroll-mt-20">
+        <FAQ />
+      </section>
       <Footer />
     </div>
   );
