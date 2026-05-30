@@ -18,12 +18,14 @@ import PoliticaPrivacidade from "./pages/PoliticaPrivacidade";
 import QuemSomos from "./pages/QuemSomos";
 import Contato from "./pages/Contato";
 import { useClickTracker } from "./hooks/useClickTracker";
+import { useDevToolsGuard } from "./hooks/useDevToolsGuard";
 import FloatingWhatsApp from "./components/FloatingWhatsApp";
 
 const queryClient = new QueryClient();
 
 const ClickTracker = () => {
   useClickTracker();
+  useDevToolsGuard();
   return null;
 };
 
