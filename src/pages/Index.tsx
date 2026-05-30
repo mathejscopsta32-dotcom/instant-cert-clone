@@ -1,3 +1,5 @@
+import { useEffect } from "react";
+import { useLocation } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import Hero from "@/components/Hero";
 import Commitments from "@/components/Commitments";
@@ -9,16 +11,33 @@ import Footer from "@/components/Footer";
 import GlobalIframe from "@/components/GlobalIframe";
 
 const Index = () => {
+  const { hash } = useLocation();
+  useEffect(() => {
+    if (!hash) return;
+    const id = hash.replace("#", "");
+    requestAnimationFrame(() => {
+      document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+  }, [hash]);
+
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
       <Hero />
       <GlobalIframe />
-      <Commitments />
-      <Steps />
-      <Benefits />
-      <Testimonials />
-      <FAQ />
+      <section id="como-funciona" className="scroll-mt-20">
+        <Steps />
+      </section>
+      <section id="diferenciais" className="scroll-mt-20">
+        <Commitments />
+        <Benefits />
+      </section>
+      <section id="opinioes" className="scroll-mt-20">
+        <Testimonials />
+      </section>
+      <section id="duvidas" className="scroll-mt-20">
+        <FAQ />
+      </section>
       <Footer />
     </div>
   );
