@@ -1,24 +1,24 @@
-import { useState, useEffect, useRef } from "react";
-import { CheckCircle2, XCircle, Eye, Loader2, RefreshCw, LogOut, MousePointerClick, Key, Save, Trash2, Sun, Moon, Download, Code } from "lucide-react";
+import { useState, useEffect, useRef, useMemo } from "react";
+import {
+  CheckCircle2, XCircle, Eye, Loader2, RefreshCw, LogOut, MousePointerClick,
+  Key, Save, Trash2, Sun, Moon, Download, Code, LayoutDashboard, FileText,
+  FileEdit, MessageCircle, Menu
+} from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useToast } from "@/hooks/use-toast";
+import { toast } from "sonner";
+import DashboardView from "@/components/admin/DashboardView";
+import EditDocumentoDialog from "@/components/admin/EditDocumentoDialog";
+import NewOrderDialog from "@/components/admin/NewOrderDialog";
+import { regenerateAtestadoPDF, type PedidoLike } from "@/lib/regenerateAtestadoPDF";
 
-interface Pedido {
-  id: string;
-  nome_completo: string;
-  cpf: string;
-  email: string;
-  telefone: string;
+interface Pedido extends PedidoLike {
   valor_total: number;
   status: string;
   comprovante_url: string | null;
   created_at: string;
-  dias_afastamento: string | null;
-  hospital_preferencia: string | null;
   pdf_url: string | null;
   tipo: string;
 }
@@ -31,6 +31,24 @@ interface ClickEvent {
   created_at: string;
 }
 
+type View =
+  | "dashboard" | "pendentes" | "aprovados" | "rejeitados" | "documentos"
+  | "clicks" | "iframe" | "pix";
+
+const NAV: Array<{ id: View; label: string; icon: React.ComponentType<{ className?: string }> }> = [
+  { id: "dashboard", label: "Dashboard", icon: LayoutDashboard },
+  { id: "pendentes", label: "Pendentes", icon: Loader2 },
+  { id: "aprovados", label: "Aprovados", icon: CheckCircle2 },
+  { id: "rejeitados", label: "Rejeitados", icon: XCircle },
+  { id: "documentos", label: "Documentos", icon: FileText },
+  { id: "clicks", label: "Visitantes", icon: MousePointerClick },
+  { id: "iframe", label: "Iframe", icon: Code },
+  { id: "pix", label: "Chave PIX", icon: Key },
+];
+
+const PEDIDO_COLS =
+  "id, nome_completo, cpf, email, telefone, valor_total, status, comprovante_url, created_at, dias_afastamento, hospital_preferencia, pdf_url, tipo, data_nascimento, cidade, estado, sintomas, outros_sintomas, inicio_sintomas, inicio_sintomas_data, observacoes, addon_cid, addon_qr_code, addon_pacote3";
+
 const Admin = () => {
   const [pedidos, setPedidos] = useState<Pedido[]>([]);
   const [clicks, setClicks] = useState<ClickEvent[]>([]);
@@ -38,7 +56,8 @@ const Admin = () => {
   const [clicksLoading, setClicksLoading] = useState(false);
   const [authChecking, setAuthChecking] = useState(true);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState("gerados");
+  const [view, setView] = useState<View>("dashboard");
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const [pixKey, setPixKey] = useState("");
   const [pixKeyInput, setPixKeyInput] = useState("");
   const [pixSaving, setPixSaving] = useState(false);
@@ -48,17 +67,15 @@ const Admin = () => {
   const [iframeEnabled, setIframeEnabled] = useState(false);
   const [iframeSaving, setIframeSaving] = useState(false);
   const [iframeSaved, setIframeSaved] = useState(false);
+  const [editingPedido, setEditingPedido] = useState<Pedido | null>(null);
+  const [newOrderPopup, setNewOrderPopup] = useState<Pedido | null>(null);
   const navigate = useNavigate();
-  const { toast } = useToast();
   const initialLoadDone = useRef(false);
 
   useEffect(() => {
     const savedTheme = localStorage.getItem("theme");
-    if (savedTheme === "dark") {
-      document.documentElement.classList.add("dark");
-    } else {
-      document.documentElement.classList.remove("dark");
-    }
+    if (savedTheme === "dark") document.documentElement.classList.add("dark");
+    else document.documentElement.classList.remove("dark");
   }, []);
 
   useEffect(() => {
@@ -77,8 +94,7 @@ const Admin = () => {
   const fetchPedidos = async (showLoading = true) => {
     if (showLoading) setLoading(true);
     const { data } = await supabase
-      .from("pedidos")
-      .select("id, nome_completo, cpf, email, telefone, valor_total, status, comprovante_url, created_at, dias_afastamento, hospital_preferencia, pdf_url, tipo")
+      .from("pedidos").select(PEDIDO_COLS)
       .order("created_at", { ascending: false });
     if (data) setPedidos(data as Pedido[]);
     if (showLoading) setLoading(false);
@@ -87,108 +103,70 @@ const Admin = () => {
   const fetchClicks = async () => {
     setClicksLoading(true);
     const { data } = await supabase
-      .from("click_events")
-      .select("*")
-      .order("created_at", { ascending: false })
-      .limit(200);
+      .from("click_events").select("*")
+      .order("created_at", { ascending: false }).limit(200);
     if (data) setClicks(data as ClickEvent[]);
     setClicksLoading(false);
   };
 
   const fetchPixKey = async () => {
-    const { data } = await supabase
-      .from("app_settings")
-      .select("value")
-      .eq("key", "pix_key")
-      .maybeSingle();
-    if (data) {
-      setPixKey(data.value);
-      setPixKeyInput(data.value);
-    }
+    const { data } = await supabase.from("app_settings")
+      .select("value").eq("key", "pix_key").maybeSingle();
+    if (data) { setPixKey(data.value); setPixKeyInput(data.value); }
   };
 
+  const fetchIframeSettings = async () => {
+    const { data } = await supabase.from("app_settings")
+      .select("key, value").in("key", ["iframe_url", "iframe_enabled"]);
+    if (data) data.forEach((row) => {
+      if (row.key === "iframe_url") { setIframeUrl(row.value); setIframeUrlInput(row.value); }
+      if (row.key === "iframe_enabled") setIframeEnabled(row.value === "true");
+    });
+  };
 
   useEffect(() => {
     if (!authChecking) {
-      fetchPedidos().then(() => {
-        initialLoadDone.current = true;
-      });
+      fetchPedidos().then(() => { initialLoadDone.current = true; });
     }
   }, [authChecking]);
 
-  // Realtime subscription for new orders
   useEffect(() => {
     if (authChecking) return;
-    const channel = supabase
-      .channel("admin-pedidos-realtime")
-      .on(
-        "postgres_changes",
+    const channel = supabase.channel("admin-pedidos-realtime")
+      .on("postgres_changes",
         { event: "INSERT", schema: "public", table: "pedidos" },
         (payload) => {
           const novo = payload.new as Pedido;
           setPedidos((prev) => [novo, ...prev]);
           if (initialLoadDone.current) {
-            toast({
-              title: "🔔 Novo pedido recebido!",
-              description: `${novo.nome_completo} — R$ ${Number(novo.valor_total).toFixed(2).replace(".", ",")}`,
-            });
+            setNewOrderPopup(novo);
+            toast.success(`🔔 Novo pedido: ${novo.nome_completo}`);
           }
         }
       )
-      .on(
-        "postgres_changes",
+      .on("postgres_changes",
         { event: "UPDATE", schema: "public", table: "pedidos" },
         (payload) => {
           const updated = payload.new as Pedido;
           setPedidos((prev) => prev.map((p) => (p.id === updated.id ? updated : p)));
         }
       )
-      .on(
-        "postgres_changes",
+      .on("postgres_changes",
         { event: "DELETE", schema: "public", table: "pedidos" },
         (payload) => {
-          const deletedId = (payload.old as any).id;
+          const deletedId = (payload.old as { id: string }).id;
           setPedidos((prev) => prev.filter((p) => p.id !== deletedId));
         }
-      )
-      .subscribe();
+      ).subscribe();
     return () => { supabase.removeChannel(channel); };
-  }, [authChecking, toast]);
+  }, [authChecking]);
 
   useEffect(() => {
-    if (!authChecking && activeTab === "clicks") fetchClicks();
-    if (!authChecking && activeTab === "config") { fetchPixKey(); }
-    if (!authChecking && activeTab === "iframe") fetchIframeSettings();
-  }, [authChecking, activeTab]);
-
-  const fetchIframeSettings = async () => {
-    const { data } = await supabase
-      .from("app_settings")
-      .select("key, value")
-      .in("key", ["iframe_url", "iframe_enabled"]);
-    if (data) {
-      data.forEach((row) => {
-        if (row.key === "iframe_url") { setIframeUrl(row.value); setIframeUrlInput(row.value); }
-        if (row.key === "iframe_enabled") setIframeEnabled(row.value === "true");
-      });
-    }
-  };
-
-  const handleSaveIframe = async () => {
-    setIframeSaving(true);
-    setIframeSaved(false);
-    await supabase.from("app_settings").update({ value: iframeUrlInput.trim(), updated_at: new Date().toISOString() }).eq("key", "iframe_url");
-    await supabase.from("app_settings").update({ value: iframeEnabled ? "true" : "false", updated_at: new Date().toISOString() }).eq("key", "iframe_enabled");
-    setIframeUrl(iframeUrlInput.trim());
-    setIframeSaved(true);
-    setTimeout(() => setIframeSaved(false), 3000);
-    setIframeSaving(false);
-  };
-
-  const handleToggleIframe = async (val: boolean) => {
-    setIframeEnabled(val);
-    await supabase.from("app_settings").update({ value: val ? "true" : "false", updated_at: new Date().toISOString() }).eq("key", "iframe_enabled");
-  };
+    if (authChecking) return;
+    if (view === "clicks") fetchClicks();
+    if (view === "pix") fetchPixKey();
+    if (view === "iframe") fetchIframeSettings();
+  }, [authChecking, view]);
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
@@ -198,7 +176,6 @@ const Admin = () => {
   const updateStatus = async (id: string, status: string) => {
     setActionLoading(id);
     await supabase.from("pedidos").update({ status }).eq("id", id);
-    await fetchPedidos(false);
     setActionLoading(null);
   };
 
@@ -218,121 +195,142 @@ const Admin = () => {
     }
   };
 
+  const sendWhatsApp = async (p: Pedido) => {
+    if (!p.telefone) { toast.error("Cliente sem telefone."); return; }
+    setActionLoading(p.id);
+    let pdfLink = "";
+    if (p.pdf_url) {
+      const { data } = await supabase.storage.from("atestados").createSignedUrl(p.pdf_url, 60 * 60 * 24 * 7);
+      if (data?.signedUrl) pdfLink = data.signedUrl;
+    }
+    const phone = p.telefone.replace(/\D/g, "");
+    const fullPhone = phone.length <= 11 ? `55${phone}` : phone;
+    const msg =
+      `Olá ${p.nome_completo.split(" ")[0]}! 👋\n\n` +
+      `Seu atestado médico está pronto.\n\n` +
+      (pdfLink ? `📎 Acesse: ${pdfLink}\n\n(O link é válido por 7 dias)` : `Em breve enviaremos o documento.`);
+    const url = `https://wa.me/${fullPhone}?text=${encodeURIComponent(msg)}`;
+    window.open(url, "_blank");
+    setActionLoading(null);
+  };
+
+  const handleRegenerate = async (p: Pedido) => {
+    setActionLoading(p.id);
+    try {
+      await regenerateAtestadoPDF(p);
+      await fetchPedidos(false);
+      toast.success("PDF regenerado!");
+    } catch (e) {
+      console.error(e);
+      toast.error("Erro ao regenerar PDF.");
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
   const handleSavePixKey = async () => {
     if (!pixKeyInput.trim()) return;
-    setPixSaving(true);
-    setPixSaved(false);
-    const { error } = await supabase
-      .from("app_settings")
+    setPixSaving(true); setPixSaved(false);
+    const { error } = await supabase.from("app_settings")
       .update({ value: pixKeyInput.trim(), updated_at: new Date().toISOString() })
       .eq("key", "pix_key");
     if (!error) {
-      setPixKey(pixKeyInput.trim());
-      setPixSaved(true);
+      setPixKey(pixKeyInput.trim()); setPixSaved(true);
       setTimeout(() => setPixSaved(false), 3000);
     }
     setPixSaving(false);
   };
 
+  const handleSaveIframe = async () => {
+    setIframeSaving(true); setIframeSaved(false);
+    await supabase.from("app_settings").update({ value: iframeUrlInput.trim(), updated_at: new Date().toISOString() }).eq("key", "iframe_url");
+    await supabase.from("app_settings").update({ value: iframeEnabled ? "true" : "false", updated_at: new Date().toISOString() }).eq("key", "iframe_enabled");
+    setIframeUrl(iframeUrlInput.trim()); setIframeSaved(true);
+    setTimeout(() => setIframeSaved(false), 3000);
+    setIframeSaving(false);
+  };
+
+  const handleToggleIframe = async (val: boolean) => {
+    setIframeEnabled(val);
+    await supabase.from("app_settings").update({ value: val ? "true" : "false", updated_at: new Date().toISOString() }).eq("key", "iframe_enabled");
+  };
+
   const handleDeletePedido = async (id: string) => {
-    if (!confirm("Tem certeza que deseja apagar este pedido?")) return;
+    if (!confirm("Apagar este pedido?")) return;
     setActionLoading(id);
     await supabase.from("pedidos").delete().eq("id", id);
-    await fetchPedidos(false);
     setActionLoading(null);
   };
 
-  const generateRandomPixKey = () => {
-    const uuid = crypto.randomUUID();
-    setPixKeyInput(uuid);
-  };
-
-  const handleDeleteAllClicks = async () => {
-    if (!confirm("Tem certeza que deseja apagar TODOS os clicks?")) return;
-    setClicksLoading(true);
-    await supabase.from("click_events").delete().neq("id", "00000000-0000-0000-0000-000000000000");
-    setClicks([]);
-    setClicksLoading(false);
-  };
-
   const handleDeleteAllPedidos = async () => {
-    if (!confirm("Tem certeza que deseja apagar TODOS os pedidos? Esta ação não pode ser desfeita.")) return;
+    if (!confirm("Tem certeza? Apagar TODOS os pedidos é irreversível.")) return;
     setLoading(true);
     await supabase.from("pedidos").delete().neq("id", "00000000-0000-0000-0000-000000000000");
-    setPedidos([]);
-    setLoading(false);
-  };
-
-  const handleDownloadEmails = async () => {
-    // Busca TODOS os emails direto do banco, sem limite de 1000
-    let allEmails: string[] = [];
-    let from = 0;
-    const batchSize = 1000;
-    while (true) {
-      const { data } = await supabase
-        .from("pedidos")
-        .select("email")
-        .order("created_at", { ascending: false })
-        .range(from, from + batchSize - 1);
-      if (!data || data.length === 0) break;
-      allEmails = allEmails.concat(data.map((d: any) => d.email).filter(Boolean));
-      if (data.length < batchSize) break;
-      from += batchSize;
-    }
-    const uniqueEmails = [...new Set(allEmails)];
-    if (uniqueEmails.length === 0) {
-      toast({ title: "Nenhum email encontrado", variant: "destructive" });
-      return;
-    }
-    const content = uniqueEmails.join("\n");
-    const blob = new Blob([content], { type: "text/plain" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `emails-clientes-${format(new Date(), "dd-MM-yyyy")}.txt`;
-    a.click();
-    URL.revokeObjectURL(url);
-    toast({ title: `${uniqueEmails.length} emails exportados com sucesso!` });
+    setPedidos([]); setLoading(false);
   };
 
   const handleDeleteAllPendentes = async () => {
-    if (!confirm("Tem certeza que deseja apagar TODOS os pedidos pendentes?")) return;
+    if (!confirm("Apagar todos os pendentes?")) return;
     setLoading(true);
     await supabase.from("pedidos").delete().eq("status", "pendente");
     setPedidos((prev) => prev.filter((p) => p.status !== "pendente"));
     setLoading(false);
   };
 
-  const statusBadge = (status: string) => {
-    const map: Record<string, string> = {
-      pendente: "bg-yellow-100 text-yellow-800",
-      aprovado: "bg-green-100 text-green-800",
-      rejeitado: "bg-red-100 text-red-800",
-    };
-    return map[status] || "bg-muted text-muted-foreground";
+  const handleDeleteAllClicks = async () => {
+    if (!confirm("Apagar todos os clicks?")) return;
+    setClicksLoading(true);
+    await supabase.from("click_events").delete().neq("id", "00000000-0000-0000-0000-000000000000");
+    setClicks([]); setClicksLoading(false);
   };
 
-  const pedidosGerados = pedidos.filter(p => p.status === "pendente");
-  const pedidosPagos = pedidos.filter(p => p.status === "aprovado");
-  const pedidosRejeitados = pedidos.filter(p => p.status === "rejeitado");
+  const handleDownloadEmails = async () => {
+    let all: string[] = [];
+    let from = 0; const batch = 1000;
+    while (true) {
+      const { data } = await supabase.from("pedidos").select("email")
+        .order("created_at", { ascending: false }).range(from, from + batch - 1);
+      if (!data || data.length === 0) break;
+      all = all.concat(data.map((d: { email: string }) => d.email).filter(Boolean));
+      if (data.length < batch) break;
+      from += batch;
+    }
+    const unique = [...new Set(all)];
+    if (!unique.length) { toast.error("Nenhum email encontrado"); return; }
+    const blob = new Blob([unique.join("\n")], { type: "text/plain" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url; a.download = `emails-${format(new Date(), "dd-MM-yyyy")}.txt`;
+    a.click(); URL.revokeObjectURL(url);
+    toast.success(`${unique.length} emails exportados!`);
+  };
 
-  const renderPedidoCard = (p: Pedido) => (
-    <div key={p.id} className="bg-card border rounded-xl p-5 flex flex-col md:flex-row md:items-center gap-4">
+  const statusBadge = (status: string) => ({
+    pendente: "bg-yellow-100 text-yellow-800",
+    aprovado: "bg-green-100 text-green-800",
+    rejeitado: "bg-red-100 text-red-800",
+  }[status] || "bg-muted text-muted-foreground");
+
+  const pendentes = useMemo(() => pedidos.filter(p => p.status === "pendente"), [pedidos]);
+  const aprovados = useMemo(() => pedidos.filter(p => p.status === "aprovado"), [pedidos]);
+  const rejeitados = useMemo(() => pedidos.filter(p => p.status === "rejeitado"), [pedidos]);
+
+  const PedidoCard = ({ p }: { p: Pedido }) => (
+    <div className="bg-card border rounded-xl p-5 flex flex-col lg:flex-row lg:items-center gap-4">
       <div className="flex-1 min-w-0">
-        <div className="flex items-center gap-3 mb-1">
+        <div className="flex items-center gap-3 mb-1 flex-wrap">
           <h3 className="font-bold text-foreground truncate">{p.nome_completo}</h3>
-          <span className={`px-2.5 py-0.5 rounded-full text-xs font-semibold ${statusBadge(p.status)}`}>
-            {p.status}
+          <span className={`px-2.5 py-0.5 rounded-full text-xs font-semibold ${statusBadge(p.status)}`}>{p.status}</span>
+          <span className={`text-[10px] font-bold px-2 py-0.5 rounded ${p.tipo === 'consulta' ? 'bg-blue-100 text-blue-700' : 'bg-emerald-100 text-emerald-700'}`}>
+            {p.tipo === 'consulta' ? 'CONSULTA' : 'ATESTADO'}
           </span>
         </div>
         <div className="text-xs text-muted-foreground space-y-0.5">
-          <p>CPF: {p.cpf} | Tel: {p.telefone}</p>
+          <p>CPF: {p.cpf} | Tel: {p.telefone} | {p.estado || "—"}</p>
           <p>Email: {p.email}</p>
           <p>
-            <span className={`inline-block text-[10px] font-bold px-2 py-0.5 rounded mr-2 ${p.tipo === 'consulta' ? 'bg-blue-100 text-blue-700' : 'bg-emerald-100 text-emerald-700'}`}>
-              {p.tipo === 'consulta' ? 'CONSULTA' : 'ATESTADO'}
-            </span>
-            {p.dias_afastamento && <>{p.dias_afastamento} — </>}{p.hospital_preferencia && <>{p.hospital_preferencia} — </>}
+            {p.dias_afastamento && <>{p.dias_afastamento} — </>}
+            {p.hospital_preferencia && <>{p.hospital_preferencia} — </>}
             <span className="font-bold text-primary">R$ {Number(p.valor_total).toFixed(2).replace(".", ",")}</span>
           </p>
           <p className="text-[10px]">
@@ -340,191 +338,207 @@ const Admin = () => {
           </p>
         </div>
       </div>
-      <div className="flex items-center gap-2 flex-shrink-0">
+      <div className="flex items-center gap-2 flex-wrap justify-end">
         {p.pdf_url && (
-          <button
-            onClick={() => downloadPdf(p.pdf_url!, p.nome_completo)}
-            className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg bg-primary/10 text-primary text-sm font-semibold hover:bg-primary/20 transition-colors"
-          >
-            <Download className="w-4 h-4" /> PDF
+          <button onClick={() => downloadPdf(p.pdf_url!, p.nome_completo)}
+            className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg bg-primary/10 text-primary text-xs font-semibold hover:bg-primary/20">
+            <Download className="w-3.5 h-3.5" /> PDF
           </button>
         )}
+        {p.telefone && (
+          <button onClick={() => sendWhatsApp(p)} disabled={actionLoading === p.id}
+            title="Enviar pelo WhatsApp"
+            className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg bg-green-600 text-white text-xs font-semibold hover:bg-green-700 disabled:opacity-50">
+            {actionLoading === p.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <MessageCircle className="w-3.5 h-3.5" />}
+            WhatsApp
+          </button>
+        )}
+        <button onClick={() => setEditingPedido(p)}
+          className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg border text-xs font-semibold hover:bg-muted">
+          <FileEdit className="w-3.5 h-3.5" /> Editar
+        </button>
+        <button onClick={() => handleRegenerate(p)} disabled={actionLoading === p.id}
+          title="Regenerar PDF com dados atuais"
+          className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg border text-xs font-semibold hover:bg-muted disabled:opacity-50">
+          {actionLoading === p.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <RefreshCw className="w-3.5 h-3.5" />}
+          Regenerar
+        </button>
         {p.comprovante_url && (
-          <button
-            onClick={() => viewComprovante(p.comprovante_url!)}
-            className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg border border-border text-sm font-semibold hover:bg-muted transition-colors"
-          >
-            <Eye className="w-4 h-4" /> Comprovante
+          <button onClick={() => viewComprovante(p.comprovante_url!)}
+            className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg border text-xs font-semibold hover:bg-muted">
+            <Eye className="w-3.5 h-3.5" /> Comp.
           </button>
         )}
         {p.status === "pendente" && (
           <>
-            <button
-              onClick={() => updateStatus(p.id, "aprovado")}
-              disabled={actionLoading === p.id}
-              className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg bg-green-600 text-white text-sm font-semibold hover:bg-green-700 transition-colors disabled:opacity-50"
-            >
-              {actionLoading === p.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle2 className="w-4 h-4" />}
-              Aprovar
+            <button onClick={() => updateStatus(p.id, "aprovado")} disabled={actionLoading === p.id}
+              className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg bg-green-600 text-white text-xs font-semibold hover:bg-green-700 disabled:opacity-50">
+              <CheckCircle2 className="w-3.5 h-3.5" /> Aprovar
             </button>
-            <button
-              onClick={() => updateStatus(p.id, "rejeitado")}
-              disabled={actionLoading === p.id}
-              className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg bg-red-600 text-white text-sm font-semibold hover:bg-red-700 transition-colors disabled:opacity-50"
-            >
-              <XCircle className="w-4 h-4" /> Rejeitar
+            <button onClick={() => updateStatus(p.id, "rejeitado")} disabled={actionLoading === p.id}
+              className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg bg-red-600 text-white text-xs font-semibold hover:bg-red-700 disabled:opacity-50">
+              <XCircle className="w-3.5 h-3.5" /> Rejeitar
             </button>
           </>
         )}
-        <button
-          onClick={() => handleDeletePedido(p.id)}
-          disabled={actionLoading === p.id}
-          className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg border border-destructive/30 text-destructive text-sm font-semibold hover:bg-destructive/10 transition-colors disabled:opacity-50"
-          title="Apagar pedido"
-        >
-          {actionLoading === p.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <Trash2 className="w-4 h-4" />}
+        <button onClick={() => handleDeletePedido(p.id)} disabled={actionLoading === p.id}
+          className="inline-flex items-center gap-1.5 px-2 py-2 rounded-lg border border-destructive/30 text-destructive text-xs hover:bg-destructive/10 disabled:opacity-50"
+          title="Apagar">
+          {actionLoading === p.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Trash2 className="w-3.5 h-3.5" />}
         </button>
       </div>
     </div>
   );
 
   const renderEmptyState = (msg: string) => (
-    <p className="text-center text-muted-foreground py-20">{msg}</p>
+    <div className="text-center py-20 text-muted-foreground">{msg}</div>
   );
 
   const renderLoading = () => (
-    <div className="flex justify-center py-20">
-      <Loader2 className="w-8 h-8 animate-spin text-primary" />
-    </div>
+    <div className="flex justify-center py-20"><Loader2 className="w-8 h-8 animate-spin text-primary" /></div>
   );
 
+  const PedidoList = ({ list, emptyMsg, showDeleteAll, onDeleteAll }: { list: Pedido[]; emptyMsg: string; showDeleteAll?: boolean; onDeleteAll?: () => void }) => (
+    loading ? renderLoading() : list.length === 0 ? renderEmptyState(emptyMsg) : (
+      <div className="space-y-4">
+        {list.map(p => <PedidoCard key={p.id} p={p} />)}
+        {showDeleteAll && onDeleteAll && (
+          <div className="flex justify-end pt-2">
+            <button onClick={onDeleteAll} disabled={loading}
+              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-destructive text-destructive-foreground text-sm font-semibold hover:opacity-90 disabled:opacity-50">
+              <Trash2 className="w-4 h-4" /> Apagar todos
+            </button>
+          </div>
+        )}
+      </div>
+    )
+  );
 
   if (authChecking) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Loader2 className="w-8 h-8 animate-spin text-primary" />
-      </div>
-    );
+    return <div className="min-h-screen flex items-center justify-center">
+      <Loader2 className="w-8 h-8 animate-spin text-primary" />
+    </div>;
   }
 
-  return (
-    <div className="min-h-screen bg-background p-4 md:p-8">
-      <div className="max-w-6xl mx-auto">
-        <div className="flex items-center justify-between mb-8">
-          <h1 className="text-2xl font-bold text-foreground">Painel Admin</h1>
-          <div className="flex items-center gap-3">
-            <button
-              onClick={() => {
-                const html = document.documentElement;
-                html.classList.toggle("dark");
-                localStorage.setItem("theme", html.classList.contains("dark") ? "dark" : "light");
-              }}
-              className="inline-flex items-center justify-center w-9 h-9 rounded-lg border border-border hover:bg-muted transition-colors"
-              title="Alternar tema"
-            >
-              <Sun className="w-4 h-4 hidden dark:block" />
-              <Moon className="w-4 h-4 block dark:hidden" />
-            </button>
-            <button onClick={() => { fetchPedidos(); if (activeTab === "clicks") fetchClicks(); }} className="inline-flex items-center gap-2 text-sm text-primary font-semibold hover:underline">
-              <RefreshCw className="w-4 h-4" /> Atualizar
-            </button>
-            <button onClick={handleLogout} className="inline-flex items-center gap-2 text-sm text-muted-foreground font-semibold hover:text-foreground transition-colors">
-              <LogOut className="w-4 h-4" /> Sair
-            </button>
-          </div>
-        </div>
+  const currentTitle = NAV.find(n => n.id === view)?.label ?? "";
 
-        {/* Stats */}
-        <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
-          <div className="bg-card border rounded-xl p-4 text-center">
-            <p className="text-2xl font-bold text-yellow-600">{pedidosGerados.length}</p>
-            <p className="text-xs text-muted-foreground">Pendentes</p>
-          </div>
-          <div className="bg-card border rounded-xl p-4 text-center">
-            <p className="text-2xl font-bold text-green-600">{pedidosPagos.length}</p>
-            <p className="text-xs text-muted-foreground">Aprovados</p>
-          </div>
-          <div className="bg-card border rounded-xl p-4 text-center">
-            <p className="text-2xl font-bold text-red-600">{pedidosRejeitados.length}</p>
-            <p className="text-xs text-muted-foreground">Rejeitados</p>
-          </div>
-          <div className="bg-card border rounded-xl p-4 text-center">
-            <p className="text-2xl font-bold text-primary">{pedidos.length}</p>
-            <p className="text-xs text-muted-foreground">Total</p>
-          </div>
-          <button
-            onClick={handleDownloadEmails}
-            className="bg-card border rounded-xl p-4 text-center hover:bg-muted transition-colors cursor-pointer"
-          >
-            <Download className="w-6 h-6 mx-auto text-primary mb-1" />
-            <p className="text-xs font-semibold text-foreground">Baixar Emails</p>
-            <p className="text-[10px] text-muted-foreground">{[...new Set(pedidos.map(p => p.email).filter(Boolean))].length} únicos</p>
+  return (
+    <div className="min-h-screen bg-background flex">
+      {/* Sidebar */}
+      <aside className={`fixed lg:sticky top-0 left-0 z-40 h-screen w-64 bg-card border-r flex flex-col transform transition-transform lg:translate-x-0 ${sidebarOpen ? "translate-x-0" : "-translate-x-full"}`}>
+        <div className="p-5 border-b">
+          <h1 className="text-lg font-bold text-foreground">Painel Admin</h1>
+          <p className="text-xs text-muted-foreground">Gestão completa</p>
+        </div>
+        <nav className="flex-1 p-3 space-y-1 overflow-y-auto">
+          {NAV.map((n) => {
+            const Icon = n.icon;
+            const active = view === n.id;
+            const count =
+              n.id === "pendentes" ? pendentes.length :
+              n.id === "aprovados" ? aprovados.length :
+              n.id === "rejeitados" ? rejeitados.length :
+              n.id === "documentos" ? pedidos.length :
+              undefined;
+            return (
+              <button key={n.id} onClick={() => { setView(n.id); setSidebarOpen(false); }}
+                className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${active ? "bg-primary text-primary-foreground shadow-sm" : "text-foreground hover:bg-muted"}`}>
+                <Icon className="w-4 h-4 flex-shrink-0" />
+                <span className="flex-1 text-left">{n.label}</span>
+                {count !== undefined && (
+                  <span className={`text-[10px] px-1.5 py-0.5 rounded ${active ? "bg-white/20" : "bg-muted-foreground/10"}`}>
+                    {count}
+                  </span>
+                )}
+              </button>
+            );
+          })}
+        </nav>
+        <div className="p-3 border-t space-y-2">
+          <button onClick={() => {
+            const html = document.documentElement;
+            html.classList.toggle("dark");
+            localStorage.setItem("theme", html.classList.contains("dark") ? "dark" : "light");
+          }} className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm hover:bg-muted">
+            <Sun className="w-4 h-4 hidden dark:block" />
+            <Moon className="w-4 h-4 block dark:hidden" />
+            <span>Alternar tema</span>
+          </button>
+          <button onClick={handleLogout}
+            className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-muted-foreground hover:text-foreground hover:bg-muted">
+            <LogOut className="w-4 h-4" /> Sair
           </button>
         </div>
+      </aside>
 
-        <Tabs value={activeTab} onValueChange={setActiveTab}>
-           <TabsList className="w-full grid grid-cols-6 mb-6">
-            <TabsTrigger value="gerados">Pendentes ({pedidosGerados.length})</TabsTrigger>
-            <TabsTrigger value="pagos">Aprovados ({pedidosPagos.length})</TabsTrigger>
-            <TabsTrigger value="rejeitados">Rejeitados ({pedidosRejeitados.length})</TabsTrigger>
-            <TabsTrigger value="clicks" className="gap-1.5">
-              <MousePointerClick className="w-4 h-4" /> Clicks
-            </TabsTrigger>
-            <TabsTrigger value="iframe" className="gap-1.5">
-              <Code className="w-4 h-4" /> Iframe
-            </TabsTrigger>
-            <TabsTrigger value="config" className="gap-1.5">
-              <Key className="w-4 h-4" /> PIX
-            </TabsTrigger>
-          </TabsList>
+      {sidebarOpen && <div className="fixed inset-0 z-30 bg-black/50 lg:hidden" onClick={() => setSidebarOpen(false)} />}
 
-          <TabsContent value="gerados">
-            {loading ? renderLoading() : pedidosGerados.length === 0
-              ? renderEmptyState("Nenhum pedido pendente.")
-              : <div className="space-y-4">{pedidosGerados.map(renderPedidoCard)}</div>}
-            {pedidosGerados.length > 0 && (
-              <div className="mt-6 flex justify-end gap-3">
-                <button
-                  onClick={handleDeleteAllPendentes}
-                  disabled={loading}
-                  className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-destructive text-destructive-foreground text-sm font-semibold hover:opacity-90 transition-opacity disabled:opacity-50"
-                >
-                  <Trash2 className="w-4 h-4" /> Apagar Todos Pendentes
-                </button>
-              </div>
-            )}
-          </TabsContent>
-
-          <TabsContent value="pagos">
-            {loading ? renderLoading() : pedidosPagos.length === 0
-              ? renderEmptyState("Nenhum pedido aprovado.")
-              : <div className="space-y-4">{pedidosPagos.map(renderPedidoCard)}</div>}
-          </TabsContent>
-
-          <TabsContent value="rejeitados">
-            {loading ? renderLoading() : pedidosRejeitados.length === 0
-              ? renderEmptyState("Nenhum pedido rejeitado.")
-              : <div className="space-y-4">{pedidosRejeitados.map(renderPedidoCard)}</div>}
-          </TabsContent>
-
-          {/* Botão global de apagar todos */}
-          {pedidos.length > 0 && (activeTab === "gerados" || activeTab === "pagos" || activeTab === "rejeitados") && (
-            <div className="mt-6 flex justify-end">
-              <button
-                onClick={handleDeleteAllPedidos}
-                disabled={loading}
-                className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-destructive text-destructive-foreground text-sm font-semibold hover:opacity-90 transition-opacity disabled:opacity-50"
-              >
-                <Trash2 className="w-4 h-4" /> Apagar Todos os Pedidos
+      {/* Main */}
+      <main className="flex-1 min-w-0">
+        <header className="sticky top-0 z-20 bg-background/95 backdrop-blur border-b">
+          <div className="flex items-center justify-between p-4">
+            <div className="flex items-center gap-3">
+              <button onClick={() => setSidebarOpen(true)} className="lg:hidden p-2 rounded-lg hover:bg-muted">
+                <Menu className="w-5 h-5" />
               </button>
+              <h2 className="text-lg font-bold text-foreground">{currentTitle}</h2>
+            </div>
+            <div className="flex items-center gap-2">
+              <button onClick={handleDownloadEmails}
+                className="hidden md:inline-flex items-center gap-1.5 px-3 py-2 rounded-lg border text-xs font-semibold hover:bg-muted">
+                <Download className="w-3.5 h-3.5" /> Emails
+              </button>
+              <button onClick={() => { fetchPedidos(); if (view === "clicks") fetchClicks(); }}
+                className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-primary text-xs font-semibold hover:bg-primary/10">
+                <RefreshCw className="w-3.5 h-3.5" /> Atualizar
+              </button>
+            </div>
+          </div>
+        </header>
+
+        <div className="p-4 md:p-6 max-w-7xl">
+          {view === "dashboard" && <DashboardView pedidos={pedidos} />}
+
+          {view === "pendentes" && (
+            <PedidoList list={pendentes} emptyMsg="Nenhum pedido pendente."
+              showDeleteAll={pendentes.length > 0} onDeleteAll={handleDeleteAllPendentes} />
+          )}
+          {view === "aprovados" && (
+            <PedidoList list={aprovados} emptyMsg="Nenhum pedido aprovado." />
+          )}
+          {view === "rejeitados" && (
+            <PedidoList list={rejeitados} emptyMsg="Nenhum pedido rejeitado." />
+          )}
+
+          {view === "documentos" && (
+            <div className="space-y-4">
+              <div className="bg-card border rounded-xl p-5">
+                <h3 className="font-bold text-foreground flex items-center gap-2">
+                  <FileText className="w-5 h-5 text-primary" /> Editor de documentos
+                </h3>
+                <p className="text-sm text-muted-foreground mt-1">
+                  Edite o nome do médico, CRM, hospital, dias de afastamento, datas e regenere o PDF de cada pedido.
+                </p>
+              </div>
+              {loading ? renderLoading() : pedidos.length === 0
+                ? renderEmptyState("Nenhum documento.")
+                : <div className="space-y-4">{pedidos.map(p => <PedidoCard key={p.id} p={p} />)}</div>}
+              {pedidos.length > 0 && (
+                <div className="flex justify-end pt-2">
+                  <button onClick={handleDeleteAllPedidos} disabled={loading}
+                    className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-destructive text-destructive-foreground text-sm font-semibold hover:opacity-90 disabled:opacity-50">
+                    <Trash2 className="w-4 h-4" /> Apagar todos
+                  </button>
+                </div>
+              )}
             </div>
           )}
 
-          <TabsContent value="clicks">
-            {clicksLoading ? renderLoading() : clicks.length === 0
+          {view === "clicks" && (
+            <>{clicksLoading ? renderLoading() : clicks.length === 0
               ? renderEmptyState("Nenhum click registrado ainda.")
               : (
-                <div className="space-y-6">
+                <div className="space-y-4">
                   <div className="bg-card border rounded-xl overflow-hidden">
                     <div className="p-4 border-b">
                       <h3 className="font-bold text-foreground">Visitantes ({clicks.length})</h3>
@@ -553,139 +567,104 @@ const Admin = () => {
                     </div>
                   </div>
                   <div className="flex justify-end">
-                    <button
-                      onClick={handleDeleteAllClicks}
-                      disabled={clicksLoading}
-                      className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-destructive text-destructive-foreground text-sm font-semibold hover:opacity-90 transition-opacity disabled:opacity-50"
-                    >
-                      <Trash2 className="w-4 h-4" /> Apagar Todos
+                    <button onClick={handleDeleteAllClicks} disabled={clicksLoading}
+                      className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-destructive text-destructive-foreground text-sm font-semibold hover:opacity-90 disabled:opacity-50">
+                      <Trash2 className="w-4 h-4" /> Apagar todos
                     </button>
                   </div>
                 </div>
-              )}
-          </TabsContent>
+              )}</>
+          )}
 
-          <TabsContent value="iframe">
-            <div className="max-w-xl mx-auto space-y-6">
+          {view === "iframe" && (
+            <div className="max-w-xl space-y-6">
               <div className="bg-card border rounded-xl p-6 space-y-4">
                 <div>
                   <h3 className="font-bold text-foreground text-lg flex items-center gap-2">
-                    <Code className="w-5 h-5 text-primary" />
-                    Iframe Global
+                    <Code className="w-5 h-5 text-primary" /> Iframe Global
                   </h3>
-                  <p className="text-sm text-muted-foreground mt-1">
-                    Configure uma URL de iframe para exibir em todas as páginas do site.
-                  </p>
+                  <p className="text-sm text-muted-foreground mt-1">Configure uma URL para exibir em todas as páginas.</p>
                 </div>
-
                 <div className="flex items-center justify-between bg-muted rounded-lg p-4">
                   <div>
-                    <p className="text-sm font-medium text-foreground">Iframe ativo</p>
-                    <p className="text-xs text-muted-foreground">Liga/desliga a exibição do iframe em todas as páginas</p>
+                    <p className="text-sm font-medium">Iframe ativo</p>
+                    <p className="text-xs text-muted-foreground">Liga/desliga em todas as páginas</p>
                   </div>
-                  <button
-                    onClick={() => handleToggleIframe(!iframeEnabled)}
-                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${iframeEnabled ? 'bg-primary' : 'bg-border'}`}
-                  >
-                    <span className={`inline-block h-4 w-4 transform rounded-full bg-background shadow-lg transition-transform ${iframeEnabled ? 'translate-x-6' : 'translate-x-1'}`} />
+                  <button onClick={() => handleToggleIframe(!iframeEnabled)}
+                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${iframeEnabled ? 'bg-primary' : 'bg-border'}`}>
+                    <span className={`inline-block h-4 w-4 transform rounded-full bg-background shadow transition-transform ${iframeEnabled ? 'translate-x-6' : 'translate-x-1'}`} />
                   </button>
                 </div>
-
                 <div className="space-y-2">
-                  <label className="text-sm font-medium text-foreground">URL do Iframe</label>
-                  <input
-                    type="text"
-                    value={iframeUrlInput}
-                    onChange={(e) => setIframeUrlInput(e.target.value)}
-                    placeholder="https://exemplo.com/pagina"
-                    className="w-full px-3 py-2.5 rounded-xl border border-border bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary font-mono"
-                  />
+                  <label className="text-sm font-medium">URL do Iframe</label>
+                  <input type="text" value={iframeUrlInput} onChange={(e) => setIframeUrlInput(e.target.value)}
+                    placeholder="https://exemplo.com" className="w-full px-3 py-2.5 rounded-xl border bg-background text-sm font-mono" />
                 </div>
-
-                <button
-                  onClick={handleSaveIframe}
-                  disabled={iframeSaving || !iframeUrlInput.trim()}
-                  className="inline-flex items-center gap-2 px-6 py-2.5 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:opacity-90 transition-opacity disabled:opacity-50"
-                >
-                  {iframeSaving ? (
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                  ) : iframeSaved ? (
-                    <CheckCircle2 className="w-4 h-4" />
-                  ) : (
-                    <Save className="w-4 h-4" />
-                  )}
+                <button onClick={handleSaveIframe} disabled={iframeSaving || !iframeUrlInput.trim()}
+                  className="inline-flex items-center gap-2 px-6 py-2.5 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:opacity-90 disabled:opacity-50">
+                  {iframeSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : iframeSaved ? <CheckCircle2 className="w-4 h-4" /> : <Save className="w-4 h-4" />}
                   {iframeSaved ? "Salvo!" : "Salvar URL"}
                 </button>
-
                 {iframeUrl && (
                   <div className="bg-muted rounded-lg p-3">
                     <p className="text-xs text-muted-foreground mb-1">URL atual:</p>
-                    <p className="font-mono text-sm text-foreground break-all">{iframeUrl}</p>
+                    <p className="font-mono text-sm break-all">{iframeUrl}</p>
                   </div>
                 )}
               </div>
             </div>
-          </TabsContent>
+          )}
 
-          <TabsContent value="config">
-            <div className="max-w-xl mx-auto space-y-6">
+          {view === "pix" && (
+            <div className="max-w-xl space-y-6">
               <div className="bg-card border rounded-xl p-6 space-y-4">
                 <div>
                   <h3 className="font-bold text-foreground text-lg flex items-center gap-2">
-                    <Key className="w-5 h-5 text-primary" />
-                    Chave PIX
+                    <Key className="w-5 h-5 text-primary" /> Chave PIX
                   </h3>
-                  <p className="text-sm text-muted-foreground mt-1">
-                    Altere a chave PIX usada para receber pagamentos.
-                  </p>
+                  <p className="text-sm text-muted-foreground mt-1">Altere a chave PIX usada para receber pagamentos.</p>
                 </div>
-
                 {pixKey && (
                   <div className="bg-muted rounded-lg p-3">
                     <p className="text-xs text-muted-foreground mb-1">Chave atual:</p>
-                    <p className="font-mono text-sm text-foreground break-all">{pixKey}</p>
+                    <p className="font-mono text-sm break-all">{pixKey}</p>
                   </div>
                 )}
-
                 <div className="space-y-2">
-                  <label className="text-sm font-medium text-foreground">Nova chave PIX</label>
-                  <input
-                    type="text"
-                    value={pixKeyInput}
-                    onChange={(e) => setPixKeyInput(e.target.value)}
-                    placeholder="Cole a nova chave PIX aqui..."
-                    className="w-full px-3 py-2.5 rounded-xl border border-border bg-background text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary font-mono"
-                  />
+                  <label className="text-sm font-medium">Nova chave PIX</label>
+                  <input type="text" value={pixKeyInput} onChange={(e) => setPixKeyInput(e.target.value)}
+                    placeholder="Cole a nova chave PIX..." className="w-full px-3 py-2.5 rounded-xl border bg-background text-sm font-mono" />
                 </div>
-
                 <div className="flex gap-3">
-                  <button
-                    onClick={generateRandomPixKey}
-                    className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl border border-border text-sm font-semibold hover:bg-muted transition-colors"
-                  >
-                    <RefreshCw className="w-4 h-4" />
-                    Gerar Aleatória
+                  <button onClick={() => setPixKeyInput(crypto.randomUUID())}
+                    className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl border text-sm font-semibold hover:bg-muted">
+                    <RefreshCw className="w-4 h-4" /> Gerar Aleatória
                   </button>
-                  <button
-                    onClick={handleSavePixKey}
-                    disabled={pixSaving || !pixKeyInput.trim() || pixKeyInput.trim() === pixKey}
-                    className="inline-flex items-center gap-2 px-6 py-2.5 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:opacity-90 transition-opacity disabled:opacity-50"
-                  >
-                    {pixSaving ? (
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                    ) : pixSaved ? (
-                      <CheckCircle2 className="w-4 h-4" />
-                    ) : (
-                      <Save className="w-4 h-4" />
-                    )}
+                  <button onClick={handleSavePixKey} disabled={pixSaving || !pixKeyInput.trim() || pixKeyInput.trim() === pixKey}
+                    className="inline-flex items-center gap-2 px-6 py-2.5 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:opacity-90 disabled:opacity-50">
+                    {pixSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : pixSaved ? <CheckCircle2 className="w-4 h-4" /> : <Save className="w-4 h-4" />}
                     {pixSaved ? "Salvo!" : "Salvar"}
                   </button>
                 </div>
               </div>
             </div>
-          </TabsContent>
-        </Tabs>
-      </div>
+          )}
+        </div>
+      </main>
+
+      <EditDocumentoDialog
+        pedido={editingPedido}
+        open={!!editingPedido}
+        onClose={() => setEditingPedido(null)}
+        onSaved={() => fetchPedidos(false)}
+      />
+
+      <NewOrderDialog
+        open={!!newOrderPopup}
+        pedido={newOrderPopup}
+        onClose={() => setNewOrderPopup(null)}
+        onView={() => { setView("pendentes"); setNewOrderPopup(null); }}
+      />
     </div>
   );
 };
