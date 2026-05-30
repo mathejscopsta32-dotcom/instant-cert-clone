@@ -28,13 +28,10 @@ const Navbar = () => {
   };
 
   return (
-    <nav className="sticky top-0 z-50 bg-background/95 backdrop-blur border-b">
+    <nav className="absolute top-0 left-0 right-0 z-50 bg-transparent">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between h-16">
-        <Link to="/" className="flex items-center gap-2.5">
-          <img src={logo} alt="JustMed Atestados" className="h-10 w-10 object-contain" />
-          <span className="font-extrabold text-lg text-foreground tracking-tight">
-            JustMed<span className="text-primary"> Atestados</span>
-          </span>
+        <Link to="/" className="flex items-center" aria-label="JustMed Atestados">
+          <img src={logo} alt="JustMed Atestados" className="h-11 w-11 object-contain" />
         </Link>
 
         <div className="hidden lg:flex items-center gap-7">
