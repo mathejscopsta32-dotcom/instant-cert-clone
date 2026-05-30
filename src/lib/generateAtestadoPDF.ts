@@ -37,7 +37,7 @@ const getCID10 = (sintomas: string[]): { code: string; description: string } => 
   return { code: "R69", description: "Causas desconhecidas de morbidade" };
 };
 
-// Doctor database
+// Doctor database (legacy lookup kept for compatibility)
 const doctorDatabase: Record<string, { fullName: string; crm: string }> = {
   "Dr. Rodrigo V.": { fullName: "Dr. Rodrigo V. Vasconcelos", crm: "CRM/SP 158.743" },
   "Dra. Ana Beatriz": { fullName: "Dra. Ana Beatriz de Souza", crm: "CRM/RJ 198.432" },
@@ -48,9 +48,17 @@ const doctorDatabase: Record<string, { fullName: string; crm: string }> = {
 const DEFAULT_DOCTOR_NAME = "Dr. Rodrigo V. Vasconcelos";
 const DEFAULT_DOCTOR_CRM = "CRM/SP 158.743";
 
-const getDoctorInfo = (medicoSelecionado?: string) => {
-  if (medicoSelecionado && doctorDatabase[medicoSelecionado]) {
-    return doctorDatabase[medicoSelecionado];
+const getDoctorInfo = (formData: FormData) => {
+  // 1) Prefer explicit override (e.g. doctor chosen by UF lookup)
+  if (formData.medicoOverride?.fullName && formData.medicoOverride?.crm) {
+    return {
+      fullName: formData.medicoOverride.fullName,
+      crm: formData.medicoOverride.crm,
+    };
+  }
+  // 2) Legacy named selection
+  if (formData.medicoSelecionado && doctorDatabase[formData.medicoSelecionado]) {
+    return doctorDatabase[formData.medicoSelecionado];
   }
   return { fullName: DEFAULT_DOCTOR_NAME, crm: DEFAULT_DOCTOR_CRM };
 };
