@@ -29,8 +29,37 @@ serve(async (req) => {
       );
     }
 
+    // ===== IP-based rate limiting & block list =====
+    const xff = req.headers.get("x-forwarded-for") || "";
+    const clientIp = xff.split(",")[0].trim() || req.headers.get("cf-connecting-ip") || req.headers.get("x-real-ip") || "";
+
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+    const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey);
+
+    if (clientIp) {
+      const { data: rl } = await supabaseAdmin.rpc("check_pix_rate_limit", {
+        p_ip: clientIp,
+        p_limit: 2,
+      });
+      const allowed = (rl as any)?.allowed;
+      const reason = (rl as any)?.reason;
+      if (allowed === false) {
+        console.warn(`Blocked PIX request from IP ${clientIp}: ${reason}`);
+        const msg = reason === "blocked"
+          ? "Este IP está bloqueado. Entre em contato com o suporte."
+          : "Limite diário atingido (2 atestados por dia por IP). Tente novamente amanhã ou fale conosco no WhatsApp.";
+        return new Response(
+          JSON.stringify({ error: msg, reason }),
+          { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+      // log this attempt
+      await supabaseAdmin.from("pix_attempts").insert({ ip: clientIp, pedido_id: pedidoId });
+    }
+
     const auth = "Basic " + btoa(`${publicKey}:${secretKey}`);
+
     const webhookUrl = `${supabaseUrl}/functions/v1/superpay-webhook`;
 
     // FreePay expects amount as integer in cents
@@ -160,13 +189,12 @@ serve(async (req) => {
 
     // Persist FreePay transaction id (column re-used from previous gateway)
     if (transactionId) {
-      const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-      const supabase = createClient(supabaseUrl, supabaseServiceKey);
-      await supabase
+      await supabaseAdmin
         .from("pedidos")
         .update({ superpay_transaction_id: transactionId })
         .eq("id", pedidoId);
     }
+
 
     return new Response(
       JSON.stringify({
