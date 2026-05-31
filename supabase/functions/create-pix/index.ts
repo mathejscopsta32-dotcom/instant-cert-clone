@@ -189,13 +189,12 @@ serve(async (req) => {
 
     // Persist FreePay transaction id (column re-used from previous gateway)
     if (transactionId) {
-      const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-      const supabase = createClient(supabaseUrl, supabaseServiceKey);
-      await supabase
+      await supabaseAdmin
         .from("pedidos")
         .update({ superpay_transaction_id: transactionId })
         .eq("id", pedidoId);
     }
+
 
     return new Response(
       JSON.stringify({
