@@ -32,6 +32,24 @@ export type Database = {
         }
         Relationships: []
       }
+      blocked_ips: {
+        Row: {
+          created_at: string
+          ip: string
+          reason: string | null
+        }
+        Insert: {
+          created_at?: string
+          ip: string
+          reason?: string | null
+        }
+        Update: {
+          created_at?: string
+          ip?: string
+          reason?: string | null
+        }
+        Relationships: []
+      }
       click_events: {
         Row: {
           city: string | null
@@ -191,6 +209,27 @@ export type Database = {
         }
         Relationships: []
       }
+      pix_attempts: {
+        Row: {
+          created_at: string
+          id: string
+          ip: string
+          pedido_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          ip: string
+          pedido_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          ip?: string
+          pedido_id?: string | null
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           id: string
@@ -240,6 +279,10 @@ export type Database = {
       }
     }
     Functions: {
+      check_pix_rate_limit: {
+        Args: { p_ip: string; p_limit?: number }
+        Returns: Json
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
