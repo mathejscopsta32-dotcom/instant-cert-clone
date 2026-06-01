@@ -34,6 +34,10 @@ export interface FormData {
   aceitaTermos: boolean;
   medicoSelecionado: string;
   medicoOverride?: { fullName: string; crm: string };
+  enderecoOverride?: string;
+  hospitalEnderecoOverride?: string;
+  cidOverride?: { code: string; description: string };
+  dataEmissaoOverride?: Date;
 }
 
 const initialFormData: FormData = {
