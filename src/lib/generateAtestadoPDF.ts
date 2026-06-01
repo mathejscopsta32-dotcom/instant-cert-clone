@@ -136,15 +136,8 @@ const generateVerificationCode = (): string => {
   return code;
 };
 
-// Hospital addresses
-const hospitalAddresses: Record<string, string> = {
-  "UPA 24h": "R. Barão de Mauá, 3567 - São João",
-  UBS: "Av. Brasil, 1200 - Centro",
-  SUS: "Praça da Saúde, 100",
-  Unimed: "Av. Ayrton Senna, 2550 - Barra da Tijuca",
-  Hapvida: "R. Pedro Álvares Cabral, 800 - Aldeota",
-  Socorromed: "Av. Paulista, 2100 - Bela Vista",
-};
+// (Hospital address agora vem do endereço escolhido pelo cliente — cidade/UF
+// ou um endereço informado/editado no admin. Não usamos mais endereços fixos.)
 
 export const generateAtestadoPDF = async (formData: FormData): Promise<jsPDF> => {
   const doc = new jsPDF("p", "mm", "a4");
