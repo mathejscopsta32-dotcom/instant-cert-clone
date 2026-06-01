@@ -28,11 +28,21 @@ export interface RegenerateOverrides {
   medicoNome?: string;
   medicoCrm?: string;
   hospital?: string;
+  hospitalEndereco?: string;
   diasAfastamento?: string;
   inicioSintomas?: string;
   inicioSintomasData?: string | null;
   addonCid?: boolean;
   addonQrCode?: boolean;
+  nomeCompleto?: string;
+  cpf?: string;
+  dataNascimento?: string;
+  endereco?: string;
+  cidade?: string;
+  estado?: string;
+  dataEmissao?: string | null;
+  cidCode?: string;
+  cidDescription?: string;
 }
 
 export async function regenerateAtestadoPDF(
