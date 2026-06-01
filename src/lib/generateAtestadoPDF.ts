@@ -136,15 +136,8 @@ const generateVerificationCode = (): string => {
   return code;
 };
 
-// Hospital addresses
-const hospitalAddresses: Record<string, string> = {
-  "UPA 24h": "R. Barão de Mauá, 3567 - São João",
-  UBS: "Av. Brasil, 1200 - Centro",
-  SUS: "Praça da Saúde, 100",
-  Unimed: "Av. Ayrton Senna, 2550 - Barra da Tijuca",
-  Hapvida: "R. Pedro Álvares Cabral, 800 - Aldeota",
-  Socorromed: "Av. Paulista, 2100 - Bela Vista",
-};
+// (Hospital address agora vem do endereço escolhido pelo cliente — cidade/UF
+// ou um endereço informado/editado no admin. Não usamos mais endereços fixos.)
 
 export const generateAtestadoPDF = async (formData: FormData): Promise<jsPDF> => {
   const doc = new jsPDF("p", "mm", "a4");
@@ -257,7 +250,8 @@ export const generateAtestadoPDF = async (formData: FormData): Promise<jsPDF> =>
   doc.setTextColor(30, 30, 30);
   doc.text(formData.cpf || "—", margin, y);
   doc.text(formData.dataNascimento || "—", margin + colW, y);
-  doc.text(format(now, "dd/MM/yyyy - HH:mm:ss"), margin + colW * 2, y);
+  const emissaoDate = formData.dataEmissaoOverride || now;
+  doc.text(format(emissaoDate, "dd/MM/yyyy - HH:mm:ss"), margin + colW * 2, y);
 
   y += 8;
 
@@ -271,7 +265,10 @@ export const generateAtestadoPDF = async (formData: FormData): Promise<jsPDF> =>
   doc.setFont("helvetica", "normal");
   doc.setFontSize(9.5);
   doc.setTextColor(30, 30, 30);
-  const enderecoFmt = [formData.cidade, formData.estado].filter(Boolean).join(" - ") || "—";
+  const enderecoFmt =
+    formData.enderecoOverride ||
+    [formData.cidade, formData.estado].filter(Boolean).join(" - ") ||
+    "—";
   doc.text(enderecoFmt, margin, y);
 
   // Divider
@@ -290,11 +287,11 @@ export const generateAtestadoPDF = async (formData: FormData): Promise<jsPDF> =>
   // ============== CID (optional) ==============
   y += 14;
   if (formData.addonCid) {
-    const cid = getCID10(formData.sintomas);
+    const cid = formData.cidOverride || getCID10(formData.sintomas);
     doc.setFont("helvetica", "bold");
     doc.setFontSize(11);
     doc.setTextColor(20, 20, 20);
-    doc.text(`CID: ${cid.code}`, margin, y);
+    doc.text(`CID: ${cid.code}${cid.description ? " - " + cid.description : ""}`, margin, y);
     y += 9;
   }
 
@@ -359,11 +356,11 @@ export const generateAtestadoPDF = async (formData: FormData): Promise<jsPDF> =>
   doc.setFont("helvetica", "normal");
   doc.setFontSize(7.5);
   doc.setTextColor(110, 110, 110);
-  const hospitalLine = `${hospitalName || ""}${
-    hospitalAddresses[hospitalName] ? " - " + hospitalAddresses[hospitalName] : ""
-  }${formData.cidade ? ", " + formData.cidade : ""}${
-    formData.estado ? " - " + formData.estado : ""
-  }`;
+  const enderecoLinha =
+    formData.hospitalEnderecoOverride ||
+    formData.enderecoOverride ||
+    [formData.cidade, formData.estado].filter(Boolean).join(" - ");
+  const hospitalLine = `${hospitalName || ""}${enderecoLinha ? " - " + enderecoLinha : ""}`;
   doc.text(hospitalLine, pageW / 2, footerY + 19, { align: "center" });
 
   // Disclaimer (CID disclosure note) — only if CID add-on
