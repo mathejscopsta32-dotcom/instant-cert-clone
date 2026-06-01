@@ -250,7 +250,8 @@ export const generateAtestadoPDF = async (formData: FormData): Promise<jsPDF> =>
   doc.setTextColor(30, 30, 30);
   doc.text(formData.cpf || "—", margin, y);
   doc.text(formData.dataNascimento || "—", margin + colW, y);
-  doc.text(format(now, "dd/MM/yyyy - HH:mm:ss"), margin + colW * 2, y);
+  const emissaoDate = formData.dataEmissaoOverride || now;
+  doc.text(format(emissaoDate, "dd/MM/yyyy - HH:mm:ss"), margin + colW * 2, y);
 
   y += 8;
 
@@ -264,7 +265,10 @@ export const generateAtestadoPDF = async (formData: FormData): Promise<jsPDF> =>
   doc.setFont("helvetica", "normal");
   doc.setFontSize(9.5);
   doc.setTextColor(30, 30, 30);
-  const enderecoFmt = [formData.cidade, formData.estado].filter(Boolean).join(" - ") || "—";
+  const enderecoFmt =
+    formData.enderecoOverride ||
+    [formData.cidade, formData.estado].filter(Boolean).join(" - ") ||
+    "—";
   doc.text(enderecoFmt, margin, y);
 
   // Divider
