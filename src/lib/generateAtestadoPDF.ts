@@ -356,11 +356,11 @@ export const generateAtestadoPDF = async (formData: FormData): Promise<jsPDF> =>
   doc.setFont("helvetica", "normal");
   doc.setFontSize(7.5);
   doc.setTextColor(110, 110, 110);
-  const hospitalLine = `${hospitalName || ""}${
-    hospitalAddresses[hospitalName] ? " - " + hospitalAddresses[hospitalName] : ""
-  }${formData.cidade ? ", " + formData.cidade : ""}${
-    formData.estado ? " - " + formData.estado : ""
-  }`;
+  const enderecoLinha =
+    formData.hospitalEnderecoOverride ||
+    formData.enderecoOverride ||
+    [formData.cidade, formData.estado].filter(Boolean).join(" - ");
+  const hospitalLine = `${hospitalName || ""}${enderecoLinha ? " - " + enderecoLinha : ""}`;
   doc.text(hospitalLine, pageW / 2, footerY + 19, { align: "center" });
 
   // Disclaimer (CID disclosure note) — only if CID add-on
