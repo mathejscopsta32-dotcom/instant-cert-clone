@@ -211,21 +211,27 @@ export type Database = {
       }
       pix_attempts: {
         Row: {
+          cpf: string | null
           created_at: string
           id: string
           ip: string
+          nome: string | null
           pedido_id: string | null
         }
         Insert: {
+          cpf?: string | null
           created_at?: string
           id?: string
           ip: string
+          nome?: string | null
           pedido_id?: string | null
         }
         Update: {
+          cpf?: string | null
           created_at?: string
           id?: string
           ip?: string
+          nome?: string | null
           pedido_id?: string | null
         }
         Relationships: []
@@ -279,6 +285,10 @@ export type Database = {
       }
     }
     Functions: {
+      check_cpf_nome_rate_limit: {
+        Args: { p_cpf: string; p_limit?: number; p_nome: string }
+        Returns: Json
+      }
       check_pix_rate_limit: {
         Args: { p_ip: string; p_limit?: number }
         Returns: Json

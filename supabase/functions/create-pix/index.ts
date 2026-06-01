@@ -54,9 +54,33 @@ serve(async (req) => {
           { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
       }
-      // log this attempt
-      await supabaseAdmin.from("pix_attempts").insert({ ip: clientIp, pedido_id: pedidoId });
     }
+
+    // ===== CPF + Nome rate limiting (2 PIX por dia por CPF ou nome) =====
+    const { data: rlCpf } = await supabaseAdmin.rpc("check_cpf_nome_rate_limit", {
+      p_cpf: cpf || "",
+      p_nome: nomeCompleto || "",
+      p_limit: 2,
+    });
+    if ((rlCpf as any)?.allowed === false) {
+      console.warn(`Blocked PIX request for CPF/nome: ${cpf} / ${nomeCompleto}`);
+      return new Response(
+        JSON.stringify({
+          error:
+            "Limite diário atingido (2 atestados por dia por CPF/nome). Tente novamente amanhã ou fale conosco no WhatsApp.",
+          reason: "cpf_nome_rate_limit",
+        }),
+        { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // Log this attempt (IP + CPF + nome) for both rate limits
+    await supabaseAdmin.from("pix_attempts").insert({
+      ip: clientIp || null,
+      pedido_id: pedidoId,
+      cpf: cpf || null,
+      nome: nomeCompleto || null,
+    });
 
     const auth = "Basic " + btoa(`${publicKey}:${secretKey}`);
 
