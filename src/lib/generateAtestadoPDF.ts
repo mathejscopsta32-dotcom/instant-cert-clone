@@ -287,11 +287,11 @@ export const generateAtestadoPDF = async (formData: FormData): Promise<jsPDF> =>
   // ============== CID (optional) ==============
   y += 14;
   if (formData.addonCid) {
-    const cid = getCID10(formData.sintomas);
+    const cid = formData.cidOverride || getCID10(formData.sintomas);
     doc.setFont("helvetica", "bold");
     doc.setFontSize(11);
     doc.setTextColor(20, 20, 20);
-    doc.text(`CID: ${cid.code}`, margin, y);
+    doc.text(`CID: ${cid.code}${cid.description ? " - " + cid.description : ""}`, margin, y);
     y += 9;
   }
 
