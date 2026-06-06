@@ -36,8 +36,9 @@ const EditDocumentoDialog = ({ pedido, open, onClose, onSaved }: Props) => {
   const [hospital, setHospital] = useState("UBS");
   const [hospitalEndereco, setHospitalEndereco] = useState("");
   const [dias, setDias] = useState("1 dia");
-  const [inicio, setInicio] = useState("hoje");
+  const [inicio, setInicio] = useState("personalizado");
   const [inicioData, setInicioData] = useState("");
+  const [dataInicioAtestado, setDataInicioAtestado] = useState("");
   // CID
   const [addonCid, setAddonCid] = useState(false);
   const [cidCode, setCidCode] = useState("");
