@@ -41,6 +41,7 @@ export interface RegenerateOverrides {
   cidade?: string;
   estado?: string;
   dataEmissao?: string | null;
+  dataInicioAtestado?: string | null;
   cidCode?: string;
   cidDescription?: string;
 }
