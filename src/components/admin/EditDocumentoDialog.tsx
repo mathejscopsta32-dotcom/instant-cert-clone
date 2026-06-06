@@ -58,8 +58,13 @@ const EditDocumentoDialog = ({ pedido, open, onClose, onSaved }: Props) => {
     setHospital(pedido.hospital_preferencia || "UBS");
     setHospitalEndereco("");
     setDias(pedido.dias_afastamento || "1 dia");
-    setInicio(pedido.inicio_sintomas || "hoje");
-    setInicioData(pedido.inicio_sintomas_data ? pedido.inicio_sintomas_data.slice(0, 10) : "");
+    setInicio("personalizado");
+    setInicioData(
+      pedido.inicio_sintomas_data
+        ? pedido.inicio_sintomas_data.slice(0, 10)
+        : new Date().toISOString().slice(0, 10)
+    );
+    setDataInicioAtestado(new Date().toISOString().slice(0, 10));
     setAddonCid(!!pedido.addon_cid);
     setCidCode("");
     setCidDescription("");
