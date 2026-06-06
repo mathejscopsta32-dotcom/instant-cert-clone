@@ -179,20 +179,22 @@ const EditDocumentoDialog = ({ pedido, open, onClose, onSaved }: Props) => {
                   className="w-full px-3 py-2 rounded-lg border bg-background text-sm"
                 />
               </Field>
-              <Field label="Início dos sintomas">
-                <Select value={inicio} onChange={setInicio} options={INICIO.map((i) => i.l)}
-                  rawOptions={INICIO.map((i) => i.v)} />
+              <Field label="Início dos sintomas (esteve sob cuidados no dia)">
+                <input
+                  type="date"
+                  value={inicioData}
+                  onChange={(e) => setInicioData(e.target.value)}
+                  className="w-full px-3 py-2 rounded-lg border bg-background text-sm"
+                />
               </Field>
-              {inicio === "personalizado" && (
-                <Field label="Data personalizada">
-                  <input
-                    type="date"
-                    value={inicioData}
-                    onChange={(e) => setInicioData(e.target.value)}
-                    className="w-full px-3 py-2 rounded-lg border bg-background text-sm"
-                  />
-                </Field>
-              )}
+              <Field label="Início do atestado (repouso a partir de)">
+                <input
+                  type="date"
+                  value={dataInicioAtestado}
+                  onChange={(e) => setDataInicioAtestado(e.target.value)}
+                  className="w-full px-3 py-2 rounded-lg border bg-background text-sm"
+                />
+              </Field>
             </div>
           </Section>
 
