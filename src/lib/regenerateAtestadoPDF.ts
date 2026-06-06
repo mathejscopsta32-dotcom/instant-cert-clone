@@ -41,6 +41,7 @@ export interface RegenerateOverrides {
   cidade?: string;
   estado?: string;
   dataEmissao?: string | null;
+  dataInicioAtestado?: string | null;
   cidCode?: string;
   cidDescription?: string;
 }
@@ -84,6 +85,7 @@ export async function regenerateAtestadoPDF(
     enderecoOverride: overrides.endereco || undefined,
     hospitalEnderecoOverride: overrides.hospitalEndereco || undefined,
     dataEmissaoOverride: overrides.dataEmissao ? new Date(overrides.dataEmissao) : undefined,
+    dataInicioAtestadoOverride: overrides.dataInicioAtestado ? new Date(overrides.dataInicioAtestado) : undefined,
     cidOverride:
       overrides.cidCode || overrides.cidDescription
         ? { code: overrides.cidCode || "", description: overrides.cidDescription || "" }

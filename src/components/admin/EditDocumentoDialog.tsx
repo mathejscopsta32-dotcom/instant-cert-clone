@@ -36,8 +36,9 @@ const EditDocumentoDialog = ({ pedido, open, onClose, onSaved }: Props) => {
   const [hospital, setHospital] = useState("UBS");
   const [hospitalEndereco, setHospitalEndereco] = useState("");
   const [dias, setDias] = useState("1 dia");
-  const [inicio, setInicio] = useState("hoje");
+  const [inicio, setInicio] = useState("personalizado");
   const [inicioData, setInicioData] = useState("");
+  const [dataInicioAtestado, setDataInicioAtestado] = useState("");
   // CID
   const [addonCid, setAddonCid] = useState(false);
   const [cidCode, setCidCode] = useState("");
@@ -57,8 +58,13 @@ const EditDocumentoDialog = ({ pedido, open, onClose, onSaved }: Props) => {
     setHospital(pedido.hospital_preferencia || "UBS");
     setHospitalEndereco("");
     setDias(pedido.dias_afastamento || "1 dia");
-    setInicio(pedido.inicio_sintomas || "hoje");
-    setInicioData(pedido.inicio_sintomas_data ? pedido.inicio_sintomas_data.slice(0, 10) : "");
+    setInicio("personalizado");
+    setInicioData(
+      pedido.inicio_sintomas_data
+        ? pedido.inicio_sintomas_data.slice(0, 10)
+        : new Date().toISOString().slice(0, 10)
+    );
+    setDataInicioAtestado(new Date().toISOString().slice(0, 10));
     setAddonCid(!!pedido.addon_cid);
     setCidCode("");
     setCidDescription("");
@@ -86,10 +92,10 @@ const EditDocumentoDialog = ({ pedido, open, onClose, onSaved }: Props) => {
         hospital,
         hospitalEndereco: hospitalEndereco || undefined,
         diasAfastamento: dias,
-        inicioSintomas: inicio,
-        inicioSintomasData:
-          inicio === "personalizado" && inicioData ? new Date(inicioData).toISOString() : null,
+        inicioSintomas: "personalizado",
+        inicioSintomasData: inicioData ? new Date(inicioData).toISOString() : null,
         dataEmissao: dataEmissao ? new Date(dataEmissao).toISOString() : null,
+        dataInicioAtestado: dataInicioAtestado ? new Date(dataInicioAtestado).toISOString() : null,
         addonCid,
         cidCode: addonCid ? cidCode || undefined : undefined,
         cidDescription: addonCid ? cidDescription || undefined : undefined,
@@ -173,20 +179,22 @@ const EditDocumentoDialog = ({ pedido, open, onClose, onSaved }: Props) => {
                   className="w-full px-3 py-2 rounded-lg border bg-background text-sm"
                 />
               </Field>
-              <Field label="Início dos sintomas">
-                <Select value={inicio} onChange={setInicio} options={INICIO.map((i) => i.l)}
-                  rawOptions={INICIO.map((i) => i.v)} />
+              <Field label="Início dos sintomas (esteve sob cuidados no dia)">
+                <input
+                  type="date"
+                  value={inicioData}
+                  onChange={(e) => setInicioData(e.target.value)}
+                  className="w-full px-3 py-2 rounded-lg border bg-background text-sm"
+                />
               </Field>
-              {inicio === "personalizado" && (
-                <Field label="Data personalizada">
-                  <input
-                    type="date"
-                    value={inicioData}
-                    onChange={(e) => setInicioData(e.target.value)}
-                    className="w-full px-3 py-2 rounded-lg border bg-background text-sm"
-                  />
-                </Field>
-              )}
+              <Field label="Início do atestado (repouso a partir de)">
+                <input
+                  type="date"
+                  value={dataInicioAtestado}
+                  onChange={(e) => setDataInicioAtestado(e.target.value)}
+                  className="w-full px-3 py-2 rounded-lg border bg-background text-sm"
+                />
+              </Field>
             </div>
           </Section>
 

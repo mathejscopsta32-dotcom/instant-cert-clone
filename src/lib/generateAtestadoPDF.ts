@@ -299,11 +299,12 @@ export const generateAtestadoPDF = async (formData: FormData): Promise<jsPDF> =>
   doc.setFont("helvetica", "normal");
   doc.setFontSize(10.5);
   doc.setTextColor(40, 40, 40);
+  const inicioAtestado = formData.dataInicioAtestadoOverride || now;
   const bodyText = `Esteve sob cuidados profissionais no dia ${format(
     inicioDate,
     "dd/MM/yyyy"
   )} e deverá permanecer em repouso a partir de hoje (${format(
-    now,
+    inicioAtestado,
     "dd/MM/yyyy"
   )}) por ${diasNum} dia(s).`;
   const lines = doc.splitTextToSize(bodyText, contentW);

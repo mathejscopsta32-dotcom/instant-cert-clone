@@ -38,6 +38,7 @@ export interface FormData {
   hospitalEnderecoOverride?: string;
   cidOverride?: { code: string; description: string };
   dataEmissaoOverride?: Date;
+  dataInicioAtestadoOverride?: Date;
 }
 
 const initialFormData: FormData = {
