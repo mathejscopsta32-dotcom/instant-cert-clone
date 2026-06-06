@@ -92,10 +92,10 @@ const EditDocumentoDialog = ({ pedido, open, onClose, onSaved }: Props) => {
         hospital,
         hospitalEndereco: hospitalEndereco || undefined,
         diasAfastamento: dias,
-        inicioSintomas: inicio,
-        inicioSintomasData:
-          inicio === "personalizado" && inicioData ? new Date(inicioData).toISOString() : null,
+        inicioSintomas: "personalizado",
+        inicioSintomasData: inicioData ? new Date(inicioData).toISOString() : null,
         dataEmissao: dataEmissao ? new Date(dataEmissao).toISOString() : null,
+        dataInicioAtestado: dataInicioAtestado ? new Date(dataInicioAtestado).toISOString() : null,
         addonCid,
         cidCode: addonCid ? cidCode || undefined : undefined,
         cidDescription: addonCid ? cidDescription || undefined : undefined,
