@@ -1,4 +1,5 @@
 import { jsPDF } from "jspdf";
+import QRCode from "qrcode";
 import type { FormData } from "@/pages/Solicitar";
 import { format, addDays } from "date-fns";
 
@@ -98,32 +99,18 @@ const loadImageAsBase64 = (src: string): Promise<string | null> =>
     img.src = src;
   });
 
-// QR code pattern generator (visual representation)
-const drawQRCode = (doc: jsPDF, x: number, y: number, size: number, data: string) => {
-  const modules = 25;
-  const cellSize = size / modules;
-  let hash = 0;
-  for (let i = 0; i < data.length; i++) hash = ((hash << 5) - hash + data.charCodeAt(i)) | 0;
-  doc.setFillColor(255, 255, 255);
-  doc.rect(x, y, size, size, "F");
-  doc.setFillColor(0, 0, 0);
-  const drawFinder = (fx: number, fy: number) => {
-    for (let r = 0; r < 7; r++)
-      for (let c = 0; c < 7; c++)
-        if (r === 0 || r === 6 || c === 0 || c === 6 || (r >= 2 && r <= 4 && c >= 2 && c <= 4))
-          doc.rect(fx + c * cellSize, fy + r * cellSize, cellSize, cellSize, "F");
-  };
-  drawFinder(x, y);
-  drawFinder(x + (modules - 7) * cellSize, y);
-  drawFinder(x, y + (modules - 7) * cellSize);
-  let seed = Math.abs(hash);
-  for (let r = 0; r < modules; r++)
-    for (let c = 0; c < modules; c++) {
-      if ((r < 8 && c < 8) || (r < 8 && c > modules - 9) || (r > modules - 9 && c < 8)) continue;
-      if (r === 6 || c === 6) continue;
-      seed = (seed * 1103515245 + 12345) & 0x7fffffff;
-      if (seed % 3 !== 0) doc.rect(x + c * cellSize, y + r * cellSize, cellSize, cellSize, "F");
-    }
+// Generate a real, scannable QR Code as a PNG data URL
+const generateQRDataUrl = async (data: string): Promise<string | null> => {
+  try {
+    return await QRCode.toDataURL(data, {
+      errorCorrectionLevel: "M",
+      margin: 1,
+      width: 320,
+      color: { dark: "#000000", light: "#FFFFFF" },
+    });
+  } catch {
+    return null;
+  }
 };
 
 const generateVerificationCode = (): string => {
@@ -139,7 +126,10 @@ const generateVerificationCode = (): string => {
 // (Hospital address agora vem do endereço escolhido pelo cliente — cidade/UF
 // ou um endereço informado/editado no admin. Não usamos mais endereços fixos.)
 
-export const generateAtestadoPDF = async (formData: FormData): Promise<jsPDF> => {
+export const generateAtestadoPDF = async (
+  formData: FormData,
+  pedidoId?: string
+): Promise<jsPDF> => {
   const doc = new jsPDF("p", "mm", "a4");
   const pageW = doc.internal.pageSize.getWidth();
   const pageH = doc.internal.pageSize.getHeight();
@@ -154,6 +144,13 @@ export const generateAtestadoPDF = async (formData: FormData): Promise<jsPDF> =>
   const inicioDate = getInicioDate(formData);
   const diasNum = getDiasNum(formData.diasAfastamento);
   const hospitalName = formData.hospitalPreferencia;
+
+  // URL that the QR code will encode — opens the public validation page
+  const validationOrigin =
+    typeof window !== "undefined" ? window.location.origin : "https://justmed1.lovable.app";
+  const validationUrl = pedidoId
+    ? `${validationOrigin}/validar/${pedidoId}`
+    : `${validationOrigin}/validar/${verificationCode}`;
 
   // ============== HEADER ==============
   const headerTop = 15;
@@ -189,15 +186,18 @@ export const generateAtestadoPDF = async (formData: FormData): Promise<jsPDF> =>
     doc.text("validar esse mesmo", boxX + 4, boxY + 9);
     doc.text("Atestado no seu celular?", boxX + 4, boxY + 13);
 
-    // QR code (left side of box)
-    drawQRCode(doc, boxX + 4, boxY + 17, 28, verificationCode);
+    // Real scannable QR code pointing to the validation URL
+    const qrDataUrl = await generateQRDataUrl(validationUrl);
+    if (qrDataUrl) {
+      doc.addImage(qrDataUrl, "PNG", boxX + 4, boxY + 17, 28, 28);
+    }
 
     // Numbered steps (right side of box)
     const stepsX = boxX + 38;
     let stepY = boxY + 19;
     const steps = [
-      "Escaneie o QR Code ou\nacesse: docmedonline.lovable.app",
-      'Se solicitado, clique em\n"Validar Documento"',
+      "Escaneie o QR Code com\na câmera do celular",
+      'Abrirá a página de validação\noficial do documento',
       "Confira se as informações\nbatem com o atestado",
     ];
     steps.forEach((stepText, idx) => {

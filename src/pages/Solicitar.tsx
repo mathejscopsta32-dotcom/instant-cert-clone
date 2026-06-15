@@ -174,26 +174,7 @@ const Solicitar = () => {
       if (formData.addonQrCode) amount += ADDON_QR_PRICE;
       if (formData.addonPacote3) amount += ADDON_PACOTE_PRICE;
 
-      let pdfUrl: string | null = null;
-      try {
-        // Pick the doctor whose CRM matches the customer's state (UF)
-        const { getMedicoByEstado } = await import("@/lib/getMedicoByEstado");
-        const medico = await getMedicoByEstado(formData.estado);
-        const formDataWithMedico = {
-          ...formData,
-          medicoOverride: { fullName: medico.nome, crm: medico.crm },
-        };
-        const doc = await generateAtestadoPDF(formDataWithMedico);
-        const pdfBlob = doc.output("blob");
-        const pdfPath = `${Date.now()}-${Math.random().toString(36).slice(2)}.pdf`;
-        const { error: pdfUploadError } = await supabase.storage
-          .from("atestados")
-          .upload(pdfPath, pdfBlob, { contentType: "application/pdf" });
-        if (!pdfUploadError) pdfUrl = pdfPath;
-      } catch (pdfErr) {
-        console.warn("Erro ao gerar/upload PDF:", pdfErr);
-      }
-
+      // Step 1: upsert pedido first so we get an ID for the QR validation URL.
       const { data, error } = await supabase.rpc("upsert_pedido", {
         p_cpf: formData.cpf,
         p_tipo: "atestado",
@@ -214,11 +195,46 @@ const Solicitar = () => {
         p_addon_cid: formData.addonCid,
         p_addon_qr_code: formData.addonQrCode,
         p_addon_pacote3: formData.addonPacote3,
-        p_pdf_url: pdfUrl,
+        p_pdf_url: null,
       } as any);
-
       if (error) throw error;
-      setPedidoId(data as string);
+      const newPedidoId = data as string;
+
+      // Step 2: generate PDF with QR pointing to /validar/<id>, then upload.
+      try {
+        const { getMedicoByEstado } = await import("@/lib/getMedicoByEstado");
+        const medico = await getMedicoByEstado(formData.estado);
+        const formDataWithMedico = {
+          ...formData,
+          medicoOverride: { fullName: medico.nome, crm: medico.crm },
+        };
+        const emissao = new Date();
+        const formDataWithEmissao = {
+          ...formDataWithMedico,
+          dataEmissaoOverride: emissao,
+        };
+        const doc = await generateAtestadoPDF(formDataWithEmissao, newPedidoId);
+        const pdfBlob = doc.output("blob");
+        const pdfPath = `${Date.now()}-${Math.random().toString(36).slice(2)}.pdf`;
+        const { error: pdfUploadError } = await supabase.storage
+          .from("atestados")
+          .upload(pdfPath, pdfBlob, { contentType: "application/pdf" });
+        if (!pdfUploadError) {
+          await (supabase as any)
+            .from("pedidos")
+            .update({
+              pdf_url: pdfPath,
+              data_emissao: emissao.toISOString(),
+              medico_nome: medico.nome,
+              medico_crm: medico.crm,
+            })
+            .eq("id", newPedidoId);
+        }
+      } catch (pdfErr) {
+        console.warn("Erro ao gerar/upload PDF:", pdfErr);
+      }
+
+      setPedidoId(newPedidoId);
       setCurrentStep(4);
     } catch (err) {
       console.error("Erro ao criar pedido:", err);

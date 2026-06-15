@@ -47,7 +47,7 @@ const NAV: Array<{ id: View; label: string; icon: React.ComponentType<{ classNam
 ];
 
 const PEDIDO_COLS =
-  "id, nome_completo, cpf, email, telefone, valor_total, status, comprovante_url, created_at, dias_afastamento, hospital_preferencia, pdf_url, tipo, data_nascimento, cidade, estado, sintomas, outros_sintomas, inicio_sintomas, inicio_sintomas_data, observacoes, addon_cid, addon_qr_code, addon_pacote3";
+  "id, nome_completo, cpf, email, telefone, valor_total, status, comprovante_url, created_at, dias_afastamento, hospital_preferencia, pdf_url, tipo, data_nascimento, cidade, estado, sintomas, outros_sintomas, inicio_sintomas, inicio_sintomas_data, observacoes, addon_cid, addon_qr_code, addon_pacote3, medico_nome, medico_crm, endereco, hospital_endereco, data_emissao, data_inicio_atestado, cid_code, cid_description";
 
 const Admin = () => {
   const [pedidos, setPedidos] = useState<Pedido[]>([]);

@@ -17,6 +17,7 @@ import TermosDeUso from "./pages/TermosDeUso";
 import PoliticaPrivacidade from "./pages/PoliticaPrivacidade";
 import QuemSomos from "./pages/QuemSomos";
 import Contato from "./pages/Contato";
+import Validar from "./pages/Validar";
 import { useClickTracker } from "./hooks/useClickTracker";
 import { useDevToolsGuard } from "./hooks/useDevToolsGuard";
 
@@ -49,6 +50,8 @@ const App = () => (
           <Route path="/politica-de-privacidade" element={<PoliticaPrivacidade />} />
           <Route path="/quem-somos" element={<QuemSomos />} />
           <Route path="/contato" element={<Contato />} />
+          <Route path="/validar/:id" element={<Validar />} />
+          <Route path="/v/:id" element={<Validar />} />
           <Route path="/admin" element={<Admin />} />
           <Route path="/admin/login" element={<AdminLogin />} />
           <Route path="*" element={<NotFound />} />
