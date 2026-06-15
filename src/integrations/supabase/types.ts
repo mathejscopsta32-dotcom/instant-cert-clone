@@ -127,18 +127,26 @@ export type Database = {
           addon_cid: boolean | null
           addon_pacote3: boolean | null
           addon_qr_code: boolean | null
+          cid_code: string | null
+          cid_description: string | null
           cidade: string | null
           comprovante_url: string | null
           cpf: string
           created_at: string
+          data_emissao: string | null
+          data_inicio_atestado: string | null
           data_nascimento: string | null
           dias_afastamento: string | null
           email: string
+          endereco: string | null
           estado: string | null
+          hospital_endereco: string | null
           hospital_preferencia: string | null
           id: string
           inicio_sintomas: string | null
           inicio_sintomas_data: string | null
+          medico_crm: string | null
+          medico_nome: string | null
           nome_completo: string
           observacoes: string | null
           outros_sintomas: string | null
@@ -155,18 +163,26 @@ export type Database = {
           addon_cid?: boolean | null
           addon_pacote3?: boolean | null
           addon_qr_code?: boolean | null
+          cid_code?: string | null
+          cid_description?: string | null
           cidade?: string | null
           comprovante_url?: string | null
           cpf: string
           created_at?: string
+          data_emissao?: string | null
+          data_inicio_atestado?: string | null
           data_nascimento?: string | null
           dias_afastamento?: string | null
           email: string
+          endereco?: string | null
           estado?: string | null
+          hospital_endereco?: string | null
           hospital_preferencia?: string | null
           id?: string
           inicio_sintomas?: string | null
           inicio_sintomas_data?: string | null
+          medico_crm?: string | null
+          medico_nome?: string | null
           nome_completo: string
           observacoes?: string | null
           outros_sintomas?: string | null
@@ -183,18 +199,26 @@ export type Database = {
           addon_cid?: boolean | null
           addon_pacote3?: boolean | null
           addon_qr_code?: boolean | null
+          cid_code?: string | null
+          cid_description?: string | null
           cidade?: string | null
           comprovante_url?: string | null
           cpf?: string
           created_at?: string
+          data_emissao?: string | null
+          data_inicio_atestado?: string | null
           data_nascimento?: string | null
           dias_afastamento?: string | null
           email?: string
+          endereco?: string | null
           estado?: string | null
+          hospital_endereco?: string | null
           hospital_preferencia?: string | null
           id?: string
           inicio_sintomas?: string | null
           inicio_sintomas_data?: string | null
+          medico_crm?: string | null
+          medico_nome?: string | null
           nome_completo?: string
           observacoes?: string | null
           outros_sintomas?: string | null
@@ -293,6 +317,7 @@ export type Database = {
         Args: { p_ip: string; p_limit?: number }
         Returns: Json
       }
+      get_pedido_validacao: { Args: { p_id: string }; Returns: Json }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]

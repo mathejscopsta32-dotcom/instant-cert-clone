@@ -44,11 +44,11 @@ const Validar = () => {
   useEffect(() => {
     if (!id) return;
     (async () => {
-      const { data, error } = await supabase.rpc("get_pedido_validacao", { p_id: id });
+      const { data, error } = await (supabase as any).rpc("get_pedido_validacao", { p_id: id });
       if (error || !data) {
         setError("Documento não encontrado ou inválido.");
       } else {
-        setData(data as Validacao);
+        setData(data as unknown as Validacao);
       }
       setLoading(false);
     })();
