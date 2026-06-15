@@ -53,10 +53,12 @@ const EditDocumentoDialog = ({ pedido, open, onClose, onSaved }: Props) => {
     setDataNascimento(pedido.data_nascimento || "");
     setCidade(pedido.cidade || "");
     setEstado(pedido.estado || "");
-    setEndereco("");
-    setDataEmissao("");
+    setEndereco(pedido.endereco || "");
+    setDataEmissao(
+      pedido.data_emissao ? pedido.data_emissao.slice(0, 16) : ""
+    );
     setHospital(pedido.hospital_preferencia || "UBS");
-    setHospitalEndereco("");
+    setHospitalEndereco(pedido.hospital_endereco || "");
     setDias(pedido.dias_afastamento || "1 dia");
     setInicio("personalizado");
     setInicioData(
@@ -64,15 +66,26 @@ const EditDocumentoDialog = ({ pedido, open, onClose, onSaved }: Props) => {
         ? pedido.inicio_sintomas_data.slice(0, 10)
         : new Date().toISOString().slice(0, 10)
     );
-    setDataInicioAtestado(new Date().toISOString().slice(0, 10));
-    setAddonCid(!!pedido.addon_cid);
-    setCidCode("");
-    setCidDescription("");
-    setAddonQr(!!pedido.addon_qr_code);
-    getMedicoByEstado(pedido.estado || "").then((m) => {
-      setMedicoNome(m.nome);
-      setMedicoCrm(m.crm);
-    });
+    setDataInicioAtestado(
+      pedido.data_inicio_atestado
+        ? pedido.data_inicio_atestado.slice(0, 10)
+        : (pedido.inicio_sintomas_data
+            ? pedido.inicio_sintomas_data.slice(0, 10)
+            : new Date().toISOString().slice(0, 10))
+    );
+    setAddonCid(!!pedido.addon_cid || !!pedido.cid_code);
+    setCidCode(pedido.cid_code || "");
+    setCidDescription(pedido.cid_description || "");
+    setAddonQr(pedido.addon_qr_code === false ? false : true);
+    if (pedido.medico_nome && pedido.medico_crm) {
+      setMedicoNome(pedido.medico_nome);
+      setMedicoCrm(pedido.medico_crm);
+    } else {
+      getMedicoByEstado(pedido.estado || "").then((m) => {
+        setMedicoNome(m.nome);
+        setMedicoCrm(m.crm);
+      });
+    }
   }, [pedido, open]);
 
   if (!open || !pedido) return null;
