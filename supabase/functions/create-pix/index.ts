@@ -13,12 +13,39 @@ serve(async (req) => {
   }
 
   try {
-    const publicKey = Deno.env.get("FREEPAY_PUBLIC_KEY");
-    const secretKey = Deno.env.get("FREEPAY_SECRET_KEY");
+    const publicKeyRaw = Deno.env.get("FREEPAY_PUBLIC_KEY");
+    const secretKeyRaw = Deno.env.get("FREEPAY_SECRET_KEY");
+    const publicKey = (publicKeyRaw || "").trim();
+    const secretKey = (secretKeyRaw || "").trim();
 
     if (!publicKey || !secretKey) {
       throw new Error("FreePay credentials not configured");
     }
+
+    const mask = (v: string) =>
+      v.length <= 8 ? `len=${v.length}` : `len=${v.length} ${v.slice(0, 4)}…${v.slice(-4)}`;
+    console.log(`FreePay creds — public: ${mask(publicKey)} | secret: ${mask(secretKey)}`);
+
+    // Probe /v1/dashboard/balance to isolate credential problem from payload
+    const probe = await fetch("https://api.freepaybrasil.com/v1/dashboard/balance", {
+      headers: {
+        Authorization: "Basic " + btoa(`${publicKey}:${secretKey}`),
+        Accept: "application/json",
+      },
+    });
+    const probeText = await probe.text();
+    console.log(`FreePay balance probe: ${probe.status} ${probeText.slice(0, 200)}`);
+    if (probe.status === 401) {
+      return new Response(
+        JSON.stringify({
+          error:
+            "As credenciais da FreePay foram rejeitadas (401). Verifique se as chaves salvas em FREEPAY_PUBLIC_KEY e FREEPAY_SECRET_KEY são exatamente as do painel (Credenciais API) e do mesmo ambiente.",
+          details: probeText,
+        }),
+        { status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
 
     const { amount, pedidoId, nomeCompleto, cpf, email, telefone } = await req.json();
 
