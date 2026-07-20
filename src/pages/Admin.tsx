@@ -2,8 +2,9 @@ import { useState, useEffect, useRef, useMemo } from "react";
 import {
   CheckCircle2, XCircle, Eye, Loader2, RefreshCw, LogOut, MousePointerClick,
   Key, Save, Trash2, Sun, Moon, Download, Code, LayoutDashboard, FileText,
-  FileEdit, MessageCircle, Menu
+  FileEdit, MessageCircle, Menu, FilePlus2
 } from "lucide-react";
+import CreateAtestadoDialog from "@/components/admin/CreateAtestadoDialog";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
@@ -69,6 +70,7 @@ const Admin = () => {
   const [iframeSaved, setIframeSaved] = useState(false);
   const [editingPedido, setEditingPedido] = useState<Pedido | null>(null);
   const [newOrderPopup, setNewOrderPopup] = useState<Pedido | null>(null);
+  const [createOpen, setCreateOpen] = useState(false);
   const navigate = useNavigate();
   const initialLoadDone = useRef(false);
 
@@ -484,6 +486,10 @@ const Admin = () => {
               <h2 className="text-lg font-bold text-foreground">{currentTitle}</h2>
             </div>
             <div className="flex items-center gap-2">
+              <button onClick={() => setCreateOpen(true)}
+                className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg bg-primary text-primary-foreground text-xs font-semibold hover:opacity-90">
+                <FilePlus2 className="w-3.5 h-3.5" /> Novo atestado
+              </button>
               <button onClick={handleDownloadEmails}
                 className="hidden md:inline-flex items-center gap-1.5 px-3 py-2 rounded-lg border text-xs font-semibold hover:bg-muted">
                 <Download className="w-3.5 h-3.5" /> Emails
@@ -664,6 +670,12 @@ const Admin = () => {
         pedido={newOrderPopup}
         onClose={() => setNewOrderPopup(null)}
         onView={() => { setView("pendentes"); setNewOrderPopup(null); }}
+      />
+
+      <CreateAtestadoDialog
+        open={createOpen}
+        onClose={() => setCreateOpen(false)}
+        onCreated={() => fetchPedidos(false)}
       />
     </div>
   );
