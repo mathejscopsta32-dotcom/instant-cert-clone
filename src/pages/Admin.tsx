@@ -70,6 +70,7 @@ const Admin = () => {
   const [iframeSaved, setIframeSaved] = useState(false);
   const [editingPedido, setEditingPedido] = useState<Pedido | null>(null);
   const [newOrderPopup, setNewOrderPopup] = useState<Pedido | null>(null);
+  const [createOpen, setCreateOpen] = useState(false);
   const navigate = useNavigate();
   const initialLoadDone = useRef(false);
 
