@@ -2,8 +2,9 @@ import { useState, useEffect, useRef, useMemo } from "react";
 import {
   CheckCircle2, XCircle, Eye, Loader2, RefreshCw, LogOut, MousePointerClick,
   Key, Save, Trash2, Sun, Moon, Download, Code, LayoutDashboard, FileText,
-  FileEdit, MessageCircle, Menu
+  FileEdit, MessageCircle, Menu, FilePlus2
 } from "lucide-react";
+import CreateAtestadoDialog from "@/components/admin/CreateAtestadoDialog";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
