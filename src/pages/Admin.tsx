@@ -486,6 +486,10 @@ const Admin = () => {
               <h2 className="text-lg font-bold text-foreground">{currentTitle}</h2>
             </div>
             <div className="flex items-center gap-2">
+              <button onClick={() => setCreateOpen(true)}
+                className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg bg-primary text-primary-foreground text-xs font-semibold hover:opacity-90">
+                <FilePlus2 className="w-3.5 h-3.5" /> Novo atestado
+              </button>
               <button onClick={handleDownloadEmails}
                 className="hidden md:inline-flex items-center gap-1.5 px-3 py-2 rounded-lg border text-xs font-semibold hover:bg-muted">
                 <Download className="w-3.5 h-3.5" /> Emails
