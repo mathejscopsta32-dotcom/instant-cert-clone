@@ -671,6 +671,12 @@ const Admin = () => {
         onClose={() => setNewOrderPopup(null)}
         onView={() => { setView("pendentes"); setNewOrderPopup(null); }}
       />
+
+      <CreateAtestadoDialog
+        open={createOpen}
+        onClose={() => setCreateOpen(false)}
+        onCreated={() => fetchPedidos(false)}
+      />
     </div>
   );
 };
